@@ -1,0 +1,29 @@
+.linear-loader {
+  position: relative;
+  width: 260px;
+  height: 3px;
+  background: #e5e7eb; /* muted */
+  overflow: hidden;
+  border-radius: 10px;
+}
+
+.linear-loader::before {
+  content: "";
+  position: absolute;
+  height: 100%;
+  width: 60px;
+  background: #3b82f6; /* primary blue */
+  animation: slide 1.2s ease-in-out infinite;
+}
+
+@keyframes slide {
+  0% {
+    left: -30%;
+  }
+  50% {
+    left: 100%;
+  }
+  100% {
+    left: 100%;
+  }
+}
