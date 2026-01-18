@@ -56,7 +56,7 @@ export default function NewIssueDialog({
   defStatus,
   defProject,
 }: NewIssueDialogProps) {
-  const { "team-id": teamId, id: projectId, "cycleId": cycleID } = useParams();
+  const { "team-id": teamId, id: projectId, cycleId: cycleID } = useParams();
   const projects = useSelector((state: any) => state.project.projects);
   const teams = useSelector((state: any) => state.teams);
   const status = useSelector((state: RootState) => state.issuesStatus);
@@ -122,6 +122,7 @@ export default function NewIssueDialog({
     try {
       const payload: iIssuePayload = {
         ...values,
+        team_id: selectedTeams?.id ? Number(selectedTeams.id) : 0,
         due_date: values.due_date
           ? new Date(values.due_date).toISOString().split("T")[0]
           : null,
