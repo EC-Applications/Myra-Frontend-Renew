@@ -14,7 +14,7 @@ const Teams = () => {
   console.log("TEAMS DATA IN TEAMS", teamsData);
   return (
     <>
-      <div className="p-6 space-y-6">
+      <div className="p-6 space-y-6 ">
         {/* Header */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
@@ -24,7 +24,7 @@ const Teams = () => {
             </Badge>
           </div>
           <Link to="./new">
-            <Button className="hover:bg-gray-500 cursor-pointer">
+            <Button className="cursor-pointer " variant="custom">
               <Plus className="w-4 h-4" />
               Add team
             </Button>
@@ -34,7 +34,7 @@ const Teams = () => {
         {/* Table */}
         <div className="space-y-4">
           {/* Header Row */}
-          <div className="grid grid-cols-12 gap-4 px-4 py-2 text-sm text-muted-foreground border-b border-border">
+          <div className="grid grid-cols-12 gap-4 px-4 py-2 text-sm font-semibold text-muted-foreground border-b border-border">
             <div className="col-span-3">Name</div>
             <div className="col-span-2">Membership</div>
             <div className="col-span-3">Members</div>

@@ -170,8 +170,8 @@ const Projects = () => {
               <h1 className="text-foreground text-md font-semibold">Projects</h1>
               <div className="flex items-center space-x-1">
                 <Button variant="noBorder" className="text-[14px]">
-                  {/* <Box />
-                  All projects */}
+                  <Box />
+                  All projects
                 </Button>
                 {/* <Button
                   variant="ghost"

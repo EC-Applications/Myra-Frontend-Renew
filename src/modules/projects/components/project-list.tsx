@@ -25,12 +25,11 @@ import { toast } from "sonner";
 import { ProjectDatePicker } from "./date-picker";
 import { baseUrl } from "@/constants";
 
-
 interface props {
   projects: any;
 }
 
-const ProjectList: FC<props> = ({ projects  }) => {
+const ProjectList: FC<props> = ({ projects }) => {
   const projectsList = Array.isArray(projects)
     ? projects
     : projects?.projects || [];
@@ -129,7 +128,7 @@ const ProjectList: FC<props> = ({ projects  }) => {
                     to={"/projects/detail/" + project.id}
                     className="font-medium"
                   >
-                    {project.name || "daw"}
+                    <div >{project.name || "daw"}</div>
                   </Link>
                   {project.description && (
                     <div className="text-sm text-muted-foreground flex items-center">
@@ -166,12 +165,9 @@ const ProjectList: FC<props> = ({ projects  }) => {
                     {/* <span className="text-sm">{project.priority.name}</span> */}
                   </>
                 ) : (
-                  <Badge
-                  variant="secondary"
-                  className={`  text-white text-xs`}
-                >
-                  No priority
-                </Badge>
+                  <Badge variant="secondary" className={`  text-white text-xs`}>
+                    No priority
+                  </Badge>
                 )}
               </div>
 

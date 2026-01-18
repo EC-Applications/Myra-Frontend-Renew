@@ -605,7 +605,7 @@ export default function Detail() {
   }
 
   return (
-    <div className="w-full overflow-y-auto flex justify-center h-[calc(100vh_-_80px)] dark:bg-[#17181b] border dark:border-zinc-800">
+    <div className="w-full overflow-y-auto flex justify-center h-[calc(100vh_-_80px)] dark:bg-[#17181b]  dark:border-zinc-800">
       <div className="flex-1 px-6 py-6 max-w-3xl">
         {/* Project Header */}
         <div className="mb-2">

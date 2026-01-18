@@ -342,7 +342,7 @@ const IssueListView: FC<{
                             <PriorityPicker
                               variant="icon-only"
                               className="border-0"
-                              buttonVarient="dark"
+                              buttonVarient="light"
                               value={issue.priority_id ?? undefined}
                               onChange={(newPriorityId) => {
                                 handlePriorityUpdate(

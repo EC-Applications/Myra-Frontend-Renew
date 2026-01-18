@@ -61,7 +61,7 @@ export function PriorityPicker({
           variant="outline"
           disabled={disabled}
           className={cn(
-            `h-[30px] w-auto justify-start gap-2 px-2 text-sm font-semibold text-muted-foreground dark:hover:text-white ${buttonVarient == 'light'? "dark:bg-[#2a2c33]" : "dark:bg-transparent"} dark:hover:bg-[#32333a] `,
+            `h-[30px] w-auto justify-start gap-2 px-2 text-sm font-semibold text-muted-foreground dark:hover:text-white ${buttonVarient == 'light'? "dark:bg-[#2a2c33]" : "bg-transparent"} dark:hover:bg-[#32333a] `,
             disabled && "opacity-50 cursor-not-allowed",
             className
           )}
