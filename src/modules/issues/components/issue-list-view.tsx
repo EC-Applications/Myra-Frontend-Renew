@@ -48,6 +48,7 @@ import { toast } from "sonner";
 import NewIssueDialog from "../new-issue";
 import { IssuesStatusPicker } from "./issues-status-picker";
 import { fetchProjectIssueUri } from "@/services/project.service";
+import { useTheme } from "@/components/theme-provider";
 
 const IssueListView: FC<{
   issuesData: Record<string, iIssues[]>;
@@ -239,14 +240,29 @@ const IssueListView: FC<{
     }
   };
 
+  const { theme } = useTheme();
+  const isDark = theme === "dark" || (theme === "system" && window.matchMedia("(prefers-color-scheme: dark)").matches);
+
   // Status colors mapping (left to right gradient)
-  const statusColors: Record<string, { from: string; to: string }> = {
-    "In Review": { from: "#171d1c", to: "#17181a" },
-    Todo: { from: "#1a1b1d", to: "#18191b" },
-    "In Progress": { from: "#1c1b1b", to: "#18181b" },
-    Done: { from: "#1a1b24", to: "#18191c" },
-    Backlog: { from: "#1b1c1e", to: "#17181a" },
-  };
+  const statusColors: Record<string, { from: string; to: string }> = isDark
+    ? {
+        "In Review": { from: "#171d1c", to: "#17181a" },
+        Todo: { from: "#1a1b1d", to: "#18191b" },
+        "In Progress": { from: "#1c1b1b", to: "#18181b" },
+        Done: { from: "#1a1b24", to: "#18191c" },
+        Backlog: { from: "#1b1c1e", to: "#17181a" },
+        Canceled: { from: "#1b1c1e", to: "#17181a" },
+        Duplicate: { from: "#1b1c1e", to: "#17181a" },
+      }
+    : {
+        "In Review": { from: "#f3f6f4", to: "#f5f6f5" },
+        Todo: { from: "#f6f6f6", to: "#f5f6f5" },
+        "In Progress": { from: "#f7f5f3", to: "#f5f6f5" },
+        Done: { from: "#f5f5fc", to: "#f5f6f5" },
+        Backlog: { from: "#f5f5f5", to: "#f5f6f5" },
+        Canceled: { from: "#f5f5f6", to: "#f5f6f5" },
+        Duplicate: { from: "#f5f5f6", to: "#f5f6f5" },
+      };
 
   console.log("def status", defStatus);
   return (
@@ -298,7 +314,7 @@ const IssueListView: FC<{
                 <div key={status} className="">
                   <div
                     onClick={() => toggleSection(status)}
-                    className="w-full flex items-center justify-between transition-colors cursor-pointer p-1 bg-gradient-to-r border border-zinc-900"
+                    className="w-full flex items-center justify-between transition-colors cursor-pointer p-1 bg-gradient-to-r border dark:border-zinc-900"
                     style={{
                       backgroundImage: `linear-gradient(to right, ${gradientColors.from}, ${gradientColors.to})`,
                     }}
@@ -310,7 +326,7 @@ const IssueListView: FC<{
                         <ChevronRight className="w-4 h-4" />
                       )}
                       <img className="h-4 w-4" src={config.icon} alt="" />
-                      <span className="font-medium">{config.name}</span>
+                      <span className="font-medium text-[#565758] dark:text-white">{config.name}</span>
                       <Badge variant="noBorder" className="text-xs">
                         {issues.length}
                       </Badge>

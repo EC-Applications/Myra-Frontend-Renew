@@ -27,15 +27,15 @@ const SignIn = () => {
 
   const handleGoogleLogin = () => {
     // Google OAuth endpoint pe redirect
-    window.location.href = "http://api.myracloud.io/auth/google";
+    window.location.href = "http://api.myracloud.io/auth/google?platform=web";
   };
 
   const handleMicrosoftLogin = () => {
-    window.location.href = "https://api.myracloud.io/auth/microsoft" ;
+    window.location.href = "https://api.myracloud.io/auth/microsoft?platform=web" ;
   }
 
   const handleGithubLogin = () => {
-    window.location.href = "https://api.myracloud.io/auth/github"
+    window.location.href = "https://api.myracloud.io/auth/github?platform=web"
   }
 
   const formik = useFormik<iLoginRequest>({

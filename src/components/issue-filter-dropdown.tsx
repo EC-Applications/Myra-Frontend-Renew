@@ -401,7 +401,7 @@ export function IssueFilterDropdown({ onFilterChange }: FilterDropdownProps = {}
   return (
     <Popover>
       <PopoverTrigger asChild>
-        <button className="inline-flex items-center justify-center gap-2 px-3 py-2 text-sm font-medium  border-zinc-700 rounded-md hover:bg-zinc-900 transition-colors text-zinc-300 relative">
+        <button className="inline-flex items-center justify-center gap-2 px-3 py-2 text-sm font-medium  border-zinc-700 rounded-md hover:bg-[#e8e8e8] dark:hover:bg-zinc-900 transition-colors dark:text-zinc-300 relative">
           <Filter className="w-4 h-4" />
           Filter
           {activeFilterCount > 0 && (

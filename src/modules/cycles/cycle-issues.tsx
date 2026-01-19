@@ -47,16 +47,7 @@ import type { RootState } from "@/store/store";
 import { Badge } from "@/components/ui/badge";
 // import type { Cycle } from "@/interfaces/cycle.interface";
 
-const chartData = [
-  { date: "Aug 25", scope: 135, started: 20, completed: 1 },
-  { date: "Aug 26", scope: 135, started: 35, completed: 1 },
-  { date: "Aug 27", scope: 135, started: 50, completed: 1 },
-  { date: "Aug 28", scope: 135, started: 70, completed: 1 },
-  { date: "Aug 29", scope: 135, started: 85, completed: 1 },
-  { date: "Aug 30", scope: 135, started: 100, completed: 1 },
-  { date: "Aug 31", scope: 135, started: 107, completed: 1 },
-  { date: "Sep 1", scope: 135, started: 107, completed: 1 },
-];
+
 
 const chartConfig = {
   scope: {
@@ -359,7 +350,7 @@ const { "team-id": teamid } = useParams();
   }
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen border rounded">
       <header className="flex justify-between h-16 shrink-0 items-center gap-2 border-b border-border">
         <div className="flex items-center gap-2 px-4">
           <Button variant="ghost" size="icon" className="size-7">

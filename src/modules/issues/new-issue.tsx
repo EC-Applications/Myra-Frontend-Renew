@@ -122,6 +122,7 @@ export default function NewIssueDialog({
     try {
       const payload: iIssuePayload = {
         ...values,
+        team_id: selectedTeams?.id ? Number(selectedTeams.id) : 0,
         due_date: values.due_date
           ? new Date(values.due_date).toISOString().split("T")[0]
           : null,
@@ -132,6 +133,7 @@ export default function NewIssueDialog({
 
       toast.dismiss(loadingToast);
       toast.success(response.data.message);
+      
       if (cycleID) {
         cycleDetailUri(
           workspace.currentWorkspace?.slug ?? "",
@@ -149,11 +151,11 @@ export default function NewIssueDialog({
         method.then((res) => dispatch(setIssues(res.data)));
       }
 
-      cycleDetailUri(
-        workspace.currentWorkspace?.slug ?? "",
-        Number(teamId),
-        208,
-      ).then((res) => dispatch(setCycleIssues(res.data)));
+      // cycleDetailUri(
+      //   workspace.currentWorkspace?.slug ?? "",
+      //   Number(teamId),
+      //   208,
+      // ).then((res) => dispatch(setCycleIssues(res.data)));
 
       resetForm();
       onOpenChange(false);

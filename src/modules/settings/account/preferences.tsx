@@ -8,8 +8,10 @@ import {
 } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { Switch } from "@/components/ui/switch";
+import { useTheme } from "@/components/theme-provider";
 
 const Preferences = () => {
+  const { theme, setTheme } = useTheme();
   return (
     <div className="min-h-screen">
       <div className="w-full max-w-3xl mx-auto p-8">
@@ -154,7 +156,7 @@ const Preferences = () => {
                     Select or customize your interface color scheme
                   </p>
                 </div>
-                <Select defaultValue="system">
+                <Select value={theme} onValueChange={(value: "system" | "light" | "dark") => setTheme(value)}>
                   <SelectTrigger className="w-48">
                     <SelectValue />
                   </SelectTrigger>
