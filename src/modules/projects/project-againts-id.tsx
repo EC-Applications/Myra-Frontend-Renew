@@ -37,6 +37,7 @@ import {
   FilterDropdown,
   type ProjectFilters,
 } from "@/components/filter-dropdown";
+import { useGetProjectIdHook } from "@/hooks/use-get-project-id";
 
 // const projects = [
 //     {
@@ -167,28 +168,33 @@ const ProjectAgainstTeamId = () => {
   const [view, setView] = useState(0);
 
   const [loading, setLoading] = useState(false);
-  const [data, setData] = useState<iProject[]>([]);
+  // const [data, setData] = useState<iProject[]>([]);
   // console.log("extracted data", data);
 
-  useEffect(() => {
-    const fetchData = async () => {
-      setLoading(true);
-      try {
-        const res = await fetchProjectById(
-          currentWorkspace?.id,
-          Number(teamId)
-        );
-        console.log("DATADAA", res.data);
-        setData(res.data || []);
-      } catch (e) {
-        console.log(e);
-      } finally {
-        setLoading(false);
-      }
-    };
+  const { data } = useGetProjectIdHook(
+    Number(currentWorkspace?.id),
+    Number(teamId),
+  );
 
-    fetchData();
-  }, [teamId, currentWorkspace?.id]);
+  // useEffect(() => {
+  //   const fetchData = async () => {
+  //     setLoading(true);
+  //     try {
+  //       const res = await fetchProjectById(
+  //         currentWorkspace?.id,
+  //         Number(teamId),
+  //       );
+  //       console.log("DATADAA", res.data);
+  //       setData(res.data || []);
+  //     } catch (e) {
+  //       console.log(e);
+  //     } finally {
+  //       setLoading(false);
+  //     }
+  //   };
+
+  //   fetchData();
+  // }, [teamId, currentWorkspace?.id]);
 
   const [activeFilters, setActiveFilters] = useState<ProjectFilters>({
     status: [],
@@ -207,16 +213,16 @@ const ProjectAgainstTeamId = () => {
     console.log("🔍 Filtering with:", activeFilters);
 
     // Debug: Log first project's team structure
-    if (data.length > 0) {
-      console.log("📊 Sample Project Data:", {
-        name: data[0].name,
-        team_id: data[0].team_id,
-        teams: data[0].teams,
-        members: data[0].members,
-      });
-    }
+    // if (data.length > 0) {
+    //   console.log("📊 Sample Project Data:", {
+    //     name: data[0].name,
+    //     team_id: data[0].team_id,
+    //     teams: data[0].teams,
+    //     members: data[0].members,
+    //   });
+    // }
 
-    return data.filter((project: any) => {
+    return data?.filter((project: any) => {
       // Check status filter
       if (
         activeFilters.status.length > 0 &&
@@ -244,7 +250,7 @@ const ProjectAgainstTeamId = () => {
           : projectMemberIds;
 
         const hasMatchingMember = activeFilters.members.some((id) =>
-          allMemberIds.includes(id)
+          allMemberIds.includes(id),
         );
 
         console.log("👤 Members Filter:", {
@@ -267,7 +273,7 @@ const ProjectAgainstTeamId = () => {
         // Extract team IDs from teams array of objects
         const projectTeamIds = project.teams?.map((t: any) => t.id) || [];
         const hasMatchingTeam = activeFilters.teams.some((id) =>
-          projectTeamIds.includes(id)
+          projectTeamIds.includes(id),
         );
 
         console.log("👥 Teams Filter:", {
@@ -287,7 +293,7 @@ const ProjectAgainstTeamId = () => {
       if (activeFilters.labels.length > 0) {
         const projectLabelIds = project.labels || [];
         const hasMatchingLabel = activeFilters.labels.some((label) =>
-          projectLabelIds.includes(label)
+          projectLabelIds.includes(label),
         );
 
         if (!hasMatchingLabel) {
@@ -319,7 +325,9 @@ const ProjectAgainstTeamId = () => {
                 orientation="vertical"
                 className="mr-2 data-[orientation=vertical]:h-4"
               />
-              <h1 className="text-foreground text-[14px] font-semibold">Projects</h1>
+              <h1 className="text-foreground text-[14px] font-semibold">
+                Projects
+              </h1>
               <div className="flex items-center space-x-1">
                 <Button variant="outline" className="text-xs">
                   <Box />

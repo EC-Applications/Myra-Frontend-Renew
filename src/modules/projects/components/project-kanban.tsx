@@ -36,6 +36,7 @@ import { useUser } from "@/hooks/use-user";
 import type { DragStartEvent } from "@dnd-kit/core";
 import { IconPicker } from "./icon-picker";
 import { NewProject } from "./new-project";
+import { useUpdateProjectHook } from "@/hooks/use-update-project";
 
 interface props {
   projectsData: any;
@@ -49,6 +50,7 @@ const ProjectKanban: FC<props> = ({ projectsData }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [defStatus, setDefaultStatus] = useState<number>();
   const [isDragging, setIsDragging] = useState(false);
+  const useUpdateProject = useUpdateProjectHook();
 
   const columnsStatus = ((status as any)?.status ?? [])
     .filter((s: any) => s && s.id && s.name)
@@ -80,7 +82,7 @@ const ProjectKanban: FC<props> = ({ projectsData }) => {
       avatar: null,
       description: project.description || undefined,
       teams: project.teams,
-    }))
+    })),
   );
 
   // Update projects when projectsData prop changes (when filters are applied)
@@ -105,7 +107,7 @@ const ProjectKanban: FC<props> = ({ projectsData }) => {
         avatar: null,
         description: project.description || undefined,
         teams: project.teams,
-      }))
+      })),
     );
   }, [projectsData, status]);
 
@@ -115,7 +117,7 @@ const ProjectKanban: FC<props> = ({ projectsData }) => {
   } | null>(null);
 
   const handleDragStart = (event: DragStartEvent) => {
-    console.log("drag start")
+    console.log("drag start");
     setIsDragging(true);
     const project = projects.find((p: any) => p.id === event.active.id);
     if (project) {
@@ -127,8 +129,7 @@ const ProjectKanban: FC<props> = ({ projectsData }) => {
   };
 
   const handleDragEnd = async (event: DragEndEvent) => {
-    
-    console.log("drag end")
+    console.log("drag end");
     const { active, over } = event;
 
     if (!over || !draggedProjectRef.current) {
@@ -155,12 +156,11 @@ const ProjectKanban: FC<props> = ({ projectsData }) => {
 
     await updateProjectStatus(activeProject, targetColumnId, originalColumn);
     draggedProjectRef.current = null;
-
   };
 
   const getTargetColumnId = (overId: string | number): string | null => {
     const directColumn = columnsStatus.find(
-      (c: any) => c.id === String(overId)
+      (c: any) => c.id === String(overId),
     );
 
     if (directColumn) {
@@ -174,23 +174,31 @@ const ProjectKanban: FC<props> = ({ projectsData }) => {
   const updateProjectStatus = async (
     project: any,
     newColumnId: string,
-    oldColumnId: string
+    oldColumnId: string,
   ) => {
     try {
-      await updateProjectUri(Number(project.id), {
-        status_id: Number(newColumnId),
-        workspace_id: currentWorkspace?.id,
-        team_id: project.teams?.map((t: any) => t.id) ?? [],
+      // await updatePr  ojectUri(Number(project.id), {
+      //   status_id: Number(newColumnId),
+      //   workspace_id: currentWorkspace?.id,
+      //   team_id: project.teams?.map((t: any) => t.id) ?? [],
+      // });
+      useUpdateProject.mutate({
+        projectId: Number(project.id),
+        body: {
+          status_id: Number(newColumnId),
+          workspace_id: currentWorkspace?.id,
+          team_id: project.teams?.map((t: any) => t.id) ?? [],
+        },
       });
 
-      toast.success("Status updated");
+      // toast.success("Status updated");
     } catch (error) {
       console.error("Failed to update project status:", error);
 
       setProjects((prev: any[]) =>
         prev.map((p) =>
-          p.id === project.id ? { ...p, column: oldColumnId } : p
-        )
+          p.id === project.id ? { ...p, column: oldColumnId } : p,
+        ),
       );
 
       toast.error("Failed to update status");

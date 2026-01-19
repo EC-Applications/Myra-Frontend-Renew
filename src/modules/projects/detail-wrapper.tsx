@@ -3,11 +3,12 @@
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { SidebarTrigger } from "@/components/ui/sidebar";
-import { useProjectDetail } from "@/hooks/use-project-detail";
+// import { useProjectDetail } from "@/hooks/use-project-detail";
 import { Copy, FileText, PanelRightIcon } from "lucide-react";
 import { useState } from "react";
 import { NavLink, Outlet, useParams } from "react-router";
 import ProjectProperties from "./components/project-properties";
+import { useProjectDetail } from "@/hooks/use-project-detail";
 
 export default function DetailWrapper() {
   const [sidebarOpen, setSidebarOpen] = useState(false);

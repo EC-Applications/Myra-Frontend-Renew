@@ -27,8 +27,9 @@ import { LeadPicker } from "./lead-picker";
 import { ProjectDatePicker } from "./date-picker";
 import { ProjectFormLabels, type Label } from "./label-picker";
 import type { iMilestone } from "@/interfaces/milestone.interface";
-import { useProjectDetail } from "@/hooks/use-project-detail";
+// import { useProjectDetail } from "@/hooks/use-project-detail";
 import { useUpdateProjectHook } from "@/hooks/use-update-project";
+import { useProjectDetail } from "@/hooks/use-project-detail";
 
 const ProjectProperties = () => {
   const { id } = useParams();

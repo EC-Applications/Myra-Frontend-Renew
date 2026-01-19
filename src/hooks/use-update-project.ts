@@ -27,6 +27,9 @@ export const useUpdateProjectHook = () => {
       queryClient.invalidateQueries({
         queryKey: ["project-detail", variables.projectId],
       });
+      queryClient.invalidateQueries({
+        queryKey: ["project-teamId"]
+      })
     },
   });
 };

@@ -32,8 +32,9 @@ import { ProjectFormStatus } from "./components/status-picker";
 import { te } from "date-fns/locale";
 import type { iLabel } from "@/interfaces/label.interface";
 import { cn } from "@/lib/utils";
-import { useProjectDetail } from "@/hooks/use-project-detail";
+// import { useProjectDetail } from "@/hooks/use-project-detail";
 import { useUpdateProjectHook } from "@/hooks/use-update-project";
+import { useProjectDetail } from "@/hooks/use-project-detail";
 
 export default function Detail() {
   const { id } = useParams();
