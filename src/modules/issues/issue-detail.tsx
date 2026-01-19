@@ -556,11 +556,11 @@ dark:bg-[#101012]"
     focus-visible:ring-0
     dark:bg-transparent
 
-    text-[25px] leading-7
+    text-[18px] leading-7
     placeholder:text-[18px]"
             />
             {documents.length > 0 ? (
-              <div className="space-y-2">
+              <div className="pt-2 space-y-2">
                 {documents.map((doc) => {
                   const isSelected = selectedId === doc.id;
 

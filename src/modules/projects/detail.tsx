@@ -45,7 +45,7 @@ export default function Detail() {
   const workspaceMember = useSelector((state: any) => state.workspace);
   const members = useMemo(
     () => (Array.isArray(workspaceMember) ? workspaceMember : []),
-    [workspaceMember]
+    [workspaceMember],
   );
 
   const labelState = useSelector((state: any) => state.label);
@@ -91,7 +91,7 @@ export default function Detail() {
   const [selectedLabels, setSelectedLabels] = useState<any[]>([]);
   const [documents, setDocuments] = useState<DocumentItem[]>([]);
   const [expandedMilestones, setExpandedMilestones] = useState<Set<string>>(
-    new Set()
+    new Set(),
   );
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [milestones, setMilestones] = useState<any[]>([]);
@@ -215,8 +215,7 @@ export default function Detail() {
   }, []);
 
   const handleUpdateName = async () => {
-    if (!projectName.trim() || !project) return;
-    if (projectName === project.name) return;
+   if (!project) return;
 
     setSaving(true);
     const originalName = project.name;
@@ -225,7 +224,7 @@ export default function Detail() {
       updateProject({
         projectId: Number(id),
         data: { name: projectName },
-      })
+      }),
     );
 
     updateProjectMutation.mutate(
@@ -243,13 +242,13 @@ export default function Detail() {
             updateProject({
               projectId: Number(id),
               data: { name: originalName },
-            })
+            }),
           );
         },
         onSettled: () => {
           setSaving(false);
         },
-      }
+      },
     );
   };
 
@@ -283,13 +282,13 @@ export default function Detail() {
             updateProject({
               projectId: Number(id),
               data: { labels: previousLabels.map((x) => x.id) },
-            })
+            }),
           );
         },
         onSettled: () => {
           setSaving(false);
         },
-      }
+      },
     );
   };
 
@@ -312,7 +311,7 @@ export default function Detail() {
         onSettled: () => {
           setSaving(false);
         },
-      }
+      },
     );
   };
 
@@ -324,7 +323,7 @@ export default function Detail() {
     setSaving(true);
 
     const priorityObj = priorityData.priority?.find(
-      (p: any) => p.id === newPriority
+      (p: any) => p.id === newPriority,
     );
 
     if (!priorityObj) {
@@ -337,7 +336,7 @@ export default function Detail() {
       updateProject({
         projectId: Number(id),
         data: { priority: priorityObj.id },
-      })
+      }),
     );
 
     updateProjectMutation.mutate(
@@ -353,7 +352,7 @@ export default function Detail() {
         onSettled: () => {
           setSaving(false);
         },
-      }
+      },
     );
   };
 
@@ -368,7 +367,7 @@ export default function Detail() {
       updateProject({
         projectId: Number(id),
         data: { status: newStatus.name.toLowerCase() },
-      })
+      }),
     );
     console.log("IDDDDD", newStatus.id);
 
@@ -385,7 +384,7 @@ export default function Detail() {
         onSettled: () => {
           setSaving(false);
         },
-      }
+      },
     );
   };
 
@@ -400,7 +399,7 @@ export default function Detail() {
       updateProject({
         projectId: Number(id),
         data: { lead_id: newLead.id },
-      })
+      }),
     );
 
     updateProjectMutation.mutate(
@@ -416,7 +415,7 @@ export default function Detail() {
         onSettled: () => {
           setSaving(false);
         },
-      }
+      },
     );
   };
 
@@ -431,7 +430,7 @@ export default function Detail() {
       updateProject({
         projectId: Number(id),
         data: { start_date: newDate.toISOString().split("T")[0] },
-      })
+      }),
     );
 
     updateProjectMutation.mutate(
@@ -447,7 +446,7 @@ export default function Detail() {
         onSettled: () => {
           setSaving(false);
         },
-      }
+      },
     );
   };
 
@@ -462,7 +461,7 @@ export default function Detail() {
       updateProject({
         projectId: Number(id),
         data: { target_date: newDate.toISOString().split("T")[0] },
-      })
+      }),
     );
 
     updateProjectMutation.mutate(
@@ -478,7 +477,7 @@ export default function Detail() {
         onSettled: () => {
           setSaving(false);
         },
-      }
+      },
     );
   };
 
@@ -510,7 +509,7 @@ export default function Detail() {
         onSettled: () => {
           setUploadingDocs(false);
         },
-      }
+      },
     );
   };
 
@@ -547,7 +546,7 @@ export default function Detail() {
         onSettled: () => {
           setUploadingIcon(false);
         },
-      }
+      },
     );
   };
 
@@ -558,7 +557,7 @@ export default function Detail() {
       await deleteProjectAttachmentUri(
         workpsace.currentWorkspace?.id as number,
         Number(id),
-        [attachmentId]
+        [attachmentId],
       );
 
       const response = await projectDetailFetchUri(Number(id));
@@ -576,7 +575,7 @@ export default function Detail() {
       await deleteProjectAttachmentUri(
         Number(workpsace.currentWorkspace?.id),
         Number(id),
-        ids
+        ids,
       );
       const response = await projectDetailFetchUri(Number(id));
       toast.success("Attachments deleted successfully");
@@ -610,7 +609,11 @@ export default function Detail() {
         {/* Project Header */}
         <div className="mb-2">
           <div className="flex items-center gap-3 mb-2">
-            <IconPicker value={projectIcon} onChange={() => {}}  variant="compact"  />
+            <IconPicker
+              value={projectIcon}
+              onChange={() => {}}
+              variant="compact"
+            />
           </div>
           <div className="space-y-2">
             <Input
@@ -651,7 +654,6 @@ export default function Detail() {
               onChange={handleUpdateStatus}
               className="border-0 "
               buttonVarient="dark"
-              
             />
             <PriorityPicker
               value={Number(project?.priority?.id)}
@@ -665,7 +667,6 @@ export default function Detail() {
               onChange={handleUpdateLead}
               className="border-0 "
               buttonVarient="dark"
-              
             />
 
             <ProjectDatePicker
@@ -677,7 +678,7 @@ export default function Detail() {
               className="border-0 "
               buttonVarient="dark"
             />
-            <ArrowRight  />
+            <ArrowRight />
             <ProjectDatePicker
               label="End date"
               value={
@@ -822,7 +823,7 @@ export default function Detail() {
             onChange={(e) => setShortSummary(e.target.value)}
             className="min-h-36 md:text-lg border-0 px-3 shadow-none focus-visible:ring-0 dark:bg-transparent resize-none dark:text-white dark:placeholder:text-[#626366]"
           />
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-end">
             <Button
               type="button"
               variant="ghost"
@@ -858,9 +859,9 @@ export default function Detail() {
             />
           </div>
 
-          {documents.length > 0 ? (
+          {(project?.documents ?? []).length > 0 ? (
             <div className="space-y-2">
-              {documents.map((doc) => {
+              {project?.documents.map((doc) => {
                 const isSelected = selectedId === doc.id;
 
                 return (
@@ -871,7 +872,7 @@ export default function Detail() {
                       "relative flex items-center gap-3 p-3 rounded-md border cursor-pointer transition-all",
                       isSelected
                         ? "border-blue-500 bg-blue-500/5"
-                        : "border-border hover:bg-muted/30"
+                        : "border-border hover:bg-muted/30",
                     )}
                   >
                     <div className="w-8 h-8 bg-muted rounded flex items-center justify-center">
@@ -905,7 +906,7 @@ export default function Detail() {
                             e.stopPropagation();
                             handleDeleteAttachment(Number(doc.id));
                             setDocuments((prev) =>
-                              prev.filter((d) => d.id !== doc.id)
+                              prev.filter((d) => d.id !== doc.id),
                             );
                             setSelectedId(null);
                           }}

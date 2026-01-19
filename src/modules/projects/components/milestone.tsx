@@ -181,7 +181,7 @@ export default function MilestoneSection({
       dueDate: editDueDate,
     };
     const updatedMilestones = milestones.map((m, idx) =>
-      idx === editingIndex ? updatedMilestone : m
+      idx === editingIndex ? updatedMilestone : m,
     );
 
     setMilestones(updatedMilestones);
@@ -199,7 +199,7 @@ export default function MilestoneSection({
     } catch (error) {
       // Revert
       setMilestones((prev) =>
-        prev.map((m, idx) => (idx === editingIndex ? originalMilestone : m))
+        prev.map((m, idx) => (idx === editingIndex ? originalMilestone : m)),
       );
       toast.error("Failed to update milestone");
     } finally {
@@ -235,7 +235,7 @@ export default function MilestoneSection({
     } catch (error: any) {
       setMilestones(originalMilestones);
       toast.error(
-        error?.response?.data?.message || "Failed to delete milestone"
+        error?.response?.data?.message || "Failed to delete milestone",
       );
       console.error("Delete error:", error);
     }
@@ -243,175 +243,171 @@ export default function MilestoneSection({
 
   return (
     <div className="">
-
-
-    <div className={`space-y-3  border dark:bg-card rounded-lg`}>
-      <div className="flex items-center justify-between p-2 border-b">
-        <div className="flex items-center gap-2">
-          <span className="text-sm font-medium dark:text-[#626366]">
-          
-         {isAddingNew ? "Create Milestones" : "Milestone" }  
-          </span>
-          {milestones.length > 0 && (
-            <span className="flex items-center justify-center min-w-[20px] h-5 px-1.5 text-xs font-medium text-muted-foreground bg-muted rounded">
-              {milestones.length}
+      <div className={`space-y-3  border dark:bg-card rounded-lg`}>
+        <div className="flex items-center justify-between p-2 border-b">
+          <div className="flex items-center gap-2">
+            <span className="text-sm font-medium dark:text-[#626366]">
+              {isAddingNew ? "Create Milestones" : "Milestone"}
             </span>
-          )}
+            {milestones.length > 0 && (
+              <span className="flex items-center justify-center min-w-[20px] h-5 px-1.5 text-xs font-medium text-muted-foreground bg-muted rounded">
+                {milestones.length}
+              </span>
+            )}
+          </div>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setIsAddingNew(!isAddingNew)}
+            className="h-7 text-sm font-normal text-muted-foreground hover:text-foreground cursor-pointer"
+          >
+            <Plus className="h-4 w-4" />
+          </Button>
         </div>
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => setIsAddingNew(!isAddingNew)}
-          className="h-7 text-sm font-normal text-muted-foreground hover:text-foreground cursor-pointer"
-        >
-          <Plus className="h-4 w-4" />
-        </Button>
-      </div>
 
-      {milestones.length > 0 && (
-        <div className="space-y-1.5">
-          {milestones.map((m: iMilestone, index: number) => (
-            <div
-              key={m.id || index}
-              className="border border-border rounded-lg bg-card overflow-hidden"
-            >
-              {editingIndex === index ? (
-                <div className="p-4" onClick={(e) => e.stopPropagation()}>
-                  <div className="flex items-start justify-between gap-4 mb-4">
-                    <div className="flex items-start gap-3 flex-1 min-w-0">
-                      <Diamond className="h-5 w-5 text-muted-foreground flex-shrink-0 mt-0.5" />
-                      <Input
-                        value={editName}
-                        onChange={(e) => setEditName(e.target.value)}
-                        placeholder="Milestone name"
-                        className="border-0 px-0 h-auto shadow-none focus-visible:ring-0 font-semibold text-base dark:bg-transparent dark:placeholder:text-[#626366]"
+        {milestones.length > 0 && (
+          <div className="space-y-1.5">
+            {milestones.map((m: iMilestone, index: number) => (
+              <div
+                key={m.id || index}
+                className=" rounded-lg bg-card overflow-hidden"
+              >
+                {editingIndex === index ? (
+                  <div className="p-4" onClick={(e) => e.stopPropagation()}>
+                    <div className="flex items-start justify-between gap-4 mb-4">
+                      <div className="flex items-start gap-3 flex-1 min-w-0">
+                        <Diamond className="h-5 w-5 text-muted-foreground flex-shrink-0 mt-0.5" />
+                        <Input
+                          value={editName}
+                          onChange={(e) => setEditName(e.target.value)}
+                          placeholder="Milestone name"
+                          className="border-0 px-0 h-auto shadow-none focus-visible:ring-0 font-semibold text-base dark:bg-transparent dark:placeholder:text-[#626366]"
+                        />
+                      </div>
+                      <div onClick={(e) => e.stopPropagation()}>
+                        <DatePicker
+                          value={editDueDate}
+                          onChange={setEditDueDate}
+                        />
+                      </div>
+                    </div>
+
+                    <div className="ml-8 mb-4">
+                      <Textarea
+                        value={editDescription}
+                        onChange={(e) => setEditDescription(e.target.value)}
+                        placeholder="Add a description..."
+                        className="border-0 px-0 shadow-none focus-visible:ring-0 text-sm text-muted-foreground min-h-[60px] resize-none dark:bg-transparent font-semibold"
                       />
                     </div>
-                    <div onClick={(e) => e.stopPropagation()}>
-                      <DatePicker
-                        value={editDueDate}
-                        onChange={setEditDueDate}
-                      />
+
+                    <div className="flex items-center justify-end gap-2 pt-2 border-t border-border">
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="h-8 text-sm font-semibold cursor-pointer"
+                        onClick={handleCancelEdit}
+                      >
+                        Cancel
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="custom"
+                        className="h-8 text-sm font-medium cursor-pointer"
+                        onClick={handleSaveEdit}
+                      >
+                        Save milestone
+                      </Button>
                     </div>
                   </div>
-
-                  <div className="ml-8 mb-4">
-                    <Textarea
-                      value={editDescription}
-                      onChange={(e) => setEditDescription(e.target.value)}
-                      placeholder="Add a description..."
-                      className="border-0 px-0 shadow-none focus-visible:ring-0 text-sm text-muted-foreground min-h-[60px] resize-none dark:bg-transparent font-semibold"
-                    />
-                  </div>
-
-                  <div className="flex items-center justify-end gap-2 pt-2 border-t border-border">
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      className="h-8 text-sm font-normal"
-                      onClick={handleCancelEdit}
-                    >
-                      Cancel
-                    </Button>
-                    <Button
-                      size="sm"
-                      className="h-8 text-sm font-medium bg-primary text-primary-foreground hover:bg-primary/90"
-                      onClick={handleSaveEdit}
-                    >
-                      Save milestone
-                    </Button>
-                  </div>
-                </div>
-              ) : (
-                <div
-                  className="px-4 py-3 flex items-center justify-between hover:bg-accent/50 transition-colors cursor-pointer group"
-                  onClick={() => handleEditClick(index, m)}
-                >
-                  <div className="flex items-center gap-3 flex-1 min-w-0">
-                    <Diamond className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-                    <span className="font-medium text-sm truncate">
-                      {m.name}
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-3 flex-shrink-0">
-                    {m.dueDate && (
-                      <span className="text-sm text-muted-foreground">
-                        {format(new Date(m.dueDate), "MMM dd")}
+                ) : (
+                  <div
+                    className="px-4 py-3 flex items-center justify-between hover:bg-accent/50 transition-colors cursor-pointer group"
+                    onClick={() => handleEditClick(index, m)}
+                  >
+                    <div className="flex items-center gap-3 flex-1 min-w-0">
+                      <Diamond className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                      <span className="font-medium text-sm truncate">
+                        {m.name}
                       </span>
-                    )}
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="cursor-pointer h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-transparent hover:text-foreground"
-                      onClick={(e) => {
-                        e.stopPropagation();
+                    </div>
+                    <div className="flex items-center gap-3 flex-shrink-0">
+                      {m.dueDate && (
+                        <span className="text-sm text-muted-foreground">
+                          {format(new Date(m.dueDate), "MMM dd")}
+                        </span>
+                      )}
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="cursor-pointer h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-transparent hover:text-foreground"
+                        onClick={(e) => {
+                          e.stopPropagation();
 
-                        handleRemove(index);
-                      }}
-                    >
-                      <X className="h-4 w-4" />
-                    </Button>
+                          handleRemove(index);
+                        }}
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    </div>
                   </div>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+
+        {isAddingNew && (
+          <div className="rounded-lg overflow-hidden">
+            <div className="px-2 py-1">
+              {/* <h3 className="text-sm font-medium mb-4">Create milestone</h3> */}
+
+              <div className="flex items-start justify-between gap-4 mb-2">
+                <div className="flex items-start gap-3 flex-1 min-w-0">
+                  <Diamond className="h-5 w-5 text-muted-foreground flex-shrink-0 mt-0.5" />
+                  <Input
+                    placeholder="Milestone name"
+                    value={milestoneName}
+                    onChange={(e) => setMilestoneName(e.target.value)}
+                    className="border-0 px-0 h-auto shadow-none focus-visible:ring-0 text-base dark:bg-transparent dark:placeholder:text-[#626366] font-semibold"
+                    autoFocus
+                  />
                 </div>
-              )}
-            </div>
-          ))}
-        </div>
-      )}
+                <DatePicker value={dueDate} onChange={setDueDate} />
+              </div>
 
-      {isAddingNew && (
-        <div className="rounded-lg overflow-hidden">
-          <div className="px-2 py-1">
-            {/* <h3 className="text-sm font-medium mb-4">Create milestone</h3> */}
-
-            <div className="flex items-start justify-between gap-4 mb-2">
-              <div className="flex items-start gap-3 flex-1 min-w-0">
-                <Diamond className="h-5 w-5 text-muted-foreground flex-shrink-0 mt-0.5" />
-                <Input
-                  placeholder="Milestone name"
-                  value={milestoneName}
-                  onChange={(e) => setMilestoneName(e.target.value)}
-                  className="border-0 px-0 h-auto shadow-none focus-visible:ring-0 text-base dark:bg-transparent dark:placeholder:text-[#626366] font-semibold"
-                  autoFocus
+              <div className="ml-8 mb-4">
+                <Textarea
+                  placeholder="Add a description..."
+                  value={milestoneDescription}
+                  onChange={(e) => setMilestoneDescription(e.target.value)}
+                  className="border-0 px-0 shadow-none focus-visible:ring-0 text-sm text-muted-foreground min-h-[60px] resize-none dark:bg-transparent dark:placeholder:text-[#626366] font-semibold"
                 />
               </div>
-              <DatePicker value={dueDate} onChange={setDueDate}  />
-            </div>
 
-            <div className="ml-8 mb-4">
-              <Textarea
-                placeholder="Add a description..."
-                value={milestoneDescription}
-                onChange={(e) => setMilestoneDescription(e.target.value)}
-                className="border-0 px-0 shadow-none focus-visible:ring-0 text-sm text-muted-foreground min-h-[60px] resize-none dark:bg-transparent dark:placeholder:text-[#626366] font-semibold"
-              />
-            </div>
-
-            <div className="flex items-center justify-end gap-2 pt-2 pb-2 ">
-              <Button
-                size="sm"
-                variant="customDark"
-                className="h-7.5 text-sm font-semibold "
-                onClick={() => setIsAddingNew(false)}
-              >
-                Cancel
-              </Button>
-              <Button
-                size="sm"
-                variant="custom"
-                className="h-8 text-sm font-medium"
-                onClick={handleAddMilestone}
-              >
-                Add milestone
-              </Button>
+              <div className="flex items-center justify-end gap-2 pt-2 pb-2 ">
+                <Button
+                  size="sm"
+                  variant="customDark"
+                  className="h-7.5 text-sm font-semibold "
+                  onClick={() => setIsAddingNew(false)}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  size="sm"
+                  variant="custom"
+                  className="h-8 text-sm font-medium"
+                  onClick={handleAddMilestone}
+                >
+                  Add milestone
+                </Button>
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        )}
+      </div>
+      {isAddingNew ? <div className="py-2"></div> : <div className=""></div>}
     </div>
-    {
-      isAddingNew ? <div className="py-2"></div> : <div className=""></div>
-    }
-  </div>
-);
+  );
 }

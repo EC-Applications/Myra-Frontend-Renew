@@ -494,7 +494,7 @@ export default function SubIssueDetailView() {
               <div className="flex items-center gap-2 px-1">
                 <span className="text-sm dark:text-[#76797d] font-semibold">
                   <IssuesStatusPicker
-                    value={selectedStatus}
+                    value={data?.parent_issue?.status ?? null}
                     onChange={handleStatusUpdate}
                     variant="icon-only"
                     statuses={statusList}
@@ -577,9 +577,10 @@ export default function SubIssueDetailView() {
           </div>
 
           {/* Action Buttons */}
-          <div className="flex items-center justify-end gap-2 mb-8 w-full">
+          <div className="flex items-center justify-end pt-2 gap-2  mb-8 w-full">
             <Button
               type="button"
+              className=""
               variant="ghost"
               size="sm"
               onClick={() => fileInputRef.current?.click()}
