@@ -30,6 +30,7 @@ import { updateIssuesUri } from "@/services/issues.service";
 import type { DragStartEvent, DragEndEvent } from "@dnd-kit/core";
 import { useSelector } from "react-redux";
 import type { RootState } from "@/store/store";
+import { useUpdateIssueHook } from "@/hooks/use-issue-update";
 
 const columns = [
   { id: "todo", title: "Todo", count: 32, icon: Circle },
@@ -83,6 +84,7 @@ const IssueKanbanView: FC<{ issuesData: any }> = ({ issuesData }) => {
   const { "team-id": id } = useParams();
   const { currentWorkspace } = useUser();
   const navigate = useNavigate();
+  const updateIssueStatus = useUpdateIssueHook();
 
   const statusList =
     useSelector((state: RootState) => state.issuesStatus) ?? [];
@@ -90,7 +92,7 @@ const IssueKanbanView: FC<{ issuesData: any }> = ({ issuesData }) => {
     statusList.map((s) => [
       s.name.toLowerCase().replace(/\s+/g, "-"),
       { id: s.id, name: s.name, icon: s.icon },
-    ])
+    ]),
   );
 
   const initialIssues = Object.entries(issuesData).flatMap(
@@ -98,7 +100,7 @@ const IssueKanbanView: FC<{ issuesData: any }> = ({ issuesData }) => {
       (issueArray as any[]).map((issue) => ({
         ...issue,
         status,
-      }))
+      })),
   );
 
   const [issues, setIssues] = useState<any[]>(initialIssues);
@@ -112,7 +114,7 @@ const IssueKanbanView: FC<{ issuesData: any }> = ({ issuesData }) => {
         (issueArray as any[]).map((issue) => ({
           ...issue,
           status,
-        }))
+        })),
     );
     setIssues(updatedIssues);
   }, [issuesData]);
@@ -232,14 +234,24 @@ const IssueKanbanView: FC<{ issuesData: any }> = ({ issuesData }) => {
     console.log("Mapped Status ID:", statusId);
 
     try {
-      const response = await updateIssuesUri(Number(activeIssue.id), {
-        status_id: statusId,
-        workspace_id: currentWorkspace?.id,
-        team_id: Number(id),
+      updateIssueStatus.mutate({
+        issueId: Number(activeIssue.id),
+        body: {
+          status_id: statusId,
+          workspace_id: currentWorkspace?.id,
+          team_id: Number(id),
+        },
+        teamId: Number(id),
+        workspaceId: Number(currentWorkspace?.id),
       });
+      // const response = await updateIssuesUri(Number(activeIssue.id), {
+      //   status_id: statusId,
+      //   workspace_id: currentWorkspace?.id,
+      //   team_id: Number(id),
+      // });
 
-      console.log("✅ API Success:", response);
-      toast.success("Status updated");
+      // console.log("✅ API Success:", response);
+      // toast.success("Status updated");
     } catch (error) {
       console.error("❌ API Error:", error);
 
@@ -248,8 +260,8 @@ const IssueKanbanView: FC<{ issuesData: any }> = ({ issuesData }) => {
         prev.map((i) =>
           i.id === String(active.id)
             ? { ...i, status: originalColumn, column: originalColumn }
-            : i
-        )
+            : i,
+        ),
       );
 
       toast.error("Failed to update status");
@@ -338,7 +350,7 @@ const IssueKanbanView: FC<{ issuesData: any }> = ({ issuesData }) => {
                       onClick={(e: React.MouseEvent) => {
                         e.stopPropagation();
                         if (!isDragging) {
-                          console.log("navigation")
+                          console.log("navigation");
                           navigate(`/issues/${issue.id}`);
                         }
                       }}
