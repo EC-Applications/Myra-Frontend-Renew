@@ -1,4 +1,6 @@
 import type {
+  iCommentPayload,
+  iCommentResponse,
   iIssuePayload,
   iIssuesLabel,
   iIssuesLabelPayload,
@@ -36,7 +38,7 @@ export const createIssuesUri = (body: iIssuePayload) => {
   // Labels
   if (body.labels) {
     body.labels.forEach((x) =>
-      formData.append("label_id[]", JSON.stringify(x))
+      formData.append("label_id[]", JSON.stringify(x)),
     );
   }
 
@@ -56,7 +58,7 @@ export const createIssuesUri = (body: iIssuePayload) => {
 
 export const fetchIssuesUri = async (workspaceId: number, teamId: number) => {
   return Axios.get(`api/issues/list/${workspaceId}?team=${teamId}`).then(
-    (res) => res.data as iResponse<iIssues[]>
+    (res) => res.data as iResponse<iIssues[]>,
   );
 };
 
@@ -65,7 +67,7 @@ export const fetchIssuesUri = async (workspaceId: number, teamId: number) => {
 export const updateIssuesUri = async (
   issueId: number,
   body: Partial<iIssuePayload>,
-  newAttachments?: File[] // New files add karne ke liye
+  newAttachments?: File[], // New files add karne ke liye
 ) => {
   const formData = new FormData();
 
@@ -87,7 +89,7 @@ export const updateIssuesUri = async (
 
   if (body.labels) {
     body.labels.forEach((x) =>
-      formData.append("label_id[]", JSON.stringify(x))
+      formData.append("label_id[]", JSON.stringify(x)),
     );
   }
 
@@ -114,10 +116,10 @@ export const createIssueLabels = async (body: iIssuesLabelPayload) => {
 };
 
 export const getIssuesLabelListUri = async (
-  workpsaceId: number | undefined
+  workpsaceId: number | undefined,
 ) => {
   return Axios.get(`/api/issue-labels/list/${workpsaceId}`).then(
-    (res) => res.data as iResponse<iIssuesLabel[]>
+    (res) => res.data as iResponse<iIssuesLabel[]>,
   );
 };
 
@@ -129,14 +131,14 @@ export const deleteIssueUri = async (issueId: number) => {
 
 export const issueDetailUri = async (issueId: number) => {
   return Axios.get(`/api/issues/detail/${issueId}`).then(
-    (res) => res.data as iResponse<iIussesDetail>
+    (res) => res.data as iResponse<iIussesDetail>,
   );
 };
 
 export const deleteIssueAttachmentUri = async (
   workspace_id: number,
   issueId: number,
-  attachmentIds: number[]
+  attachmentIds: number[],
 ) => {
   const formData = new FormData();
 
@@ -151,7 +153,7 @@ export const deleteIssueAttachmentUri = async (
       headers: {
         "Content-Type": "multipart/form-data",
       },
-    }
+    },
   );
 };
 
@@ -166,9 +168,24 @@ export const delelteIssueLabelUri = async (label_id: number) => {
 // --------------- LABEL UPDATE ---------------
 export const updateIssueLabelUri = async (
   label_id: number,
-  body: iLabelPayLoad
+  body: iLabelPayLoad,
 ) => {
   return Axios.post(`/api/issue-labels/update/${label_id}`, body, {
     responseType: "json",
   });
+};
+
+export const postCommentUri = async (body: Partial<iCommentPayload>) => {
+  return Axios.post(`/api/reyan-workspace/teams/comments/store`, body, {
+    responseType: "json",
+  }).then((res) => res.data as iResponse<iCommentResponse>);
+};
+
+export const getCommentsUri = async (
+  workspaceSlug: string | number,
+  issueId: number,
+) => {
+  return Axios.get(`/api/${workspaceSlug}/teams/comments/list/${issueId}`, {
+    responseType: "json",
+  }).then((res) => res.data as iResponse<iCommentResponse[]>);
 };
