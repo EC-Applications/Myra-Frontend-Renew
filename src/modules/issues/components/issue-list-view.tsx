@@ -326,7 +326,7 @@ const IssueListView: FC<{
                         <ChevronRight className="w-4 h-4" />
                       )}
                       <img className="h-4 w-4" src={config.icon} alt="" />
-                      <span className="font-medium text-[#565758] dark:text-black">{config.name}</span>
+                      <span className="font-medium text-[#565758] dark:text-white">{config.name}</span>
                       <Badge variant="noBorder" className="text-xs">
                         {issues.length}
                       </Badge>
@@ -358,7 +358,7 @@ const IssueListView: FC<{
                             <PriorityPicker
                               variant="icon-only"
                               className="border-0"
-                              buttonVarient="light"
+                              buttonVarient="dark"
                               value={issue.priority_id ?? undefined}
                               onChange={(newPriorityId) => {
                                 handlePriorityUpdate(

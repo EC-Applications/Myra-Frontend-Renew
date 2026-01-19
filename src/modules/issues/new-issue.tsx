@@ -56,7 +56,7 @@ export default function NewIssueDialog({
   defStatus,
   defProject,
 }: NewIssueDialogProps) {
-  const { "team-id": teamId, id: projectId, cycleId: cycleID } = useParams();
+  const { "team-id": teamId, id: projectId, "cycleId": cycleID } = useParams();
   const projects = useSelector((state: any) => state.project.projects);
   const teams = useSelector((state: any) => state.teams);
   const status = useSelector((state: RootState) => state.issuesStatus);
@@ -133,6 +133,7 @@ export default function NewIssueDialog({
 
       toast.dismiss(loadingToast);
       toast.success(response.data.message);
+      
       if (cycleID) {
         cycleDetailUri(
           workspace.currentWorkspace?.slug ?? "",
@@ -150,11 +151,11 @@ export default function NewIssueDialog({
         method.then((res) => dispatch(setIssues(res.data)));
       }
 
-      cycleDetailUri(
-        workspace.currentWorkspace?.slug ?? "",
-        Number(teamId),
-        208,
-      ).then((res) => dispatch(setCycleIssues(res.data)));
+      // cycleDetailUri(
+      //   workspace.currentWorkspace?.slug ?? "",
+      //   Number(teamId),
+      //   208,
+      // ).then((res) => dispatch(setCycleIssues(res.data)));
 
       resetForm();
       onOpenChange(false);
