@@ -49,6 +49,8 @@ import NewIssueDialog from "../new-issue";
 import { IssuesStatusPicker } from "./issues-status-picker";
 import { fetchProjectIssueUri } from "@/services/project.service";
 import { useTheme } from "@/components/theme-provider";
+import { useUpdateIssueHook } from "@/hooks/use-issue-update";
+import { useDeleteIssueHook } from "@/hooks/use-delete-issue";
 
 const IssueListView: FC<{
   issuesData: Record<string, iIssues[]>;
@@ -63,8 +65,10 @@ const IssueListView: FC<{
   const { currentWorkspace } = useUser();
   console.log("ISSUES DATA IN LIST VIEW", issuesData);
   const [expandedSections, setExpandedSections] = useState<string[]>(
-    Object.keys(issuesData)
+    Object.keys(issuesData),
   );
+  const updateIssueStatus = useUpdateIssueHook();
+  const deleteIssue = useDeleteIssueHook();
 
   const [defStatus, setDefaultStatus] = useState<number>();
   const [defProject, setDefProject] = useState<number>();
@@ -78,7 +82,7 @@ const IssueListView: FC<{
         (res) => {
           setCycleData(res.data);
           console.log("CYCLE DATA IN LIST", cycleData);
-        }
+        },
       );
     } catch (error) {
       console.log(error);
@@ -110,25 +114,30 @@ const IssueListView: FC<{
     statusList.map((s) => [
       s.name.toLowerCase().replace(/\s+/g, "-"), // slug
       { id: s.id, name: s.name, icon: s.icon },
-    ])
+    ]),
   );
 
   const toggleSection = (status: string) => {
     setExpandedSections((prev) =>
       prev.includes(status)
         ? prev.filter((s) => s !== status)
-        : [...prev, status]
+        : [...prev, status],
     );
   };
 
-  const handleIssueDelete = async (issueId: number) => {
+  const handleIssueDelete = async (issueId: number, teamid: number) => {
     const loadingToast = toast.loading("Deleting issue...");
 
     console.log(issueId);
 
     try {
-      const res = await deleteIssueUri(issueId);
-      toast.success(res.data.message);
+      deleteIssue.mutate({
+        issueId: Number(issueId),
+        teamId: teamid,
+        workspaceId: Number(currentWorkspace?.id),
+      });
+      // const res = await deleteIssueUri(issueId);
+      // toast.success(res.data.message);
       const method = teamId
         ? fetchIssuesUri(currentWorkspace!.id, Number(teamId))
         : fetchProjectIssueUri(Number(projectId));
@@ -145,17 +154,27 @@ const IssueListView: FC<{
   const handlePriorityUpdate = async (
     issuid: number,
     priorityId: number,
-    tId: number
+    tId: number,
   ) => {
     try {
-      const payload = {
-        priority_id: priorityId,
-        workspace_id: currentWorkspace?.id,
-        team_id: tId,
-      };
+      updateIssueStatus.mutate({
+        issueId: Number(issuid),
+        body: {
+          priority_id: priorityId,
+          workspace_id: currentWorkspace?.id,
+          team_id: Number(tId),
+        },
+        teamId: Number(tId),
+        workspaceId: Number(currentWorkspace?.id),
+      });
+      // const payload = {
+      //   priority_id: priorityId,
+      //   workspace_id: currentWorkspace?.id,
+      //   team_id: tId,
+      // };
 
-      await updateIssuesUri(Number(issuid), payload);
-      setPriorityId(priorityId);
+      // await updateIssuesUri(Number(issuid), payload);
+      // setPriorityId(priorityId);
 
       const method = teamId
         ? fetchIssuesUri(currentWorkspace!.id, Number(teamId))
@@ -163,28 +182,42 @@ const IssueListView: FC<{
       method.then((res) => {
         dispatch(setIssues(res.data));
       });
-      toast.success("Priority updated");
+      // toast.success("Priority updated");
     } catch (error: any) {
       toast.error(error.message || "Failed to update priority");
     }
   };
 
-  const handleTargetDate = async (issueId: number, date: Date | null , tId : number) => {
+  const handleTargetDate = async (
+    issueId: number,
+    date: Date | null,
+    tId: number,
+  ) => {
     try {
-      const payload = {
-        due_date: date ? format(date, "yyyy-MM-dd") : undefined,
-        workspace_id: currentWorkspace?.id,
-        team_id: Number(tId),
-      };
-      await updateIssuesUri(Number(issueId), payload);
+      updateIssueStatus.mutate({
+        issueId: Number(issueId),
+        body: {
+          due_date: date ? format(date, "yyyy-MM-dd") : undefined,
+          workspace_id: currentWorkspace?.id,
+          team_id: Number(tId),
+        },
+        teamId: Number(tId),
+        workspaceId: Number(currentWorkspace?.id),
+      });
+      // const payload = {
+      //   due_date: date ? format(date, "yyyy-MM-dd") : undefined,
+      //   workspace_id: currentWorkspace?.id,
+      //   team_id: Number(tId),
+      // };
+      // await updateIssuesUri(Number(issueId), payload);
 
-       const method = teamId
+      const method = teamId
         ? fetchIssuesUri(currentWorkspace!.id, Number(teamId))
         : fetchProjectIssueUri(Number(projectId));
       method.then((res) => {
         dispatch(setIssues(res.data));
       });
-      toast.success("Date updated");
+      // toast.success("Date updated");
     } catch (error: any) {
       toast.error(error.message || "Failed to update status");
     }
@@ -193,23 +226,33 @@ const IssueListView: FC<{
   const handleAssigneUpdate = async (
     issueId: number,
     member: iMember | undefined,
-    tId : number
+    tId: number,
   ) => {
     try {
-      const payload = {
-        assignee_id: member?.id,
-        workspace_id: currentWorkspace?.id,
-        team_id: tId,
-      };
-      await updateIssuesUri(Number(issueId), payload);
+      updateIssueStatus.mutate({
+        issueId: Number(issueId),
+        body: {
+          assignee_id: member?.id,
+          workspace_id: currentWorkspace?.id,
+          team_id: Number(tId),
+        },
+        teamId: Number(tId),
+        workspaceId: Number(currentWorkspace?.id),
+      });
+      // const payload = {
+      //   assignee_id: member?.id,
+      //   workspace_id: currentWorkspace?.id,
+      //   team_id: tId,
+      // };
+      // await updateIssuesUri(Number(issueId), payload);
 
-       const method = teamId
+      const method = teamId
         ? fetchIssuesUri(currentWorkspace!.id, Number(teamId))
         : fetchProjectIssueUri(Number(projectId));
       method.then((res) => {
         dispatch(setIssues(res.data));
       });
-      toast.success("Assigne updated");
+      // toast.success("Assigne updated");
     } catch (error: any) {
       toast.error(error.message || "Failed to update status");
     }
@@ -218,15 +261,25 @@ const IssueListView: FC<{
   const handleStatusUpdate = async (
     issueId: number,
     status: iIssueStatus,
-    tId: number
+    tId: number,
   ) => {
     try {
-      const payload = {
-        status_id: status.id,
-        workspace_id: currentWorkspace?.id,
-        team_id: Number(tId),
-      };
-      await updateIssuesUri(Number(issueId), payload);
+      updateIssueStatus.mutate({
+        issueId: Number(issueId),
+        body: {
+          status_id: status.id,
+          workspace_id: currentWorkspace?.id,
+          team_id: Number(tId),
+        },
+        teamId: Number(tId),
+        workspaceId: Number(currentWorkspace?.id),
+      });
+      // const payload = {
+      //   status_id: status.id,
+      //   workspace_id: currentWorkspace?.id,
+      //   team_id: Number(tId),
+      // };
+      // await updateIssuesUri(Number(issueId), payload);
 
       const method = teamId
         ? fetchIssuesUri(currentWorkspace!.id, Number(teamId))
@@ -234,14 +287,17 @@ const IssueListView: FC<{
       method.then((res) => {
         dispatch(setIssues(res.data));
       });
-      toast.success("Status updated");
+      // toast.success("Status updated");
     } catch (error: any) {
       toast.error(error.message || "Failed to update status");
     }
   };
 
   const { theme } = useTheme();
-  const isDark = theme === "dark" || (theme === "system" && window.matchMedia("(prefers-color-scheme: dark)").matches);
+  const isDark =
+    theme === "dark" ||
+    (theme === "system" &&
+      window.matchMedia("(prefers-color-scheme: dark)").matches);
 
   // Status colors mapping (left to right gradient)
   const statusColors: Record<string, { from: string; to: string }> = isDark
@@ -326,7 +382,9 @@ const IssueListView: FC<{
                         <ChevronRight className="w-4 h-4" />
                       )}
                       <img className="h-4 w-4" src={config.icon} alt="" />
-                      <span className="font-medium text-[#565758] dark:text-white">{config.name}</span>
+                      <span className="font-medium text-[#565758] dark:text-white">
+                        {config.name}
+                      </span>
                       <Badge variant="noBorder" className="text-xs">
                         {issues.length}
                       </Badge>
@@ -364,12 +422,12 @@ const IssueListView: FC<{
                                 handlePriorityUpdate(
                                   issue.id,
                                   newPriorityId,
-                                  issue.team_id
+                                  issue.team_id,
                                 );
                                 console.log(
                                   "Update priority:",
                                   issue.id,
-                                  newPriorityId
+                                  newPriorityId,
                                 );
                               }}
                             />
@@ -379,14 +437,14 @@ const IssueListView: FC<{
                               statuses={statusList}
                               value={
                                 statusList.find(
-                                  (s) => s.id === issue.status_id
+                                  (s) => s.id === issue.status_id,
                                 ) ?? null
                               }
                               onChange={(newStatus) => {
                                 handleStatusUpdate(
                                   issue.id,
                                   newStatus,
-                                  issue.team_id
+                                  issue.team_id,
                                 );
                               }}
                             />
@@ -415,14 +473,14 @@ const IssueListView: FC<{
                                       label === "Bug"
                                         ? "destructive"
                                         : label === "Feature"
-                                        ? "default"
-                                        : "secondary"
+                                          ? "default"
+                                          : "secondary"
                                     }
                                     className="text-xs"
                                   >
                                     {label}
                                   </Badge>
-                                )
+                                ),
                               )}
                               {/* <Badge variant="outline" className="text-xs">
                                 {issue.projects}
@@ -437,11 +495,15 @@ const IssueListView: FC<{
                                     : undefined
                                 }
                                 onChange={(newDate) => {
-                                  handleTargetDate(issue.id, newDate, issue.team_id);
+                                  handleTargetDate(
+                                    issue.id,
+                                    newDate,
+                                    issue.team_id,
+                                  );
                                   console.log(
                                     "Update due date:",
                                     issue.id,
-                                    newDate
+                                    newDate,
                                   );
                                 }}
                               />
@@ -451,11 +513,15 @@ const IssueListView: FC<{
                                 value={issue.assignee ?? undefined}
                                 members={members}
                                 onChange={(newMember) => {
-                                  handleAssigneUpdate(issue.id, newMember, issue.team_id);
+                                  handleAssigneUpdate(
+                                    issue.id,
+                                    newMember,
+                                    issue.team_id,
+                                  );
                                   console.log(
                                     "Update assignee:",
                                     issue.id,
-                                    newMember
+                                    newMember,
                                   );
                                 }}
                               />
@@ -475,7 +541,9 @@ const IssueListView: FC<{
 
                               <DropdownMenuContent align="end">
                                 <DropdownMenuItem
-                                  onClick={() => handleIssueDelete(issue.id)}
+                                  onClick={() =>
+                                    handleIssueDelete(issue.id, issue.team_id)
+                                  }
                                 >
                                   Delete Issue
                                 </DropdownMenuItem>

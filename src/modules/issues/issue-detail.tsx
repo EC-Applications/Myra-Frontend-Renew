@@ -228,7 +228,7 @@ export default function IssueDetailView() {
 
       await updateIssuesUri(Number(id), payload);
       setPriorityId(issuid);
-      toast.success("Priority updated");
+      // toast.success("Priority updated");
     } catch (error: any) {
       toast.error(error.message || "Failed to update priority");
     }
@@ -243,7 +243,7 @@ export default function IssueDetailView() {
       };
       await updateIssuesUri(Number(id), payload);
       setSelectedStatus(status);
-      toast.success("Status updated");
+      // toast.success("Status updated");
     } catch (error: any) {
       toast.error(error.message || "Failed to update status");
     }
@@ -258,7 +258,7 @@ export default function IssueDetailView() {
       };
       await updateIssuesUri(Number(id), payload);
       setSelectedMember(member);
-      toast.success("Assigne updated");
+      // toast.success("Assigne updated");
     } catch (error: any) {
       toast.error(error.message || "Failed to update status");
     }
@@ -273,7 +273,7 @@ export default function IssueDetailView() {
       };
       await updateIssuesUri(Number(id), payload);
       setSelectedProjects(project);
-      toast.success("Project updated");
+      // toast.success("Project updated");
     } catch (error: any) {
       toast.error(error.message || "Failed to update status");
     }
@@ -288,14 +288,14 @@ export default function IssueDetailView() {
       };
       await updateIssuesUri(Number(id), payload);
       setIssueName(issueName);
-      toast.success("Name updated");
+      // toast.success("Name updated");
     } catch (error: any) {
       toast.error(error.message || "Failed to update status");
     }
   };
 
   const handleUpdateLabel = async (labels: Label[]) => {
-    console.log("janaaaa");
+    console.log("n");
 
     setSelectedLabels(labels); // Pehle state update karo
     // setSaving(true);
@@ -314,7 +314,7 @@ export default function IssueDetailView() {
       //   })
       // );
 
-      toast.success("Issue Label updated");
+      // toast.success("Issue Label updated");
     } catch (error) {
       setSelectedLabels(selectedLabels); // Error pe purani state revert karo
       toast.error("Failed to update issue labels");
@@ -330,7 +330,7 @@ export default function IssueDetailView() {
       };
       await updateIssuesUri(Number(id), payload);
       setStartDate(date);
-      toast.success("Date updated");
+      // toast.success("Date updated");
     } catch (error: any) {
       toast.error(error.message || "Failed to update status");
     }
@@ -1007,10 +1007,10 @@ dark:bg-[#101012]"
                     className="border-0 resize-none focus-visible:ring-0 dark:bg-transparent p-3 dark:placeholder:font-semibold font-semibold"
                     rows={3}
                   />
-                  <div className="flex items-center justify-between p-2">
-                    <Button variant="ghost" size="sm" type="button">
+                  <div className="flex items-center justify-end p-2">
+                    {/* <Button variant="ghost" size="sm" type="button">
                       <Paperclip className="h-4 w-4" />
-                    </Button>
+                    </Button> */}
                     <Button
                       size="sm"
                       type="submit"

@@ -99,6 +99,8 @@ export default function Issues() {
         status: status,
         sub_issues: issue.sub_issues,
         team_id: issue.team_id,
+        type: issue.type,
+        issue_id : issue.issue_id
       }));
 
       acc[mappedStatus] = mappedIssuesList;

@@ -187,13 +187,13 @@ export default function SubIssueDetailView() {
 
       await updateSubIssuesUri(Number(id), payload);
       setPriorityId(issuid);
-      toast.success("Priority updated");
+      // toast.success("Priority updated");
     } catch (error: any) {
       toast.error(error.message || "Failed to update priority");
     }
   };
 
-  const handleStatusUpdate = async (status: iIssueStatus) => {
+  const handleStatusUpdate = async (status: iIssueStatus) => {  
     try {
       const payload = {
         issue_id: data?.issue_id,
@@ -203,7 +203,7 @@ export default function SubIssueDetailView() {
       };
       await updateSubIssuesUri(Number(id), payload);
       setSelectedStatus(status);
-      toast.success("Status updated");
+      // toast.success("Status updated");
     } catch (error: any) {
       toast.error(error.message || "Failed to update status");
     }
@@ -213,13 +213,13 @@ export default function SubIssueDetailView() {
     try {
       const payload = {
         issue_id: data?.issue_id,
-        assigne_id: member?.id,
+        assignee_id: member?.id,
         workspace_id: currentWorkspace?.id,
         team_id: data?.team_id,
       };
       await updateSubIssuesUri(Number(id), payload);
       setSelectedMember(member);
-      toast.success("Member updated");
+      // toast.success("Member updated");
     } catch (error: any) {
       toast.error(error.message || "Failed to update status");
     }
@@ -235,7 +235,7 @@ export default function SubIssueDetailView() {
       };
       await updateSubIssuesUri(Number(id), payload);
       setSelectedProjects(project);
-      toast.success("Project updated");
+      // toast.success("Project updated");
     } catch (error: any) {
       toast.error(error.message || "Failed to update status");
     }
@@ -251,7 +251,7 @@ export default function SubIssueDetailView() {
       };
       await updateSubIssuesUri(Number(id), payload);
       setIssueName(issueName);
-      toast.success("Name updated");
+      // toast.success("Name updated");
     } catch (error: any) {
       toast.error(error.message || "Failed to update status");
     }
@@ -278,7 +278,7 @@ export default function SubIssueDetailView() {
       //   })
       // );
 
-      toast.success("Sub-Issue Label updated");
+      // toast.success("Sub-Issue Label updated");
     } catch (error) {
       setSelectedLabels(selectedLabels); // Error pe purani state revert karo
       toast.error("Failed to update issue labels");
@@ -295,7 +295,7 @@ export default function SubIssueDetailView() {
       };
       await updateSubIssuesUri(Number(id), payload);
       setStartDate(date);
-      toast.success("Date updated");
+      // toast.success("Date updated");
     } catch (error: any) {
       toast.error(error.message || "Failed to update status");
     }

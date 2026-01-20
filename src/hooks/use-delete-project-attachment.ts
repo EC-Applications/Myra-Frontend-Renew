@@ -18,7 +18,7 @@ export const useDeleteProjectAttachment = () => {
         projectId,
         attachmentIds
       );
-      return req;
+      return req.data;
     },
     onSuccess: (_data, variables) => {
       toast.success("Attachment deleted successfully");

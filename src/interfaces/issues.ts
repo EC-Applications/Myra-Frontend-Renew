@@ -58,7 +58,8 @@ export interface iIssues {
   milestones: iMilestone | null;
   labels: iLabel;
   assignee: iMember | null;
-  start_date? : string 
+  start_date? : string ;
+  type?: "issue" | "sub_issue" 
 }
 
 export interface iIussesDetail {
