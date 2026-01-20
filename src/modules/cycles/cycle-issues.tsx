@@ -291,7 +291,7 @@ const { "team-id": teamid } = useParams();
     fetchCycleDetail();
   }, [currentWorkspace?.slug, teamid, id, dispatch]);
 
-  
+  console.log(issueData, "CYCLE DETAIL")
   const groupedIssues: Record<string, iIssues[]> = Object.entries(
     issueData?.issues || {}
   ).reduce((acc, [statusName, issues]) => {

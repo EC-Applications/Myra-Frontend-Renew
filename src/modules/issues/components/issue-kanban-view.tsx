@@ -81,7 +81,7 @@ const getLabelColor = (label: string) => {
 
 const IssueKanbanView: FC<{ issuesData: any }> = ({ issuesData }) => {
   console.log("ISSUE DATA", issuesData);
-  const { "team-id": id } = useParams();
+  const { "team-id": id  } = useParams();
   const { currentWorkspace } = useUser();
   const navigate = useNavigate();
   const updateIssueStatus = useUpdateIssueHook();
@@ -239,9 +239,9 @@ const IssueKanbanView: FC<{ issuesData: any }> = ({ issuesData }) => {
         body: {
           status_id: statusId,
           workspace_id: currentWorkspace?.id,
-          team_id: Number(id),
+          team_id: activeIssue.team_id,
         },
-        teamId: Number(id),
+        teamId: activeIssue.team_id,
         workspaceId: Number(currentWorkspace?.id),
       });
       // const response = await updateIssuesUri(Number(activeIssue.id), {

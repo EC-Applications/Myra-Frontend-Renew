@@ -25,6 +25,10 @@ export const useUpdateIssueHook = () => {
       queryClient.invalidateQueries({
         queryKey: ["issues", variables.workspaceId, variables.teamId],
       });
+
+         queryClient.invalidateQueries({
+        queryKey: ["project-issue", variables.workspaceId],
+      });
     },
     onError: (error) => {
       toast.error(error.message || "Failed to update issue");
