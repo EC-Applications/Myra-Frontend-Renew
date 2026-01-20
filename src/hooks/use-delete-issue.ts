@@ -12,21 +12,26 @@ interface DeleteIssueVariables {
 // Hook
 export const useDeleteIssueHook = () => {
   const queryClient = useQueryClient();
-  
-  return useMutation<any,Error,DeleteIssueVariables>({
+
+  return useMutation<any, Error, DeleteIssueVariables>({
     mutationFn: async ({ issueId }) => {
       const res = await deleteIssueUri(issueId);
       return res.data;
     },
-    
+
     onSuccess: (data, variables) => {
-      
       queryClient.invalidateQueries({
         queryKey: ["issues", variables.workspaceId, variables.teamId],
       });
+      queryClient.invalidateQueries({
+        queryKey: ["project-issue"],
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["cycle-detail"],
+      });
       toast.success("Issue deleted successfully!");
     },
-    
+
     onError: (error) => {
       toast.error(error.message || "Failed to delete issue");
       console.error("Delete error:", error);

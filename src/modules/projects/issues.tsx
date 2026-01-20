@@ -280,11 +280,11 @@ const Issues = () => {
   }
   return (
     <>
-      <div className="flex items-center  justify-between px-4 py-3 p border dark:border-zinc-800">
-        <Button variant="outline" size="sm">
+      <div className="flex items-center  justify-end px-4 py-3 p border dark:border-zinc-800">
+        {/* <Button variant="outline" size="sm">
           <Filter className="h-4 w-4 mr-2" />
           Filter
-        </Button>
+        </Button> */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="outline" size="sm">

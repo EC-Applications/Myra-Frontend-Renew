@@ -26,8 +26,12 @@ export const useUpdateIssueHook = () => {
         queryKey: ["issues", variables.workspaceId, variables.teamId],
       });
 
-         queryClient.invalidateQueries({
+      queryClient.invalidateQueries({
         queryKey: ["project-issue", variables.workspaceId],
+      });
+
+      queryClient.invalidateQueries({
+        queryKey: ["cycle-detail"],
       });
     },
     onError: (error) => {

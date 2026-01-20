@@ -45,9 +45,8 @@ import { useDispatch, useSelector } from "react-redux";
 import { setCycleIssues } from "@/store/slices/cycle-issues.slice";
 import type { RootState } from "@/store/store";
 import { Badge } from "@/components/ui/badge";
+import { useCycleDetailHook } from "@/hooks/use-cycle-detail-hook";
 // import type { Cycle } from "@/interfaces/cycle.interface";
-
-
 
 const chartConfig = {
   scope: {
@@ -252,14 +251,20 @@ export default function Issues() {
   const [chartData, setChartData] = useState<iCycleListResponse>();
   const { currentWorkspace } = useUser();
   const [loading, setLoading] = useState(false);
-  const { "cycleId" : id } = useParams();
-const { "team-id": teamid } = useParams();
+  const { cycleId: id } = useParams();
+  const { "team-id": teamid } = useParams();
   console.log("cycle id", id);
   console.log("team id", teamid);
 
   // Redux
   const dispatch = useDispatch();
-  const issueData = useSelector((state: RootState) => state.cycleIssues);
+  // const issueData = useSelector((state: RootState) => state.cycleIssues);
+
+  const issueData = useCycleDetailHook(
+    currentWorkspace?.slug ?? "",
+    Number(teamid),
+    Number(id),
+  );
 
   useEffect(() => {
     const fetchCycleDetail = async () => {
@@ -268,7 +273,7 @@ const { "team-id": teamid } = useParams();
         const res = await cycleDetailUri(
           currentWorkspace?.slug ?? "",
           Number(teamid),
-          Number(id)
+          Number(id),
         );
         dispatch(setCycleIssues(res.data));
         console.log("cycle detail data", res.data);
@@ -276,7 +281,7 @@ const { "team-id": teamid } = useParams();
         const res2 = await cycleChartUri(
           currentWorkspace?.slug ?? "",
           Number(teamid),
-          Number(id)
+          Number(id),
         );
 
         console.log("CHART DATA", res2);
@@ -291,53 +296,58 @@ const { "team-id": teamid } = useParams();
     fetchCycleDetail();
   }, [currentWorkspace?.slug, teamid, id, dispatch]);
 
-  console.log(issueData, "CYCLE DETAIL")
+  console.log(issueData, "CYCLE DETAIL");
   const groupedIssues: Record<string, iIssues[]> = Object.entries(
-    issueData?.issues || {}
-  ).reduce((acc, [statusName, issues]) => {
-    // Type guard: ensure issues is an array
-    if (!Array.isArray(issues)) {
-      return acc;
-    }
-  
-    const statusSlug = statusName.toLowerCase().replace(/\s+/g, "-");
+    issueData?.data?.issues || {},
+  ).reduce(
+    (acc, [statusName, issues]) => {
+      // Type guard: ensure issues is an array
+      if (!Array.isArray(issues)) {
+        return acc;
+      }
 
-    acc[statusSlug] = (issues as CycleIssue[]).map((issue) => ({
-      id: issue.id,
-      key: issue.issue_key,
-      name: issue.name,
-      description: issue.description,
-      workspace_id: issue.workspace_id,
-      team_id: issue.team_id,
-      status_id: issue.status_id,
-      priority_id: issue.priority_id,
-      project_id: issue.project_id,
-      assignee_id: issue.assignee_id,
-      milestone_id: issue.milestone_id,
-      cycle: null,
-      due_date: issue.due_date,
-      is_recurring: issue.is_recurring,
-      recurring_first_due: issue.recurring_first_due,
-      recurring_repeats_every: issue.recurring_repeats_every,
-      recurring_type: issue.recurring_type,
-      external_link: issue.external_link,
-      customer_request: issue.customer_request,
-      sub_issue: null,
-      deleted_at: issue.deleted_at ?? null,
-      created_at: issue.created_at,
-      updated_at: issue.updated_at,
-      priority_detail: issue.priority_detail,
-      status: issue.status ? { ...issue.status, active: 1 } : null,
-      projects: null,
-      milestones: null,
-      labels: [] as any,
-      assignee: issue.assignee ? {
-        ...issue.assignee,
-        avatar: issue.assignee.avatar ?? undefined
-      } : null,
-    }));
-    return acc;
-  }, {} as Record<string, iIssues[]>);
+      const statusSlug = statusName.toLowerCase().replace(/\s+/g, "-");
+
+      acc[statusSlug] = (issues as CycleIssue[]).map((issue) => ({
+        id: issue.id,
+        key: issue.issue_key,
+        name: issue.name,
+        description: issue.description,
+        workspace_id: issue.workspace_id,
+        team_id: issue.team_id,
+        status_id: issue.status_id,
+        priority_id: issue.priority_id,
+        project_id: issue.project_id,
+        assignee_id: issue.assignee_id,
+        milestone_id: issue.milestone_id,
+        cycle: null,
+        due_date: issue.due_date,
+        is_recurring: issue.is_recurring,
+        recurring_first_due: issue.recurring_first_due,
+        recurring_repeats_every: issue.recurring_repeats_every,
+        recurring_type: issue.recurring_type,
+        external_link: issue.external_link,
+        customer_request: issue.customer_request,
+        sub_issue: null,
+        deleted_at: issue.deleted_at ?? null,
+        created_at: issue.created_at,
+        updated_at: issue.updated_at,
+        priority_detail: issue.priority_detail,
+        status: issue.status ? { ...issue.status, active: 1 } : null,
+        projects: null,
+        milestones: null,
+        labels: [] as any,
+        assignee: issue.assignee
+          ? {
+              ...issue.assignee,
+              avatar: issue.assignee.avatar ?? undefined,
+            }
+          : null,
+      }));
+      return acc;
+    },
+    {} as Record<string, iIssues[]>,
+  );
 
   console.log("setIssues called with:", groupedIssues);
 
@@ -361,7 +371,7 @@ const { "team-id": teamid } = useParams();
             className="mr-2 data-[orientation=vertical]:h-4"
           />
           <h1 className="text-foreground text-sm">
-            {issueData?.name || "Cycle"}
+            {issueData?.data?.name || "Cycle"}
           </h1>
         </div>
         <div className="flex items-center gap-2 px-4">
