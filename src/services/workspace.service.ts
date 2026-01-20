@@ -26,10 +26,17 @@ export const workspaceInvite = async (
   workspace: number,
   payload: iWorkspaceInviteRequest
 ) => {
+  const formData = new FormData();
+  formData.append("role", payload.role);
+
+  payload.emails.forEach((email) => {
+    formData.append("email[]", email);
+  });
+
   return await Axios.post<iResponse<iWorkspaceInviteResponse>>(
     `/api/workspaces/${slug}/${workspace}/invite`,
-    payload,
-    { responseType: "json" }
+    formData,
+    { headers: { "Content-Type": "multipart/form-data" } }
   ).then((res) => res.data);
 };
 
