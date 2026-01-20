@@ -9,11 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useUser } from "@/hooks/use-user";
 import type { DocumentItem, iProject } from "@/interfaces/project.interface";
 import type { iMember } from "@/interfaces/teams.interface";
-import {
-  deleteProjectAttachmentUri,
-  fetchProjectById,
-  projectDetailFetchUri,
-} from "@/services/project.service";
+import { useDeleteProjectAttachment } from "@/hooks/use-delete-project-attachment";
 import { updateProject } from "@/store/slices/project.slice";
 import type { RootState } from "@/store/store";
 
@@ -112,8 +108,11 @@ export default function Detail() {
   const [saving, setSaving] = useState(false);
   const [isDataLoaded, setIsDataLoaded] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
+  const descriptionTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const [isSavingDescription, setIsSavingDescription] = useState(false);
 
   const updateProjectMutation = useUpdateProjectHook();
+  const deleteAttachmentMutation = useDeleteProjectAttachment();
 
   // useEffect(() => {
   //   if (project && !isDataLoaded) {
@@ -195,6 +194,13 @@ export default function Detail() {
 
   // console.log("PROJECTN PRIORITY", priority);
 
+  // Initialize description from project data
+  useEffect(() => {
+    if (project?.description !== undefined) {
+      setDescription(project.description || "");
+    }
+  }, [project?.description]);
+
   useEffect(() => {
     const handleKeyDown = (e: any) => {
       if (e.key === "Escape") {
@@ -218,7 +224,7 @@ export default function Detail() {
   }, []);
 
   const handleUpdateName = async () => {
-   if (!project) return;
+    if (!project) return;
 
     setSaving(true);
     const originalName = project.name;
@@ -313,6 +319,43 @@ export default function Detail() {
       {
         onSettled: () => {
           setSaving(false);
+        },
+      },
+    );
+  };
+
+  const handleDescriptionChange = (value: string) => {
+    setDescription(value);
+
+    // Clear previous timeout
+    if (descriptionTimeoutRef.current) {
+      clearTimeout(descriptionTimeoutRef.current);
+    }
+
+    // Debounce API call - 700ms delay
+    descriptionTimeoutRef.current = setTimeout(() => {
+      handleUpdateDescription(value);
+    }, 700);
+  };
+
+  const handleUpdateDescription = async (desc: string) => {
+    if (!project) return;
+    if (desc === project.description) return;
+
+    setIsSavingDescription(true);
+
+    updateProjectMutation.mutate(
+      {
+        projectId: Number(id),
+        body: {
+          description: desc,
+          workspace_id: workpsace.currentWorkspace?.id,
+          team_id: project.teams?.map((x) => x.id as number) || [],
+        },
+      },
+      {
+        onSettled: () => {
+          setIsSavingDescription(false);
         },
       },
     );
@@ -553,38 +596,20 @@ export default function Detail() {
     );
   };
 
-  const handleDeleteAttachment = async (attachmentId: number) => {
-    const loadingToast = toast.loading("Deleting attachment...");
-
-    try {
-      await deleteProjectAttachmentUri(
-        workpsace.currentWorkspace?.id as number,
-        Number(id),
-        [attachmentId],
-      );
-
-      const response = await projectDetailFetchUri(Number(id));
-      toast.success("Attachment deleted successfully");
-      // setProject(response.data);
-    } catch (error) {
-      toast.error("Failed to delete attachment");
-    } finally {
-      toast.dismiss(loadingToast);
-    }
+  const handleDeleteAttachment = (attachmentId: number) => {
+    deleteAttachmentMutation.mutate({
+      workspaceId: workpsace.currentWorkspace?.id as number,
+      projectId: Number(id),
+      attachmentIds: [attachmentId],
+    });
   };
 
-  const handleDeleteMultipleAttachments = async (ids: number[]) => {
-    try {
-      await deleteProjectAttachmentUri(
-        Number(workpsace.currentWorkspace?.id),
-        Number(id),
-        ids,
-      );
-      const response = await projectDetailFetchUri(Number(id));
-      toast.success("Attachments deleted successfully");
-    } catch (error) {
-      toast.error("Failed to delete attachments");
-    }
+  const handleDeleteMultipleAttachments = (ids: number[]) => {
+    deleteAttachmentMutation.mutate({
+      workspaceId: workpsace.currentWorkspace?.id as number,
+      projectId: Number(id),
+      attachmentIds: ids,
+    });
   };
 
   const handleDownloadAttachment = (doc: any) => {
@@ -630,7 +655,7 @@ export default function Detail() {
                   e.currentTarget.blur();
                 }
               }}
-              disabled={saving}
+              disabled={false}
             />
 
             <Textarea
@@ -640,7 +665,7 @@ export default function Detail() {
               onChange={(e) => setShortSummary(e.target.value)}
               onBlur={handleUpdateSummary}
               className="md:text-lg border-0 px-0 shadow-none focus-visible:ring-0 dark:bg-transparent resize-none"
-              disabled={saving}
+              disabled={false}
             />
           </div>
         </div>
@@ -820,46 +845,18 @@ export default function Detail() {
           <h3 className="text-[15px] font-semibold  mb-3 text-muted-foreground">
             Description
           </h3>
-          <Textarea
-            placeholder=""
-            value={project?.description}
-            onChange={(e) => setDescription(e.target.value)}
-            className="min-h-36 md:text-lg border-0 px-3 shadow-none focus-visible:ring-0 dark:bg-transparent resize-none dark:text-white dark:placeholder:text-[#626366]"
-          />
-          <div className="flex items-center justify-end">
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              onClick={() => fileInputRef.current?.click()}
-              disabled={uploadingDocs}
-            >
-              <Paperclip className="h-4 w-4" />
-              {uploadingDocs && (
-                <span className="ml-2 text-xs">Uploading...</span>
-              )}
-            </Button>
-
-            <input
-              ref={fileInputRef}
-              type="file"
-              multiple
-              accept="image/*,.pdf,.doc,.docx,.xls,.xlsx"
-              className="hidden"
-              onChange={(e) => {
-                console.log("Input onChange triggered");
-                console.log("Files selected:", e.target.files);
-                console.log("Files count:", e.target.files?.length);
-                if (e.target.files && e.target.files.length > 0) {
-                  console.log("Calling handleDocumentUpload");
-                  handleDocumentUpload(e.target.files);
-                } else {
-                  console.log("No files selected");
-                }
-
-                e.target.value = "";
-              }}
+          <div className="relative">
+            <Textarea
+              placeholder="Add a description..."
+              value={description}
+              onChange={(e) => handleDescriptionChange(e.target.value)}
+              className="min-h-36 md:text-lg border-0 px-3 shadow-none focus-visible:ring-0 dark:bg-transparent resize-none dark:text-white dark:placeholder:text-[#626366]"
             />
+            {/* {isSavingDescription && (
+              <span className="absolute top-2 right-2 text-xs text-muted-foreground">
+                Saving...
+              </span>
+            )} */}
           </div>
 
           {(project?.documents ?? []).length > 0 ? (
@@ -927,6 +924,42 @@ export default function Detail() {
           ) : (
             <p className="text-sm text-muted-foreground">No documents</p>
           )}
+
+          <div className="flex items-center pt-1 justify-end">
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={uploadingDocs}
+            >
+              <Paperclip className="h-4 w-4" />
+              {uploadingDocs && (
+                <span className="ml-2 text-xs">Uploading...</span>
+              )}
+            </Button>
+
+            <input
+              ref={fileInputRef}
+              type="file"
+              multiple
+              accept="image/*,.pdf,.doc,.docx,.xls,.xlsx"
+              className="hidden"
+              onChange={(e) => {
+                console.log("Input onChange triggered");
+                console.log("Files selected:", e.target.files);
+                console.log("Files count:", e.target.files?.length);
+                if (e.target.files && e.target.files.length > 0) {
+                  console.log("Calling handleDocumentUpload");
+                  handleDocumentUpload(e.target.files);
+                } else {
+                  console.log("No files selected");
+                }
+
+                e.target.value = "";
+              }}
+            />
+          </div>
         </div>
 
         {/* Milestones */}

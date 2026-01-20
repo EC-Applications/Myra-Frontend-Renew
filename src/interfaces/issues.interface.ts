@@ -43,7 +43,7 @@ export interface iIssuesLabel {
 }
 
 export interface iCommentPayload {
-  commentable_type: "issue" | "sub-issue";
+  commentable_type: "issue" | "subissue";
   commentable_id: number;
   parent_id: number | null;
   body: String;
