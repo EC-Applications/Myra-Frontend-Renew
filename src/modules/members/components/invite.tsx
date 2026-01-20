@@ -10,7 +10,6 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useUser } from "@/hooks/use-user";
-import type { iResponse } from "@/interfaces/common.interface";
 import { inviteMemberInTeamUri } from "@/services/team.service";
 import { workspaceInvite } from "@/services/workspace.service";
 import { useFormik } from "formik";
@@ -64,36 +63,32 @@ const Invite: FC<InviteProps> = ({ refresh, teamId, teamName }) => {
       let emails = values.emails.split(",").map((email) => email.trim());
       emails = [...new Set(emails)];
 
-      const invitePromises = teamId
-        ?
-        emails.map((e) =>
-          inviteMemberInTeamUri(teamName || '', teamId, {
-            email: e,
-          })
-        )
-        : // Otherwise, invite to workspace
-        emails.map((e) =>
-          workspaceInvite(currentWorkspace!.slug, currentWorkspace!.id, {
-            email: e,
+      try {
+        if (teamId) {
+          // Team invite - multiple calls (assuming team API still expects single email)
+          const invitePromises = emails.map((e) =>
+            inviteMemberInTeamUri(teamName || '', teamId, {
+              email: e,
+            })
+          );
+          const res = await Promise.all(invitePromises);
+          toast.success(res[0]?.message);
+        } else {
+          // Workspace invite - single call with array
+          const res = await workspaceInvite(currentWorkspace!.slug, currentWorkspace!.id, {
+            emails,
             role: "member",
-          })
-        );
-
-      Promise.all(invitePromises)
-        .then(
-          (res) => {
-            toast.success(res[0]?.message);
-            refresh();
-          },
-          (er: iResponse<null>) => {
-            toast.warning(er.message);
-          }
-        )
-        .finally(() => {
-          resetForm();
-          setOpen(false);
-          setIsSubmitting(false);
-        });
+          });
+          toast.success(res.message);
+        }
+        refresh();
+      } catch (er: any) {
+        toast.warning(er.message || "Failed to send invites");
+      } finally {
+        resetForm();
+        setOpen(false);
+        setIsSubmitting(false);
+      }
     },
   });
 
