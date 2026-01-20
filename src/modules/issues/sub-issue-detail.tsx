@@ -16,7 +16,16 @@ import {
   updateSubIssuesUri,
 } from "@/services/sub-issues.service";
 import { format } from "date-fns";
-import { ArrowUp, Check, ChevronUp, Clock, MoreHorizontal, Paperclip, Reply } from "lucide-react";
+import {
+  ArrowUp,
+  Check,
+  ChevronUp,
+  Clock,
+  Download,
+  MoreHorizontal,
+  Paperclip,
+  Reply,
+} from "lucide-react";
 import type React from "react";
 import { useEffect, useRef, useState } from "react";
 import { useSelector } from "react-redux";
@@ -193,7 +202,7 @@ export default function SubIssueDetailView() {
     }
   };
 
-  const handleStatusUpdate = async (status: iIssueStatus) => {  
+  const handleStatusUpdate = async (status: iIssueStatus) => {
     try {
       const payload = {
         issue_id: data?.issue_id,
@@ -434,7 +443,6 @@ export default function SubIssueDetailView() {
     );
   };
 
-
   // REPLAYYYY COMMENT
 
   const handleReplySubmit = (commentId: number) => {
@@ -458,6 +466,15 @@ export default function SubIssueDetailView() {
         },
       },
     );
+  };
+
+  const handleDownloadAttachment = (doc: any) => {
+    const link = document.createElement("a");
+    link.href = doc.file_url;
+    link.download = doc.doc_name;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   };
 
   if (loading) {
@@ -622,19 +639,32 @@ export default function SubIssueDetailView() {
                       </div>
 
                       {isSelected && (
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleDeleteAttachment(Number(doc.id));
-                            setDocuments((prev) =>
-                              prev.filter((d) => d.id !== doc.id),
-                            );
-                            setSelectedId(null);
-                          }}
-                          className="absolute right-2 top-2 p-1 rounded hover:bg-destructive/10 text-destructive"
-                        >
-                          🗑️
-                        </button>
+                        <div className="absolute right-2 top-2 flex gap-1">
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDownloadAttachment(doc);
+                            }}
+                            className="p-1 rounded hover:bg-primary/10 text-primary"
+                            title="Download"
+                          >
+                            <Download className="h-5" />
+                          </button>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDeleteAttachment(Number(doc.id));
+                              setDocuments((prev) =>
+                                prev.filter((d) => d.id !== doc.id),
+                              );
+                              setSelectedId(null);
+                            }}
+                            className="p-1 rounded hover:bg-destructive/10 text-destructive"
+                            title="Delete"
+                          >
+                            🗑️
+                          </button>
+                        </div>
                       )}
                     </div>
                   );
@@ -942,7 +972,7 @@ export default function SubIssueDetailView() {
                     className="border-0 resize-none focus-visible:ring-0 dark:bg-transparent p-3 dark:placeholder:font-semibold font-semibold"
                     rows={3}
                   />
-                <div className="flex items-center justify-end p-2">
+                  <div className="flex items-center justify-end p-2">
                     {/* <Button variant="ghost" size="sm" type="button">
                       <Paperclip className="h-4 w-4" />
                     </Button> */}
