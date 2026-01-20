@@ -308,6 +308,7 @@ export default function Create() {
               </Button>
 
               <Button
+              variant="custom"
                 className={`font-medium cursor-pointer ${
                   loading
                     ? "bg-muted text-muted-foreground"

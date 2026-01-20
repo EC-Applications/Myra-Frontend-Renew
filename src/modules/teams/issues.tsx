@@ -24,6 +24,7 @@ import {
   IssueFilterDropdown,
   type ProjectFilters,
 } from "@/components/issue-filter-dropdown";
+import { useGetIssuesHook } from "@/hooks/use-get-issues";
 
 export default function Issues() {
   const { currentWorkspace } = useUser();
@@ -32,24 +33,28 @@ export default function Issues() {
   const dispatch = useDispatch();
 
   const [loading, setLoading] = useState(false);
+  const { data: rawIssues, isLoading } = useGetIssuesHook(
+    currentWorkspace!.id,
+    Number(teamId),
+  );
 
-  useEffect(() => {
-    if (!teamId) return;
-    console.log(" Fetching issues for teamId:", teamId);
-    console.log(" Workspace ID:", currentWorkspace?.id);
-    setLoading(true);
+  // useEffect(() => {
+  //   if (!teamId) return;
+  //   console.log(" Fetching issues for teamId:", teamId);
+  //   console.log(" Workspace ID:", currentWorkspace?.id);
+  //   setLoading(true);
 
-    fetchIssuesUri(currentWorkspace!.id, Number(teamId))
-      .then((res) => {
-        dispatch(setIssues(res.data));
-      })
-      .catch((err) => {
-        console.error(err);
-      })
-      .finally(() => {
-        setLoading(false);
-      });
-  }, [teamId, currentWorkspace, dispatch]);
+  //   fetchIssuesUri(currentWorkspace!.id, Number(teamId))
+  //     .then((res) => {
+  //       dispatch(setIssues(res.data));
+  //     })
+  //     .catch((err) => {
+  //       console.error(err);
+  //     })
+  //     .finally(() => {
+  //       setLoading(false);
+  //     });
+  // }, [teamId, currentWorkspace, dispatch]);
 
   const [view, setView] = useState(0);
   const [activeFilters, setActiveFilters] = useState<ProjectFilters>({
@@ -60,12 +65,12 @@ export default function Issues() {
     labels: [],
   });
 
-  const rawIssues = useSelector((state: any) => state.issues);
+  // const rawIssues = useSelector((state: any) => state.issues);
   const statusList = useSelector((state: any) => state.issuesStatus) ?? [];
   console.log("ROW ISSUES", rawIssues);
   console.log("STATUS LIST", statusList);
 
-  const mappedIssues = Object.entries(rawIssues).reduce(
+  const mappedIssues = Object.entries(rawIssues ?? []).reduce(
     (acc: Record<string, any[]>, [status, issues]: any) => {
       const mappedStatus = status.toLowerCase().replace(/\s+/g, "-");
 
@@ -75,11 +80,11 @@ export default function Issues() {
         name: issue.name,
         description: issue.description,
         priority: issue.priority_detail?.name?.toLowerCase() || "low",
-        priority_id: issue.priority_id, 
-        status_id: issue.status_id, 
+        priority_id: issue.priority_id,
+        status_id: issue.status_id,
         // labels: issue.labels?.map((label: any) => label.name || label) || [],
         projects: issue.projects?.name || "No Project",
-        due_date: issue.due_date || null, 
+        due_date: issue.due_date || null,
         due_date_formatted: issue.due_date
           ? new Date(issue.due_date).toLocaleDateString("en-US", {
               month: "short",
@@ -94,12 +99,14 @@ export default function Issues() {
         status: status,
         sub_issues: issue.sub_issues,
         team_id: issue.team_id,
+        type: issue.type,
+        issue_id : issue.issue_id
       }));
 
       acc[mappedStatus] = mappedIssuesList;
       return acc;
     },
-    {}
+    {},
   );
 
   const finalIssues = useMemo(() => {
@@ -163,7 +170,7 @@ export default function Issues() {
         if (activeFilters.labels.length > 0) {
           const issueLabels = issue.labels || [];
           const hasMatchingLabel = activeFilters.labels.some((label) =>
-            issueLabels.includes(label)
+            issueLabels.includes(label),
           );
           if (!hasMatchingLabel) {
             return false;
@@ -177,7 +184,7 @@ export default function Issues() {
     return filtered;
   }, [finalIssues, activeFilters]);
 
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="flex items-center justify-center h-full min-h-[300px]">
         <div className="h-6 w-6 animate-spin rounded-full border-2 border-muted-foreground border-t-transparent" />

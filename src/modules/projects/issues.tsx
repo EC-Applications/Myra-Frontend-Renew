@@ -19,6 +19,7 @@ import { fetchIssuesUri } from "@/services/issues.service";
 import { setIssues } from "@/store/slices/issues.slice";
 import type { ProjectFilters } from "@/components/filter-dropdown";
 import { fetchProjectIssueUri } from "@/services/project.service";
+import { useProjectIssuesHook } from "@/hooks/use-project-issues-hook";
 
 const mockIssues: Issue[] = [
   {
@@ -120,6 +121,7 @@ const Issues = () => {
   console.log("PROJECTID ID", projectId);
   const [showNewIssueDialog, setShowNewIssueDialog] = useState(false);
   const dispatch = useDispatch();
+  const {data : rawIssues}  = useProjectIssuesHook(Number(currentWorkspace?.id), Number(projectId));
 
   const [loading, setLoading] = useState(false);
 
@@ -152,12 +154,12 @@ const Issues = () => {
     labels: [],
   });
 
-  const rawIssues = useSelector((state: any) => state.issues);
+  // const rawIssues = useSelector((state: any) => state.issues);
   const statusList = useSelector((state: any) => state.issuesStatus) ?? [];
   console.log("ROW ISSUES", rawIssues);
   console.log("STATUS LIST", statusList);
 
-  const mappedIssues = Object.entries(rawIssues).reduce(
+  const mappedIssues = Object.entries(rawIssues ?? []).reduce(
     (acc: Record<string, any[]>, [status, issues]: any) => {
       const mappedStatus = status.toLowerCase().replace(/\s+/g, "-");
 
@@ -278,11 +280,11 @@ const Issues = () => {
   }
   return (
     <>
-      <div className="flex items-center  justify-between px-4 py-3 p border dark:border-zinc-800">
-        <Button variant="outline" size="sm">
+      <div className="flex items-center  justify-end px-4 py-3 p border dark:border-zinc-800">
+        {/* <Button variant="outline" size="sm">
           <Filter className="h-4 w-4 mr-2" />
           Filter
-        </Button>
+        </Button> */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="outline" size="sm">

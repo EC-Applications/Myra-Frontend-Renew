@@ -30,6 +30,7 @@ const subIssueSchema = yup.object({
     .string()
     .required("Title is required")
     .min(3, "Title must be at least 3 characters"),
+  team_id: yup.number().required("Team is required"),
   description: yup.string(),
   status_id: yup.number().required("Status is required"),
   priority_id: yup.number(),
@@ -51,6 +52,7 @@ export default function SubIssueForm({
   onCancel,
 }: SubIssueFormProps) {
   const { id } = useParams();
+  console.log("ISSUES ID",id)
   const { currentWorkspace } = useUser();
 
   const status = useSelector((state: RootState) => state.issuesStatus);
@@ -96,7 +98,7 @@ export default function SubIssueForm({
 
       toast.dismiss(loadingToast);
       toast.success(response.message || "Sub-issue created successfully");
-      const res = await issueDetailUri(Number(id));
+      const res = await issueDetailUri(Number(parentIssueId));
       resetForm();
       onSuccess?.(res.data);
     } catch (e: any) {

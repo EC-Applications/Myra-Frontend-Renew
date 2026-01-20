@@ -174,6 +174,12 @@ export const updateProjectUri = async (
     });
   }
 
+  if(body.members_id && Array.isArray(body.members_id)){
+    body.members_id.forEach((id)=>{
+      formData.append("members[]", id.toString())
+    })
+  }
+
   if (body.labels && Array.isArray(body.labels)) {
     body.labels.forEach((labelId) => {
       formData.append("label_id[]", labelId.toString());

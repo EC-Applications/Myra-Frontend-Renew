@@ -9,11 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useUser } from "@/hooks/use-user";
 import type { DocumentItem, iProject } from "@/interfaces/project.interface";
 import type { iMember } from "@/interfaces/teams.interface";
-import {
-  deleteProjectAttachmentUri,
-  fetchProjectById,
-  projectDetailFetchUri,
-} from "@/services/project.service";
+import { useDeleteProjectAttachment } from "@/hooks/use-delete-project-attachment";
 import { updateProject } from "@/store/slices/project.slice";
 import type { RootState } from "@/store/store";
 
@@ -32,8 +28,9 @@ import { ProjectFormStatus } from "./components/status-picker";
 import { te } from "date-fns/locale";
 import type { iLabel } from "@/interfaces/label.interface";
 import { cn } from "@/lib/utils";
-import { useProjectDetail } from "@/hooks/use-project-detail";
+// import { useProjectDetail } from "@/hooks/use-project-detail";
 import { useUpdateProjectHook } from "@/hooks/use-update-project";
+import { useProjectDetail } from "@/hooks/use-project-detail";
 
 export default function Detail() {
   const { id } = useParams();
@@ -45,7 +42,7 @@ export default function Detail() {
   const workspaceMember = useSelector((state: any) => state.workspace);
   const members = useMemo(
     () => (Array.isArray(workspaceMember) ? workspaceMember : []),
-    [workspaceMember]
+    [workspaceMember],
   );
 
   const labelState = useSelector((state: any) => state.label);
@@ -83,6 +80,8 @@ export default function Detail() {
   const [isFocused, setIsFocused] = useState(false);
   const [projectName, setProjectName] = useState("");
   const [shortSummary, setShortSummary] = useState("");
+  const [description, setDescription] = useState("");
+
   const [priority, setPriority] = useState<number | undefined>();
   const [selectedStatus, setSelectedStatus] = useState(statusList?.[0] ?? null);
   const [selectedLead, setSelectedLead] = useState<iMember | undefined>();
@@ -91,7 +90,7 @@ export default function Detail() {
   const [selectedLabels, setSelectedLabels] = useState<any[]>([]);
   const [documents, setDocuments] = useState<DocumentItem[]>([]);
   const [expandedMilestones, setExpandedMilestones] = useState<Set<string>>(
-    new Set()
+    new Set(),
   );
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [milestones, setMilestones] = useState<any[]>([]);
@@ -109,8 +108,11 @@ export default function Detail() {
   const [saving, setSaving] = useState(false);
   const [isDataLoaded, setIsDataLoaded] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
+  const descriptionTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const [isSavingDescription, setIsSavingDescription] = useState(false);
 
   const updateProjectMutation = useUpdateProjectHook();
+  const deleteAttachmentMutation = useDeleteProjectAttachment();
 
   // useEffect(() => {
   //   if (project && !isDataLoaded) {
@@ -192,6 +194,13 @@ export default function Detail() {
 
   // console.log("PROJECTN PRIORITY", priority);
 
+  // Initialize description from project data
+  useEffect(() => {
+    if (project?.description !== undefined) {
+      setDescription(project.description || "");
+    }
+  }, [project?.description]);
+
   useEffect(() => {
     const handleKeyDown = (e: any) => {
       if (e.key === "Escape") {
@@ -215,8 +224,7 @@ export default function Detail() {
   }, []);
 
   const handleUpdateName = async () => {
-    if (!projectName.trim() || !project) return;
-    if (projectName === project.name) return;
+    if (!project) return;
 
     setSaving(true);
     const originalName = project.name;
@@ -225,7 +233,7 @@ export default function Detail() {
       updateProject({
         projectId: Number(id),
         data: { name: projectName },
-      })
+      }),
     );
 
     updateProjectMutation.mutate(
@@ -243,13 +251,13 @@ export default function Detail() {
             updateProject({
               projectId: Number(id),
               data: { name: originalName },
-            })
+            }),
           );
         },
         onSettled: () => {
           setSaving(false);
         },
-      }
+      },
     );
   };
 
@@ -283,13 +291,13 @@ export default function Detail() {
             updateProject({
               projectId: Number(id),
               data: { labels: previousLabels.map((x) => x.id) },
-            })
+            }),
           );
         },
         onSettled: () => {
           setSaving(false);
         },
-      }
+      },
     );
   };
 
@@ -312,7 +320,44 @@ export default function Detail() {
         onSettled: () => {
           setSaving(false);
         },
-      }
+      },
+    );
+  };
+
+  const handleDescriptionChange = (value: string) => {
+    setDescription(value);
+
+    // Clear previous timeout
+    if (descriptionTimeoutRef.current) {
+      clearTimeout(descriptionTimeoutRef.current);
+    }
+
+    // Debounce API call - 700ms delay
+    descriptionTimeoutRef.current = setTimeout(() => {
+      handleUpdateDescription(value);
+    }, 700);
+  };
+
+  const handleUpdateDescription = async (desc: string) => {
+    if (!project) return;
+    if (desc === project.description) return;
+
+    setIsSavingDescription(true);
+
+    updateProjectMutation.mutate(
+      {
+        projectId: Number(id),
+        body: {
+          description: desc,
+          workspace_id: workpsace.currentWorkspace?.id,
+          team_id: project.teams?.map((x) => x.id as number) || [],
+        },
+      },
+      {
+        onSettled: () => {
+          setIsSavingDescription(false);
+        },
+      },
     );
   };
 
@@ -324,7 +369,7 @@ export default function Detail() {
     setSaving(true);
 
     const priorityObj = priorityData.priority?.find(
-      (p: any) => p.id === newPriority
+      (p: any) => p.id === newPriority,
     );
 
     if (!priorityObj) {
@@ -337,7 +382,7 @@ export default function Detail() {
       updateProject({
         projectId: Number(id),
         data: { priority: priorityObj.id },
-      })
+      }),
     );
 
     updateProjectMutation.mutate(
@@ -353,7 +398,7 @@ export default function Detail() {
         onSettled: () => {
           setSaving(false);
         },
-      }
+      },
     );
   };
 
@@ -368,7 +413,7 @@ export default function Detail() {
       updateProject({
         projectId: Number(id),
         data: { status: newStatus.name.toLowerCase() },
-      })
+      }),
     );
     console.log("IDDDDD", newStatus.id);
 
@@ -385,7 +430,7 @@ export default function Detail() {
         onSettled: () => {
           setSaving(false);
         },
-      }
+      },
     );
   };
 
@@ -400,7 +445,7 @@ export default function Detail() {
       updateProject({
         projectId: Number(id),
         data: { lead_id: newLead.id },
-      })
+      }),
     );
 
     updateProjectMutation.mutate(
@@ -416,7 +461,7 @@ export default function Detail() {
         onSettled: () => {
           setSaving(false);
         },
-      }
+      },
     );
   };
 
@@ -431,7 +476,7 @@ export default function Detail() {
       updateProject({
         projectId: Number(id),
         data: { start_date: newDate.toISOString().split("T")[0] },
-      })
+      }),
     );
 
     updateProjectMutation.mutate(
@@ -447,7 +492,7 @@ export default function Detail() {
         onSettled: () => {
           setSaving(false);
         },
-      }
+      },
     );
   };
 
@@ -462,7 +507,7 @@ export default function Detail() {
       updateProject({
         projectId: Number(id),
         data: { target_date: newDate.toISOString().split("T")[0] },
-      })
+      }),
     );
 
     updateProjectMutation.mutate(
@@ -478,7 +523,7 @@ export default function Detail() {
         onSettled: () => {
           setSaving(false);
         },
-      }
+      },
     );
   };
 
@@ -510,7 +555,7 @@ export default function Detail() {
         onSettled: () => {
           setUploadingDocs(false);
         },
-      }
+      },
     );
   };
 
@@ -547,42 +592,24 @@ export default function Detail() {
         onSettled: () => {
           setUploadingIcon(false);
         },
-      }
+      },
     );
   };
 
-  const handleDeleteAttachment = async (attachmentId: number) => {
-    const loadingToast = toast.loading("Deleting attachment...");
-
-    try {
-      await deleteProjectAttachmentUri(
-        workpsace.currentWorkspace?.id as number,
-        Number(id),
-        [attachmentId]
-      );
-
-      const response = await projectDetailFetchUri(Number(id));
-      toast.success("Attachment deleted successfully");
-      // setProject(response.data);
-    } catch (error) {
-      toast.error("Failed to delete attachment");
-    } finally {
-      toast.dismiss(loadingToast);
-    }
+  const handleDeleteAttachment = (attachmentId: number) => {
+    deleteAttachmentMutation.mutate({
+      workspaceId: workpsace.currentWorkspace?.id as number,
+      projectId: Number(id),
+      attachmentIds: [attachmentId],
+    });
   };
 
-  const handleDeleteMultipleAttachments = async (ids: number[]) => {
-    try {
-      await deleteProjectAttachmentUri(
-        Number(workpsace.currentWorkspace?.id),
-        Number(id),
-        ids
-      );
-      const response = await projectDetailFetchUri(Number(id));
-      toast.success("Attachments deleted successfully");
-    } catch (error) {
-      toast.error("Failed to delete attachments");
-    }
+  const handleDeleteMultipleAttachments = (ids: number[]) => {
+    deleteAttachmentMutation.mutate({
+      workspaceId: workpsace.currentWorkspace?.id as number,
+      projectId: Number(id),
+      attachmentIds: ids,
+    });
   };
 
   const handleDownloadAttachment = (doc: any) => {
@@ -606,11 +633,15 @@ export default function Detail() {
 
   return (
     <div className="w-full overflow-y-auto flex justify-center h-[calc(100vh_-_80px)] dark:bg-[#17181b]  dark:border-zinc-800">
-      <div className="flex-1 px-6 py-6 max-w-3xl">
+      <div className="flex-1 py-10 max-w-3xl">
         {/* Project Header */}
         <div className="mb-2">
           <div className="flex items-center gap-3 mb-2">
-            <IconPicker value={projectIcon} onChange={() => {}}  variant="compact"  />
+            <IconPicker
+              value={projectIcon}
+              onChange={() => {}}
+              variant="compact"
+            />
           </div>
           <div className="space-y-2">
             <Input
@@ -624,7 +655,7 @@ export default function Detail() {
                   e.currentTarget.blur();
                 }
               }}
-              disabled={saving}
+              disabled={false}
             />
 
             <Textarea
@@ -634,7 +665,7 @@ export default function Detail() {
               onChange={(e) => setShortSummary(e.target.value)}
               onBlur={handleUpdateSummary}
               className="md:text-lg border-0 px-0 shadow-none focus-visible:ring-0 dark:bg-transparent resize-none"
-              disabled={saving}
+              disabled={false}
             />
           </div>
         </div>
@@ -651,7 +682,6 @@ export default function Detail() {
               onChange={handleUpdateStatus}
               className="border-0 "
               buttonVarient="dark"
-              
             />
             <PriorityPicker
               value={Number(project?.priority?.id)}
@@ -665,7 +695,6 @@ export default function Detail() {
               onChange={handleUpdateLead}
               className="border-0 "
               buttonVarient="dark"
-              
             />
 
             <ProjectDatePicker
@@ -677,7 +706,7 @@ export default function Detail() {
               className="border-0 "
               buttonVarient="dark"
             />
-            <ArrowRight  />
+            <ArrowRight />
             <ProjectDatePicker
               label="End date"
               value={
@@ -816,13 +845,87 @@ export default function Detail() {
           <h3 className="text-[15px] font-semibold  mb-3 text-muted-foreground">
             Description
           </h3>
-          <Textarea
-            placeholder=""
-            value={shortSummary}
-            onChange={(e) => setShortSummary(e.target.value)}
-            className="min-h-36 md:text-lg border-0 px-3 shadow-none focus-visible:ring-0 dark:bg-transparent resize-none dark:text-white dark:placeholder:text-[#626366]"
-          />
-          <div className="flex items-center justify-between">
+          <div className="relative">
+            <Textarea
+              placeholder="Add a description..."
+              value={description}
+              onChange={(e) => handleDescriptionChange(e.target.value)}
+              className="min-h-36 md:text-lg border-0 px-3 shadow-none focus-visible:ring-0 dark:bg-transparent resize-none dark:text-white dark:placeholder:text-[#626366]"
+            />
+            {/* {isSavingDescription && (
+              <span className="absolute top-2 right-2 text-xs text-muted-foreground">
+                Saving...
+              </span>
+            )} */}
+          </div>
+
+          {(project?.documents ?? []).length > 0 ? (
+            <div className="space-y-2">
+              {project?.documents.map((doc) => {
+                const isSelected = selectedId === doc.id;
+
+                return (
+                  <div
+                    key={doc.id}
+                    onClick={() => setSelectedId(doc.id)}
+                    className={cn(
+                      "relative flex items-center gap-3 p-3 rounded-md border cursor-pointer transition-all",
+                      isSelected
+                        ? "border-blue-500 bg-blue-500/5"
+                        : "border-border hover:bg-muted/30",
+                    )}
+                  >
+                    <div className="w-8 h-8 bg-muted rounded flex items-center justify-center">
+                      {getFileIcon(doc.doc_type)}
+                    </div>
+
+                    <div className="flex-1">
+                      <p className="text-sm font-medium">{doc.doc_name}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {new Date(doc.created_at).toLocaleDateString()}
+                      </p>
+                    </div>
+
+                    {isSelected && (
+                      <div className="absolute right-2 top-2 flex gap-1">
+                        {/* Download */}
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDownloadAttachment(doc);
+                          }}
+                          className="p-1  rounded hover:bg-primary/10 text-primary"
+                          title="Download"
+                        >
+                          <Download className="h-5" />
+                        </button>
+
+                        {/* Delete */}
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDeleteAttachment(Number(doc.id));
+                            setDocuments((prev) =>
+                              prev.filter((d) => d.id !== doc.id),
+                            );
+                            setSelectedId(null);
+                          }}
+                          className="p-1 rounded hover:bg-destructive/10 text-destructive"
+                          title="Delete"
+                        >
+                          🗑️
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          ) : (
+            <p className="text-sm text-muted-foreground">No documents</p>
+          )}
+
+          <div className="flex items-center pt-1 justify-end">
             <Button
               type="button"
               variant="ghost"
@@ -857,72 +960,6 @@ export default function Detail() {
               }}
             />
           </div>
-
-          {documents.length > 0 ? (
-            <div className="space-y-2">
-              {documents.map((doc) => {
-                const isSelected = selectedId === doc.id;
-
-                return (
-                  <div
-                    key={doc.id}
-                    onClick={() => setSelectedId(doc.id)}
-                    className={cn(
-                      "relative flex items-center gap-3 p-3 rounded-md border cursor-pointer transition-all",
-                      isSelected
-                        ? "border-blue-500 bg-blue-500/5"
-                        : "border-border hover:bg-muted/30"
-                    )}
-                  >
-                    <div className="w-8 h-8 bg-muted rounded flex items-center justify-center">
-                      {getFileIcon(doc.doc_type)}
-                    </div>
-
-                    <div className="flex-1">
-                      <p className="text-sm font-medium">{doc.doc_name}</p>
-                      <p className="text-xs text-muted-foreground">
-                        {new Date(doc.created_at).toLocaleDateString()}
-                      </p>
-                    </div>
-
-                    {isSelected && (
-                      <div className="absolute right-2 top-2 flex gap-1">
-                        {/* Download */}
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleDownloadAttachment(doc);
-                          }}
-                          className="p-1  rounded hover:bg-primary/10 text-primary"
-                          title="Download"
-                        >
-                          <Download className="h-5" />
-                        </button>
-
-                        {/* Delete */}
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleDeleteAttachment(Number(doc.id));
-                            setDocuments((prev) =>
-                              prev.filter((d) => d.id !== doc.id)
-                            );
-                            setSelectedId(null);
-                          }}
-                          className="p-1 rounded hover:bg-destructive/10 text-destructive"
-                          title="Delete"
-                        >
-                          🗑️
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-          ) : (
-            <p className="text-sm text-muted-foreground">No documents</p>
-          )}
         </div>
 
         {/* Milestones */}
@@ -985,7 +1022,7 @@ export default function Detail() {
             <MilestoneSection
               mode="update"
               project={project}
-              initialMilestones={milestones}
+              initialMilestones={project?.milestones}
               workspaceId={workpsace.currentWorkspace?.id}
             />
           </div>

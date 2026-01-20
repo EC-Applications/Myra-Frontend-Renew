@@ -16,7 +16,7 @@ import {
   updateSubIssuesUri,
 } from "@/services/sub-issues.service";
 import { format } from "date-fns";
-import { ChevronUp, Clock, Paperclip } from "lucide-react";
+import { ArrowUp, Check, ChevronUp, Clock, MoreHorizontal, Paperclip, Reply } from "lucide-react";
 import type React from "react";
 import { useEffect, useRef, useState } from "react";
 import { useSelector } from "react-redux";
@@ -32,6 +32,10 @@ import { SingleMemberPicker } from "../projects/components/single-member-picker"
 import { IssuesStatusPicker } from "./components/issues-status-picker";
 import { ProjectPicker } from "./components/project-picker";
 import { IconPicker } from "../projects/components/icon-picker";
+import { Form, Formik } from "formik";
+import { usePostCommentHook } from "@/hooks/use-post-comments";
+import { useGetComments } from "@/hooks/use-get-comments";
+import { formatCommentTime } from "@/components/date-converter";
 
 interface ActivityItem {
   id: string;
@@ -53,7 +57,7 @@ export default function SubIssueDetailView() {
   const status = useSelector((state: any) => state.issuesStatus);
   const statusList = status ?? [];
   const [selectedStatus, setSelectedStatus] = useState<iIssueStatus | null>(
-    null
+    null,
   );
   const [priorityId, setPriorityId] = useState<number | undefined>();
   const [issueName, setIssueName] = useState("");
@@ -107,7 +111,7 @@ export default function SubIssueDetailView() {
     if (data?.status) {
       setSelectedStatus(data.status);
     }
-    console.log("data ka status", data?.status)
+    console.log("data ka status", data?.status);
     if (data?.priority_id) {
       setPriorityId(data?.priority_id);
     }
@@ -132,11 +136,21 @@ export default function SubIssueDetailView() {
 
   console.log("ISSUES", issues);
 
-  const [subIssuesExpanded, setSubIssuesExpanded] = useState(true);
-  const [comment, setComment] = useState("");
-  const [showAddSubIssue, setShowAddSubIssue] = useState(false);
-  const [newSubIssueTitle, setNewSubIssueTitle] = useState("");
-  const [newSubIssueDescription, setNewSubIssueDescription] = useState("");
+  // const [subIssuesExpanded, setSubIssuesExpanded] = useState(true);
+  // const [comment, setComment] = useState("");
+  // const [showAddSubIssue, setShowAddSubIssue] = useState(false);
+  // const [newSubIssueTitle, setNewSubIssueTitle] = useState("");
+  // const [newSubIssueDescription, setNewSubIssueDescription] = useState("");
+
+  const [repOpen, setRepOpen] = useState<number | null>(null);
+  const [replyText, setReplyText] = useState<Record<number, string>>({});
+
+  // POST COMMENT
+  const postComment = usePostCommentHook();
+  const { data: comments } = useGetComments(
+    currentWorkspace?.slug ?? "",
+    Number(id),
+  );
 
   const activities: ActivityItem[] = [
     {
@@ -173,13 +187,13 @@ export default function SubIssueDetailView() {
 
       await updateSubIssuesUri(Number(id), payload);
       setPriorityId(issuid);
-      toast.success("Priority updated");
+      // toast.success("Priority updated");
     } catch (error: any) {
       toast.error(error.message || "Failed to update priority");
     }
   };
 
-  const handleStatusUpdate = async (status: iIssueStatus) => {
+  const handleStatusUpdate = async (status: iIssueStatus) => {  
     try {
       const payload = {
         issue_id: data?.issue_id,
@@ -189,7 +203,7 @@ export default function SubIssueDetailView() {
       };
       await updateSubIssuesUri(Number(id), payload);
       setSelectedStatus(status);
-      toast.success("Status updated");
+      // toast.success("Status updated");
     } catch (error: any) {
       toast.error(error.message || "Failed to update status");
     }
@@ -199,13 +213,13 @@ export default function SubIssueDetailView() {
     try {
       const payload = {
         issue_id: data?.issue_id,
-        assigne_id: member?.id,
+        assignee_id: member?.id,
         workspace_id: currentWorkspace?.id,
         team_id: data?.team_id,
       };
       await updateSubIssuesUri(Number(id), payload);
       setSelectedMember(member);
-      toast.success("Member updated");
+      // toast.success("Member updated");
     } catch (error: any) {
       toast.error(error.message || "Failed to update status");
     }
@@ -221,7 +235,7 @@ export default function SubIssueDetailView() {
       };
       await updateSubIssuesUri(Number(id), payload);
       setSelectedProjects(project);
-      toast.success("Project updated");
+      // toast.success("Project updated");
     } catch (error: any) {
       toast.error(error.message || "Failed to update status");
     }
@@ -237,7 +251,7 @@ export default function SubIssueDetailView() {
       };
       await updateSubIssuesUri(Number(id), payload);
       setIssueName(issueName);
-      toast.success("Name updated");
+      // toast.success("Name updated");
     } catch (error: any) {
       toast.error(error.message || "Failed to update status");
     }
@@ -264,7 +278,7 @@ export default function SubIssueDetailView() {
       //   })
       // );
 
-      toast.success("Sub-Issue Label updated");
+      // toast.success("Sub-Issue Label updated");
     } catch (error) {
       setSelectedLabels(selectedLabels); // Error pe purani state revert karo
       toast.error("Failed to update issue labels");
@@ -281,7 +295,7 @@ export default function SubIssueDetailView() {
       };
       await updateSubIssuesUri(Number(id), payload);
       setStartDate(date);
-      toast.success("Date updated");
+      // toast.success("Date updated");
     } catch (error: any) {
       toast.error(error.message || "Failed to update status");
     }
@@ -348,7 +362,7 @@ export default function SubIssueDetailView() {
         Number(id),
         payload,
         // undefined,
-        filesArray
+        filesArray,
       );
 
       console.log("Upload successful, fetching updated data");
@@ -364,7 +378,7 @@ export default function SubIssueDetailView() {
       console.error("Upload error:", error);
       toast.dismiss(loadingToast);
       toast.error(
-        error?.response?.data?.message || "Failed to upload documents"
+        error?.response?.data?.message || "Failed to upload documents",
       );
     } finally {
       setUploadingDocs(false);
@@ -378,7 +392,7 @@ export default function SubIssueDetailView() {
       await deleteSubIssueAttachmentUri(
         currentWorkspace?.id as number,
         Number(id),
-        [attachmentId]
+        [attachmentId],
       );
 
       const response = await fetchSubissuesDetailUri(Number(id));
@@ -389,6 +403,61 @@ export default function SubIssueDetailView() {
     } finally {
       toast.dismiss(loadingToast);
     }
+  };
+
+  // COMMENT BOX
+  const initialVal = {
+    comment_body: "",
+  };
+
+  const handleCommentSubmit = (
+    values: typeof initialVal,
+    { resetForm }: { resetForm: () => void },
+  ) => {
+    if (!values.comment_body.trim()) return;
+
+    postComment.mutate(
+      {
+        issueId: Number(id),
+        body: {
+          body: values.comment_body,
+          commentable_id: Number(id),
+          commentable_type: "subissue",
+          parent_id: null,
+        },
+      },
+      {
+        onSuccess: () => {
+          resetForm();
+        },
+      },
+    );
+  };
+
+
+  // REPLAYYYY COMMENT
+
+  const handleReplySubmit = (commentId: number) => {
+    const text = replyText[commentId]?.trim();
+    if (!text) return;
+
+    postComment.mutate(
+      {
+        issueId: Number(id),
+        body: {
+          body: text,
+          commentable_id: Number(id),
+          commentable_type: "subissue",
+          parent_id: commentId,
+        },
+      },
+      {
+        onSuccess: () => {
+          setReplyText((prev) => ({ ...prev, [commentId]: "" }));
+          setRepOpen(null);
+        },
+      },
+    );
   };
 
   if (loading) {
@@ -494,7 +563,7 @@ export default function SubIssueDetailView() {
               <div className="flex items-center gap-2 px-1">
                 <span className="text-sm dark:text-[#76797d] font-semibold">
                   <IssuesStatusPicker
-                    value={selectedStatus}
+                    value={data?.parent_issue?.status ?? null}
                     onChange={handleStatusUpdate}
                     variant="icon-only"
                     statuses={statusList}
@@ -558,7 +627,7 @@ export default function SubIssueDetailView() {
                             e.stopPropagation();
                             handleDeleteAttachment(Number(doc.id));
                             setDocuments((prev) =>
-                              prev.filter((d) => d.id !== doc.id)
+                              prev.filter((d) => d.id !== doc.id),
                             );
                             setSelectedId(null);
                           }}
@@ -577,9 +646,10 @@ export default function SubIssueDetailView() {
           </div>
 
           {/* Action Buttons */}
-          <div className="flex items-center justify-end gap-2 mb-8 w-full">
+          <div className="flex items-center justify-end pt-2 gap-2  mb-8 w-full">
             <Button
               type="button"
+              className=""
               variant="ghost"
               size="sm"
               onClick={() => fileInputRef.current?.click()}
@@ -713,24 +783,182 @@ export default function SubIssueDetailView() {
             </div>
           </div>
 
+          <div className="space-y-4">
+            {comments?.map((comment) => (
+              <div
+                key={comment.id}
+                className="border rounded-lg dark:bg-[#17181b] border-zinc-800 pb-4"
+              >
+                <div className="">
+                  {/* Row: Avatar + Content + Actions */}
+                  <div className="flex gap-3 p-2">
+                    {/* Avatar */}
+                    <Avatar className="h-9 w-9">
+                      <AvatarImage src={comment?.author?.avatar} />
+                      <AvatarFallback className="text-xs bg-primary/10">
+                        {comment?.author?.name?.slice(0, 2)?.toUpperCase() ||
+                          "NA"}
+                      </AvatarFallback>
+                    </Avatar>
+
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between mb-1">
+                        <div className="flex items-center gap-2">
+                          <span className="text-[15px] font-semibold dark:text-white">
+                            {comment?.author?.name}
+                          </span>
+                          <span className="text-[14px] font-semibold  text-muted-foreground">
+                            {formatCommentTime(comment?.created_at)}
+                          </span>
+                        </div>
+
+                        {/* Action Buttons (Right Side) */}
+                        <div className="flex items-center gap-1">
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            className="h-7 w-7 text-muted-foreground hover:text-white"
+                            onClick={() =>
+                              setRepOpen(
+                                repOpen === comment.id ? null : comment.id,
+                              )
+                            }
+                          >
+                            <Reply className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            className="h-7 w-7 text-muted-foreground hover:text-white"
+                          >
+                            <Check className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            className="h-7 w-7 text-muted-foreground hover:text-white"
+                          >
+                            <MoreHorizontal className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </div>
+
+                      {/* Comment Text */}
+                      <p className="text-[15px] font-semibold dark:text-white whitespace-pre-line leading-relaxed">
+                        {comment.body}
+                      </p>
+
+                      {/* Replies Section */}
+                      {comment.replies && comment.replies.length > 0 && (
+                        <div className="mt-3 space-y-3 pl-2   border-zinc-700">
+                          {comment.replies.map((reply) => (
+                            <div
+                              key={reply.id}
+                              className="flex border-t gap-2 pt-2"
+                            >
+                              <Avatar className="h-6 w-6">
+                                <AvatarImage src={reply?.author?.avatar} />
+                                <AvatarFallback className="text-[10px] bg-primary/10">
+                                  {reply?.author?.name
+                                    ?.slice(0, 2)
+                                    ?.toUpperCase() || "NA"}
+                                </AvatarFallback>
+                              </Avatar>
+                              <div className="flex-1">
+                                <div className="flex items-center gap-2">
+                                  <span className="text-[15px] font-semibold dark:text-white">
+                                    {reply?.author?.name}
+                                  </span>
+                                  <span className="text-[13px] font-semibold text-muted-foreground">
+                                    {formatCommentTime(reply?.created_at)}
+                                  </span>
+                                </div>
+                                <p className="text-sm font-semibold dark:text-white/90 mt-0.5">
+                                  {reply.body}
+                                </p>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Reply Input Box - only show for this specific comment */}
+                  {repOpen === comment.id && (
+                    <div className="border-t px-2 mt-3 py-0.5">
+                      <div className="mt-3 flex gap-2">
+                        <Avatar className="h-7 w-7">
+                          <AvatarImage src={comment?.author?.avatar} />
+                          <AvatarFallback className="text-xs bg-primary/10">
+                            {comment?.author?.name
+                              ?.slice(0, 2)
+                              ?.toUpperCase() || "U"}
+                          </AvatarFallback>
+                        </Avatar>
+
+                        <div className="flex-1 flex items-start gap-2">
+                          <Textarea
+                            placeholder="Leave a reply..."
+                            className="flex-1 border-0 resize-none focus:outline-none focus-visible:ring-0 text-sm text-white placeholder:text-muted-foreground min-h-[20px] dark:bg-transparent dark:placeholder:font-semibold font-semibold"
+                            value={replyText[comment.id] || ""}
+                            onChange={(e) =>
+                              setReplyText((prev) => ({
+                                ...prev,
+                                [comment.id]: e.target.value,
+                              }))
+                            }
+                          />
+                          <Button
+                            size="icon"
+                            type="button"
+                            className="h-7 w-7 shrink-0"
+                            variant="noBorder"
+                            disabled={postComment.isPending}
+                            onClick={() => handleReplySubmit(comment.id)}
+                          >
+                            <ArrowUp className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+
           {/* Comment Box */}
-          {/* <div className="border border-border rounded-lg p-4">
-            <Textarea
-              placeholder="Leave a comment..."
-              value={comment}
-              onChange={(e) => setComment(e.target.value)}
-              className="border-0 p-0 resize-none focus-visible:ring-0 dark:bg-transparent"
-              rows={3}
-            />
-            <div className="flex items-center justify-between mt-3 pt-3 border-t border-border">
-              <Button variant="ghost" size="sm">
-                <Paperclip className="h-4 w-4" />
-              </Button>
-              <Button size="sm">
-                <ArrowUp className="h-4 w-4" />
-              </Button>
-            </div>
-          </div> */}
+          <Formik initialValues={initialVal} onSubmit={handleCommentSubmit}>
+            {({ values, setFieldValue, isSubmitting }) => (
+              <Form className="pt-5">
+                <div className="border dark:border-zinc-800 dark:bg-[#17181b] rounded-lg">
+                  <Textarea
+                    placeholder="Leave a comment..."
+                    value={values.comment_body}
+                    onChange={(e) =>
+                      setFieldValue("comment_body", e.target.value)
+                    }
+                    className="border-0 resize-none focus-visible:ring-0 dark:bg-transparent p-3 dark:placeholder:font-semibold font-semibold"
+                    rows={3}
+                  />
+                <div className="flex items-center justify-end p-2">
+                    {/* <Button variant="ghost" size="sm" type="button">
+                      <Paperclip className="h-4 w-4" />
+                    </Button> */}
+                    <Button
+                      size="sm"
+                      type="submit"
+                      variant="custom"
+                      disabled={isSubmitting || postComment.isPending}
+                    >
+                      <ArrowUp className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+              </Form>
+            )}
+          </Formik>
         </div>
       </div>
 
