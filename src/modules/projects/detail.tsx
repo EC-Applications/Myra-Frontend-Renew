@@ -84,6 +84,8 @@ export default function Detail() {
   const [isFocused, setIsFocused] = useState(false);
   const [projectName, setProjectName] = useState("");
   const [shortSummary, setShortSummary] = useState("");
+  const [description, setDescription] = useState("");
+
   const [priority, setPriority] = useState<number | undefined>();
   const [selectedStatus, setSelectedStatus] = useState(statusList?.[0] ?? null);
   const [selectedLead, setSelectedLead] = useState<iMember | undefined>();
@@ -606,7 +608,7 @@ export default function Detail() {
 
   return (
     <div className="w-full overflow-y-auto flex justify-center h-[calc(100vh_-_80px)] dark:bg-[#17181b]  dark:border-zinc-800">
-      <div className="flex-1 px-6 py-6 max-w-3xl">
+      <div className="flex-1 py-10 max-w-3xl">
         {/* Project Header */}
         <div className="mb-2">
           <div className="flex items-center gap-3 mb-2">
@@ -820,8 +822,8 @@ export default function Detail() {
           </h3>
           <Textarea
             placeholder=""
-            value={shortSummary}
-            onChange={(e) => setShortSummary(e.target.value)}
+            value={project?.description}
+            onChange={(e) => setDescription(e.target.value)}
             className="min-h-36 md:text-lg border-0 px-3 shadow-none focus-visible:ring-0 dark:bg-transparent resize-none dark:text-white dark:placeholder:text-[#626366]"
           />
           <div className="flex items-center justify-end">
@@ -987,7 +989,7 @@ export default function Detail() {
             <MilestoneSection
               mode="update"
               project={project}
-              initialMilestones={milestones}
+              initialMilestones={project?.milestones}
               workspaceId={workpsace.currentWorkspace?.id}
             />
           </div>

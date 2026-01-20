@@ -12,6 +12,7 @@ import {
   Calendar,
   ChevronDown,
   ChevronRight,
+  Diamond,
   Edit3,
   MoreHorizontal,
   Plus,
@@ -30,6 +31,7 @@ import type { iMilestone } from "@/interfaces/milestone.interface";
 // import { useProjectDetail } from "@/hooks/use-project-detail";
 import { useUpdateProjectHook } from "@/hooks/use-update-project";
 import { useProjectDetail } from "@/hooks/use-project-detail";
+import { MemberPicker } from "./member-picker";
 
 const ProjectProperties = () => {
   const { id } = useParams();
@@ -41,8 +43,10 @@ const ProjectProperties = () => {
   const workspaceMember = useSelector((state: any) => state.workspace);
   const members = useMemo(
     () => (Array.isArray(workspaceMember) ? workspaceMember : []),
-    [workspaceMember]
+    [workspaceMember],
   );
+
+  const [selectedMembers, setSelectedMembers] = useState<iMember[]>([]);
   const labelState = useSelector((state: any) => state.label);
   const labels = labelState?.labels ?? [];
   const projectData = useSelector((state: RootState) => state.project);
@@ -145,7 +149,7 @@ const ProjectProperties = () => {
       updateProject({
         projectId: Number(id),
         data: { status: newStatus.name.toLowerCase() },
-      })
+      }),
     );
 
     updateProjectMutation.mutate(
@@ -161,7 +165,7 @@ const ProjectProperties = () => {
         onSettled: () => {
           setSaving(false);
         },
-      }
+      },
     );
   };
 
@@ -173,7 +177,7 @@ const ProjectProperties = () => {
     setSaving(true);
 
     const priorityObj = priorityData.priority?.find(
-      (p: any) => p.id === newPriority
+      (p: any) => p.id === newPriority,
     );
 
     if (!priorityObj) {
@@ -186,7 +190,7 @@ const ProjectProperties = () => {
       updateProject({
         projectId: Number(id),
         data: { priority: priorityObj.id },
-      })
+      }),
     );
 
     updateProjectMutation.mutate(
@@ -202,7 +206,7 @@ const ProjectProperties = () => {
         onSettled: () => {
           setSaving(false);
         },
-      }
+      },
     );
   };
 
@@ -217,7 +221,7 @@ const ProjectProperties = () => {
       updateProject({
         projectId: Number(id),
         data: { lead_id: newLead.id },
-      })
+      }),
     );
 
     updateProjectMutation.mutate(
@@ -233,7 +237,7 @@ const ProjectProperties = () => {
         onSettled: () => {
           setSaving(false);
         },
-      }
+      },
     );
   };
 
@@ -248,7 +252,7 @@ const ProjectProperties = () => {
       updateProject({
         projectId: Number(id),
         data: { start_date: newDate.toISOString().split("T")[0] },
-      })
+      }),
     );
 
     updateProjectMutation.mutate(
@@ -264,7 +268,7 @@ const ProjectProperties = () => {
         onSettled: () => {
           setSaving(false);
         },
-      }
+      },
     );
   };
 
@@ -279,7 +283,7 @@ const ProjectProperties = () => {
       updateProject({
         projectId: Number(id),
         data: { target_date: newDate.toISOString().split("T")[0] },
-      })
+      }),
     );
 
     updateProjectMutation.mutate(
@@ -295,7 +299,7 @@ const ProjectProperties = () => {
         onSettled: () => {
           setSaving(false);
         },
-      }
+      },
     );
   };
 
@@ -329,13 +333,54 @@ const ProjectProperties = () => {
             updateProject({
               projectId: Number(id),
               data: { labels: previousLabels.map((x) => x.id) },
-            })
+            }),
           );
         },
         onSettled: () => {
           setSaving(false);
         },
-      }
+      },
+    );
+  };
+
+  const handleMemberUpdate = async (members: iMember[]) => {
+    if (!project) return;
+
+    const previousMembers = selectedMembers;
+    // /(members);
+    setSelectedMembers(members);
+    setSaving(true);
+
+    // dispatch(
+    //   updateProject({
+    //     projectId: Number(id),
+    //     data: { labels: labels.map((x) => x.id) },
+    //   })
+    // );
+
+    updateProjectMutation.mutate(
+      {
+        projectId: Number(id),
+        body: {
+          workspace_id: workpsace.currentWorkspace?.id,
+          members_id: members.map((x) => x.id as number) as any,
+          team_id: project.teams?.map((x) => x.id as number) || [],
+        },
+      },
+      {
+        onError: () => {
+          setSelectedMembers(members);
+          dispatch(
+            updateProject({
+              projectId: Number(id),
+              data: { members: previousMembers },
+            }),
+          );
+        },
+        onSettled: () => {
+          setSaving(false);
+        },
+      },
     );
   };
 
@@ -390,6 +435,21 @@ const ProjectProperties = () => {
               </div>
             </div>
 
+            <div className="flex items-center justify-between">
+              <span className="text-[15px] font-semibold text-muted-foreground">
+                Members
+              </span>
+              <div className="flex items-center gap-2">
+                <MemberPicker
+                  members={members}
+                  value={project?.members ?? []}
+                  onChange={handleMemberUpdate}
+                  buttunVarient="dark"
+                  className="border-0"
+                  // className="w-full"
+                />
+              </div>
+            </div>
             {/* <div className="flex items-center justify-between">
               <span className="text-sm text-muted-foreground">Members</span>
               <div className="flex items-center gap-2">
@@ -487,8 +547,8 @@ const ProjectProperties = () => {
                 className="flex items-center justify-between p-2 hover:bg-muted/50 rounded"
               >
                 <div className="flex items-center gap-2">
-                  <div className="w-2 h-2 border border-muted-foreground rounded-full"></div>
-                  <span className="text-sm">{m.name}</span>
+                  <Diamond className="h-5 w-5 text-muted-foreground flex-shrink-0 mt-0.5" />
+                  <span className="text-sm font-semibold">{m.name}</span>
                 </div>
                 {/* <div className="flex items-center gap-2">
                   <span className="text-xs text-muted-foreground">

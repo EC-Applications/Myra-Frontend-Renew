@@ -110,6 +110,7 @@ export interface iProject {
   labels?: Label[];
   health?: iProjectHealth[];
   members?: iMember[];
+  members_id? : number[];
   lead_id?: number;
   short_summary?: string;
   icon?:

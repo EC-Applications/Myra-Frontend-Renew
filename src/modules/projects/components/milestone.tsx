@@ -246,11 +246,11 @@ export default function MilestoneSection({
       <div className={`space-y-3  border dark:bg-card rounded-lg`}>
         <div className="flex items-center justify-between p-2 border-b">
           <div className="flex items-center gap-2">
-            <span className="text-sm font-medium dark:text-[#626366]">
-              {isAddingNew ? "Create Milestones" : "Milestone"}
+            <span className="text-sm font-medium  text-white">
+              {isAddingNew ? "Create Milestones" : "Milestones"}
             </span>
             {milestones.length > 0 && (
-              <span className="flex items-center justify-center min-w-[20px] h-5 px-1.5 text-xs font-medium text-muted-foreground bg-muted rounded">
+              <span className="flex items-center justify-center min-w-[20px] h-5 px-1.5 text-xs font-medium text-muted-foreground bg-muted rounded dark:text-white" >
                 {milestones.length}
               </span>
             )}
