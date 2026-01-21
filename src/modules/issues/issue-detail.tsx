@@ -29,10 +29,12 @@ import {
   Download,
   MoreHorizontal,
   Paperclip,
+  Pencil,
   Plus,
   Reply,
   ReplyAll,
   Star,
+  Trash2,
 } from "lucide-react";
 import type React from "react";
 import { useEffect, useRef, useState } from "react";
@@ -55,9 +57,15 @@ import type { RootState } from "@/store/store";
 import { IconPicker } from "../projects/components/icon-picker";
 import { Form, Formik, type FormikHelpers } from "formik";
 import { usePostCommentHook } from "@/hooks/use-post-comments";
-import type { iCommentPayload } from "@/interfaces/issues.interface";
 import { useGetComments } from "@/hooks/use-get-comments";
 import { formatCommentTime } from "@/components/date-converter";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@radix-ui/react-dropdown-menu";
+import { useDeleteCommentHook } from "@/hooks/use-comment-delete";
 
 interface SubIssue {
   id: string;
@@ -81,6 +89,7 @@ interface ActivityItem {
 export default function IssueDetailView() {
   const issues = useSelector((state: any) => state.issues);
   const { id } = useParams();
+  const currentUser = useUser();
   console.log("IssueID", id);
   const { currentWorkspace } = useUser();
   const navigate = useNavigate();
@@ -130,6 +139,9 @@ export default function IssueDetailView() {
     currentWorkspace?.slug ?? "",
     Number(id),
   );
+
+  // DELETE COMENT HOOK
+  const deleteComment = useDeleteCommentHook();
 
   useEffect(() => {
     setLoading(true);
@@ -562,6 +574,15 @@ export default function IssueDetailView() {
     document.body.removeChild(link);
   };
 
+  // handle delete comment
+  const handleDeletComment = (commentId: number) => {
+    deleteComment.mutate({
+      commentId: commentId,
+      issueId: Number(id),
+      workspaceSlug: currentWorkspace?.slug ?? "",
+    });
+  };
+
   if (loading) {
     return (
       <div className="fixed inset-0 flex items-center justify-center bg-background/60 z-50">
@@ -922,13 +943,52 @@ dark:bg-[#101012]"
                           >
                             <Check className="h-4 w-4" />
                           </Button>
-                          <Button
+                          */}
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button
+                                size="icon"
+                                variant="ghost"
+                                className="h-7 w-7 text-muted-foreground hover:text-white"
+                              >
+                                <MoreHorizontal className="h-4 w-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+
+                            <DropdownMenuContent
+                              align="end"
+                              className="w-40 dark:bg-[#1c1d1f] border  dark:border-zinc-800 rounded p-1 space-y-1"
+                            >
+                              {/* Edit */}
+                              <DropdownMenuItem
+                                // onClick={() => handleEdit(data)}
+                                className="cursor-pointer flex items-center gap-2 text-[14px] font-semibold  dark:hover:bg-[#292b30] p-1 rounded text-muted-foreground dark:hover:text-white"
+                              >
+                                <Pencil className="h-4 w-4 text-muted-foreground" />
+                                Edit
+                              </DropdownMenuItem>
+
+                              {/* Delete */}
+                              {currentUser.currentUser?.id ===
+                                comment.author.id && (
+                                <DropdownMenuItem
+                                  onClick={() => handleDeletComment(comment.id)}
+                                  className="cursor-pointer flex items-center gap-2 text-[14px] font-semibold dark:hover:bg-[#292b30] p-1 rounded text-muted-foreground dark:hover:text-white"
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                  Delete
+                                </DropdownMenuItem>
+                              )}
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+
+                          {/* <Button
                             size="icon"
                             variant="ghost"
                             className="h-7 w-7 text-muted-foreground hover:text-white"
                           >
                             <MoreHorizontal className="h-4 w-4" />
-                          </Button> */}
+                          </Button>  */}
                         </div>
                       </div>
 
@@ -943,7 +1003,7 @@ dark:bg-[#101012]"
                           {comment.replies.map((reply) => (
                             <div
                               key={reply.id}
-                              className="flex border-t gap-2 pt-2"
+                              className="flex border-t gap-2 pt-2 group"
                             >
                               <Avatar className="h-6 w-6">
                                 <AvatarImage src={reply?.author?.avatar} />
@@ -966,6 +1026,45 @@ dark:bg-[#101012]"
                                   {reply.body}
                                 </p>
                               </div>
+                              <DropdownMenu >
+                                <DropdownMenuTrigger asChild>
+                                  <Button
+                                    size="icon"
+                                    variant="ghost"
+                                    className="h-7 w-7 text-muted-foreground hover:text-white  opacity-0 group-hover:opacity-100 transition-opacity"
+                                  >
+                                    <MoreHorizontal className="h-4 w-4" />
+                                  </Button>
+                                </DropdownMenuTrigger>
+
+                                <DropdownMenuContent
+                                  align="end"
+                                  className="w-40 dark:bg-[#1c1d1f] border  dark:border-zinc-800 rounded p-1 space-y-1"
+                                >
+                                  {/* Edit */}
+                                  <DropdownMenuItem
+                                    // onClick={() => handleEdit(data)}
+                                    className="cursor-pointer flex items-center gap-2 text-[14px] font-semibold  dark:hover:bg-[#292b30] p-1 rounded text-muted-foreground dark:hover:text-white"
+                                  >
+                                    <Pencil className="h-4 w-4 text-muted-foreground" />
+                                    Edit
+                                  </DropdownMenuItem>
+
+                                  {/* Delete */}
+                                  {currentUser.currentUser?.id ===
+                                    reply.author.id && (
+                                    <DropdownMenuItem
+                                      onClick={() =>
+                                        handleDeletComment(reply.id)
+                                      }
+                                      className="cursor-pointer flex items-center gap-2 text-[14px] font-semibold dark:hover:bg-[#292b30] p-1 rounded text-muted-foreground dark:hover:text-white"
+                                    >
+                                      <Trash2 className="h-4 w-4" />
+                                      Delete
+                                    </DropdownMenuItem>
+                                  )}
+                                </DropdownMenuContent>
+                              </DropdownMenu>
                             </div>
                           ))}
                         </div>
@@ -975,7 +1074,7 @@ dark:bg-[#101012]"
 
                   {/* Reply Input Box - only show for this specific comment */}
                   {repOpen === comment.id && (
-                    <div className="border-t px-2 mt-3 py-0.5">
+                    <div className="border-t px-2 mt-3 py-0.5" >
                       <div className="mt-3 flex gap-2">
                         <Avatar className="h-7 w-7">
                           <AvatarImage src={comment?.author?.avatar} />

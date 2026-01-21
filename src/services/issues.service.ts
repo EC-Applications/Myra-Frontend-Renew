@@ -1,6 +1,4 @@
 import type {
-  iCommentPayload,
-  iCommentResponse,
   iIssuePayload,
   iIssuesLabel,
   iIssuesLabelPayload,

@@ -1,7 +1,6 @@
+import type { iCommentPayload, iCommentResponse } from "@/interfaces/comment.interface";
 import type { iResponse } from "@/interfaces/common.interface";
 import type {
-  iCommentPayload,
-  iCommentResponse,
 } from "@/interfaces/issues.interface";
 import { postCommentUri } from "@/services/comment.service";
 
