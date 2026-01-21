@@ -13,6 +13,7 @@ export interface iUserResponse {
   email: string;
   owned_workspaces: iWorkspace[];
   invites_workspaces: iWorkspaceInviteDto[];
+  avatar? : string;
 }
 export interface iAuthState {
   currentUser: number;

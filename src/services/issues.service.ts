@@ -1,6 +1,4 @@
 import type {
-  iCommentPayload,
-  iCommentResponse,
   iIssuePayload,
   iIssuesLabel,
   iIssuesLabelPayload,
@@ -175,17 +173,3 @@ export const updateIssueLabelUri = async (
   });
 };
 
-export const postCommentUri = async (body: Partial<iCommentPayload>) => {
-  return Axios.post(`/api/reyan-workspace/teams/comments/store`, body, {
-    responseType: "json",
-  }).then((res) => res.data as iResponse<iCommentResponse>);
-};
-
-export const getCommentsUri = async (
-  workspaceSlug: string | number,
-  issueId: number,
-) => {
-  return Axios.get(`/api/${workspaceSlug}/teams/comments/list/${issueId}`, {
-    responseType: "json",
-  }).then((res) => res.data as iResponse<iCommentResponse[]>);
-};

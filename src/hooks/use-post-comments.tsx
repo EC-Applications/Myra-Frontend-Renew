@@ -1,9 +1,9 @@
+import type { iCommentPayload, iCommentResponse } from "@/interfaces/comment.interface";
 import type { iResponse } from "@/interfaces/common.interface";
 import type {
-  iCommentPayload,
-  iCommentResponse,
 } from "@/interfaces/issues.interface";
-import { postCommentUri } from "@/services/issues.service";
+import { postCommentUri } from "@/services/comment.service";
+
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 

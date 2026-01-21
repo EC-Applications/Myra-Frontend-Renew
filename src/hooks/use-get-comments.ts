@@ -1,4 +1,5 @@
-import { getCommentsUri } from "@/services/issues.service"
+
+import { getCommentsUri } from "@/services/comment.service";
 import { useQuery } from "@tanstack/react-query"
 
 export const useGetComments = (workspaceSlug: string , issueId: number) => {
