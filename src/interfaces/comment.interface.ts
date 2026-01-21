@@ -19,6 +19,17 @@ export interface iAuthor {
   updated_at?: string;
 }
 
+export interface iAttachments {
+  id: number;
+  comment_id: number;
+  file_name: string;
+  file_path: string;
+  mime_type: string;
+  file_size: number;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface iCommentResponse {
   parent_id: number;
   body: string;
@@ -29,6 +40,13 @@ export interface iCommentResponse {
   created_at: string;
   id: number;
   author: iAuthor;
-  replies?: iCommentResponse[]
+  replies?: iCommentResponse[];
+  is_edited?: boolean;
+  attachments: iAttachments[];
   // author : string
+}
+
+export interface iCommentUpdatePayload {
+  comment?: string | Number;
+  attachments?: File[];
 }
