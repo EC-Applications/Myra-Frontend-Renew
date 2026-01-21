@@ -26,6 +26,7 @@ import {
   Check,
   ChevronDown,
   ChevronUp,
+  Download,
   MoreHorizontal,
   Paperclip,
   Plus,
@@ -552,6 +553,15 @@ export default function IssueDetailView() {
     );
   };
 
+  const handleDownloadAttachment = (doc: any) => {
+    const link = document.createElement("a");
+    link.href = doc.file_url;
+    link.download = doc.doc_name;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   if (loading) {
     return (
       <div className="fixed inset-0 flex items-center justify-center bg-background/60 z-50">
@@ -663,19 +673,32 @@ dark:bg-[#101012]"
                       </div>
 
                       {isSelected && (
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleDeleteAttachment(Number(doc.id));
-                            setDocuments((prev) =>
-                              prev.filter((d) => d.id !== doc.id),
-                            );
-                            setSelectedId(null);
-                          }}
-                          className="absolute right-2 top-2 p-1 rounded hover:bg-destructive/10 text-destructive"
-                        >
-                          🗑️
-                        </button>
+                        <div className="absolute right-2 top-2 flex gap-1">
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDownloadAttachment(doc);
+                            }}
+                            className="p-1 rounded hover:bg-primary/10 text-primary"
+                            title="Download"
+                          >
+                            <Download className="h-5" />
+                          </button>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDeleteAttachment(Number(doc.id));
+                              setDocuments((prev) =>
+                                prev.filter((d) => d.id !== doc.id),
+                              );
+                              setSelectedId(null);
+                            }}
+                            className="p-1 rounded hover:bg-destructive/10 text-destructive"
+                            title="Delete"
+                          >
+                            🗑️
+                          </button>
+                        </div>
                       )}
                     </div>
                   );
@@ -728,7 +751,7 @@ dark:bg-[#101012]"
                 variant="ghost"
                 size="sm"
                 onClick={() => setSubIssuesExpanded(!subIssuesExpanded)}
-                className="flex items-center gap-2 p-0 h-auto font-medium"
+                className="flex items-center gap-2 p-0 h-auto text-[18px] font-medium"
               >
                 {subIssuesExpanded ? (
                   <ChevronDown className="h-4 w-4" />
@@ -892,7 +915,7 @@ dark:bg-[#101012]"
                           >
                             <Reply className="h-4 w-4" />
                           </Button>
-                          <Button
+                          {/* <Button
                             size="icon"
                             variant="ghost"
                             className="h-7 w-7 text-muted-foreground hover:text-white"
@@ -905,7 +928,7 @@ dark:bg-[#101012]"
                             className="h-7 w-7 text-muted-foreground hover:text-white"
                           >
                             <MoreHorizontal className="h-4 w-4" />
-                          </Button>
+                          </Button> */}
                         </div>
                       </div>
 
@@ -936,7 +959,7 @@ dark:bg-[#101012]"
                                     {reply?.author?.name}
                                   </span>
                                   <span className="text-[13px] font-semibold text-muted-foreground">
-                                  {formatCommentTime(reply?.created_at)}
+                                    {formatCommentTime(reply?.created_at)}
                                   </span>
                                 </div>
                                 <p className="text-sm font-semibold dark:text-white/90 mt-0.5">
