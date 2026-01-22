@@ -6,12 +6,14 @@ import { Separator } from "@/components/ui/separator";
 import Spinner from "@/components/ui/spinner";
 import type { iLoginRequest } from "@/interfaces/auth.interface";
 import { login } from "@/services/auth.service";
+import { tempStorage } from "@/services/storage.service";
 import { useAppDispatch } from "@/store/hook";
 import { addAccount } from "@/store/slices/auth.slice";
 import { useFormik } from "formik";
 import { useState } from "react";
 import { toast } from "sonner";
 import * as yup from "yup";
+import OtpVerification from "./otp-verification";
 
 const validationSchema = yup.object({
   email: yup
@@ -22,6 +24,7 @@ const validationSchema = yup.object({
 
 const SignIn = () => {
   const [loading, setLoading] = useState(false);
+  const [showOtp, setShowOtp] = useState(false);
 
   const dispatch = useAppDispatch();
 
@@ -53,7 +56,9 @@ const SignIn = () => {
     login(payload)
       .then(
         (res) => {
-          dispatch(addAccount(res.data));
+          // dispatch(addAccount(res.data));
+          tempStorage.setItem("temp", res.data);
+          setShowOtp(true);
         },
         (er) => {
           console.warn(er);
@@ -74,73 +79,94 @@ const SignIn = () => {
         <Card className="w-full max-w-sm">
           <CardContent className="space-y-6">
             <h1 className="text-2xl font-semibold text-center text-foreground">
-              Sign in
+              {showOtp ? "Check you email" : "Sign In"}
             </h1>
-
+            {showOtp && (
+              <p className="text-sm font-semibold text-center text-muted-foreground">
+                We have sent you a temporary login code. <br />
+                Please check your inbox at <br />
+                {formik.values.email}
+              </p>
+            )}
+            
             {/* Social Login Buttons */}
 
-            <div className="space-y-3">
-              <Button
-                variant="outline"
-                className="w-full h-12 justify-center gap-3"
-                onClick={handleGoogleLogin}
-              >
-                <img className="w-5 h-5" src="/icon/social/google.svg" />
-                Continue with Google
-              </Button>
+            {!showOtp ? (
+              <>
+                <div className="space-y-3">
+                  <Button
+                    variant="outline"
+                    className="w-full h-12 justify-center gap-3"
+                    onClick={handleGoogleLogin}
+                  >
+                    <img className="w-5 h-5" src="/icon/social/google.svg" />
+                    Continue with Google
+                  </Button>
 
-              <Button
-                variant="outline"
-                className="w-full h-12 justify-center gap-3"
-                onClick={handleMicrosoftLogin}
-              >
-                <img className="w-5 h-5" src="/icon/social/microsoft_logo.png" />
-                Continue with Microsoft
-              </Button>
-              <Button
-                variant="outline"
-                className="w-full h-12 justify-center gap-3"
-                onClick={handleGithubLogin}
-              >
-                <img className="w-5 h-5" src="/icon/social/github.svg" />
-                Continue with Github
-              </Button>
-            </div>
-            <div className="relative">
-              <Separator className="bg-muted-foreground" />
-              <div className="absolute inset-0 flex items-center justify-center">
-                <span className="bg-background text-foreground px-2 text-xs">
-                  OR
-                </span>
-              </div>
-            </div>
-            {/* Email Form */}
-            <form className="space-y-4" onSubmit={formik.handleSubmit}>
-              <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
-                <Input
-                  type="email"
-                  placeholder="Enter your email address..."
-                  className="h-12"
-                  {...formik.getFieldProps("email")}
-                />
-                {formik.touched.email ? (
-                  <span className="text-sm text-red-600 dark:text-red-400">
-                    {formik.errors.email}
-                  </span>
-                ) : null}
-                <p className="text-sm text-muted-foreground">
-                  Use an organization email to easily collaborate with teammates
-                </p>
-              </div>
+                  <Button
+                    variant="outline"
+                    className="w-full h-12 justify-center gap-3"
+                    onClick={handleMicrosoftLogin}
+                  >
+                    <img
+                      className="w-5 h-5"
+                      src="/icon/social/microsoft_logo.png"
+                    />
+                    Continue with Microsoft
+                  </Button>
+                  <Button
+                    variant="outline"
+                    className="w-full h-12 justify-center gap-3"
+                    onClick={handleGithubLogin}
+                  >
+                    <img className="w-5 h-5" src="/icon/social/github.svg" />
+                    Continue with Github
+                  </Button>
+                </div>
+                <div className="relative">
+                  <Separator className="bg-muted-foreground" />
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <span className="bg-background text-foreground px-2 text-xs">
+                      OR
+                    </span>
+                  </div>
+                </div>
+                {/* Email Form */}
+                <form className="space-y-4" onSubmit={formik.handleSubmit}>
+                  <div className="space-y-2">
+                    <Label htmlFor="email">Email</Label>
+                    <Input
+                      type="email"
+                      placeholder="Enter your email address..."
+                      className="h-12"
+                      {...formik.getFieldProps("email")}
+                    />
+                    {formik.touched.email ? (
+                      <span className="text-sm text-red-600 dark:text-red-400">
+                        {formik.errors.email}
+                      </span>
+                    ) : null}
+                    <p className="text-sm text-muted-foreground">
+                      Use an organization email to easily collaborate with
+                      teammates
+                    </p>
+                  </div>
 
-              <Button className="w-full h-12" type="submit" disabled={loading}>
-                {loading ? (
-                  <Spinner className="text-background" size="sm" />
-                ) : null}
-                Continue
-              </Button>
-            </form>
+                  <Button
+                    className="w-full h-12"
+                    type="submit"
+                    disabled={loading}
+                  >
+                    {loading ? (
+                      <Spinner className="text-background" size="sm" />
+                    ) : null}
+                    Continue
+                  </Button>
+                </form>
+              </>
+            ) : (
+              <OtpVerification email={formik.values.email} />
+            )}
           </CardContent>
         </Card>
       </main>
