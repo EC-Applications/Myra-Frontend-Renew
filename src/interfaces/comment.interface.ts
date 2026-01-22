@@ -3,6 +3,7 @@ export interface iCommentPayload {
   commentable_id: number;
   parent_id: number | null;
   body: String;
+  attachments?: File[]
 }
 
 export interface iAuthor {

@@ -20,7 +20,7 @@ export const useDeleteCommentHook = () => {
     onSuccess: (data, variables) => {
       toast.success("Comment deleted successfully");
       queryClient.invalidateQueries({
-        queryKey: ["comments", variables.issueId],
+          queryKey: ["comments", variables.issueId],
       });
     },
     
