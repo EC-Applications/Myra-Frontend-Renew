@@ -25,6 +25,7 @@ import {
   type ProjectFilters,
 } from "@/components/issue-filter-dropdown";
 import { useGetIssuesHook } from "@/hooks/use-get-issues";
+import { DisplayDropdown, type DisplayState, type ViewType } from "@/components/display-setting";
 
 export default function Issues() {
   const { currentWorkspace } = useUser();
@@ -37,6 +38,34 @@ export default function Issues() {
     currentWorkspace!.id,
     Number(teamId),
   );
+
+   const [displayState, setDisplayState] = useState<DisplayState>({
+    view: 'list',
+    grouping: null,
+    subGrouping: null,
+    ordering: null,
+    orderByRecency: false,
+    showSubIssues: true,
+    showEmptyGroups: false,
+    showEmptyColumns: false,
+    showEmptyRows: false,
+    displayProperties: {
+      id: true,
+      status: true,
+      assignee: true,
+      priority: true,
+      dueDate: true,
+      project: true,
+      milestone: true,
+      cycle: true,
+      labels: true,
+      links: true,
+      timeInStatus: true,
+      created: true,
+      updated: true,
+      pullRequests: true,
+    },
+  });
 
   // useEffect(() => {
   //   if (!teamId) return;
@@ -56,7 +85,8 @@ export default function Issues() {
   //     });
   // }, [teamId, currentWorkspace, dispatch]);
 
-  const [view, setView] = useState(0);
+  // const [view, setView] = useState(0);
+  const [view, setView] = useState<ViewType>('list');
   const [activeFilters, setActiveFilters] = useState<ProjectFilters>({
     status: [],
     priority: [],
@@ -248,7 +278,14 @@ export default function Issues() {
         </header>
         <div className="flex items-center justify-between px-3 py-1 border-b">
           <IssueFilterDropdown onFilterChange={handleFilterChange} />
-          <DropdownMenu>
+                
+           <DisplayDropdown 
+            view={view}
+            onViewChange={setView}
+            displayState={displayState}
+            onDisplayStateChange={setDisplayState}
+          />
+          {/* <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="outline" size="sm">
                 <LayoutGrid className="w-2 h-2 mr-2" />
@@ -273,9 +310,9 @@ export default function Issues() {
                 Board
               </DropdownMenuCheckboxItem>
             </DropdownMenuContent>
-          </DropdownMenu>
+          </DropdownMenu> */}
         </div>
-        {view == 0 ? (
+        {view == 'list' ? (
           // <div className=""></div>
           <IssueListView
             issuesData={filteredIssues}
