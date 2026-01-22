@@ -952,6 +952,7 @@ dark:bg-[#101012]"
               ))}
             </div>
           </div>
+          
           {/* Comment Box */}
 
           <div className="space-y-4">
@@ -1605,7 +1606,7 @@ dark:bg-[#101012]"
                       size="sm"
                       type="submit"
                       variant="custom"
-                      disabled={isSubmitting || postComment.isPending}
+                      disabled={isSubmitting || postComment.isPending || (!values.comment_body.trim() && values.attachments.length === 0)}
                     >
                       <ArrowUp className="h-4 w-4" />
                     </Button>
@@ -1630,9 +1631,9 @@ dark:bg-[#101012]"
               </Form>
             )}
           </Formik>
+        
         </div>
       </div>
-
       {/* Properties Sidebar */}
       <div className="w-80 border-l border-border bg-muted/20 px-4 py-2 border dark:border-zinc-800">
         <h3 className="font-medium mb-6">Properties</h3>
