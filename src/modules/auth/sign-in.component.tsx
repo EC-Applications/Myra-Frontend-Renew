@@ -14,6 +14,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 import * as yup from "yup";
 import OtpVerification from "./otp-verification";
+import { useSearchParams } from "react-router";
 
 const validationSchema = yup.object({
   email: yup
@@ -25,7 +26,8 @@ const validationSchema = yup.object({
 const SignIn = () => {
   const [loading, setLoading] = useState(false);
   const [showOtp, setShowOtp] = useState(false);
-
+  const [searchParams] = useSearchParams();
+  const otp = searchParams.get("code");
   const dispatch = useAppDispatch();
 
   const handleGoogleLogin = () => {
@@ -34,12 +36,13 @@ const SignIn = () => {
   };
 
   const handleMicrosoftLogin = () => {
-    window.location.href = "https://api.myracloud.io/auth/microsoft?platform=web" ;
-  }
+    window.location.href =
+      "https://api.myracloud.io/auth/microsoft?platform=web";
+  };
 
   const handleGithubLogin = () => {
-    window.location.href = "https://api.myracloud.io/auth/github?platform=web"
-  }
+    window.location.href = "https://api.myracloud.io/auth/github?platform=web";
+  };
 
   const formik = useFormik<iLoginRequest>({
     initialValues: {
@@ -63,12 +66,12 @@ const SignIn = () => {
         (er) => {
           console.warn(er);
           toast.error("Something went wrong");
-        }
+        },
       )
       .finally(() => {
         setLoading(false);
       });
-  }; 
+  };
 
   return (
     <div className="min-h-screen flex flex-col align-center justify-center">
@@ -88,10 +91,10 @@ const SignIn = () => {
                 {formik.values.email}
               </p>
             )}
-            
+
             {/* Social Login Buttons */}
 
-            {!showOtp ? (
+            {!showOtp && !otp ? (
               <>
                 <div className="space-y-3">
                   <Button
@@ -165,7 +168,7 @@ const SignIn = () => {
                 </form>
               </>
             ) : (
-              <OtpVerification email={formik.values.email} />
+              <OtpVerification email={formik.values.email} otp={otp} />
             )}
           </CardContent>
         </Card>

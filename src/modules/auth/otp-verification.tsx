@@ -10,7 +10,7 @@ import { tempStorage } from "@/services/storage.service";
 import { useAppDispatch } from "@/store/hook";
 import { addAccount } from "@/store/slices/auth.slice";
 import { useFormik } from "formik";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import * as yup from "yup";
 
@@ -18,14 +18,20 @@ const validationSchema = yup.object({
   code: yup.string().required("Code is required."),
 });
 
-const OtpVerification = ({ email }: { email: string }) => {
+const OtpVerification = ({
+  email,
+  otp,
+}: {
+  email: string;
+  otp: string | null;
+}) => {
   const [loading, setLoading] = useState(false);
 
   const dispatch = useAppDispatch();
 
   const formik = useFormik<iOtpRequest>({
     initialValues: {
-      code: "",
+      code: otp || "",
       email,
     },
     validationSchema,
@@ -33,6 +39,7 @@ const OtpVerification = ({ email }: { email: string }) => {
       setLoading(true);
       loginCallback(values);
     },
+    enableReinitialize: true,
   });
 
   const loginCallback = async (payload: iOtpRequest) => {
@@ -47,6 +54,10 @@ const OtpVerification = ({ email }: { email: string }) => {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    if (otp) formik.submitForm();
+  }, [otp]);
 
   return (
     <form className="space-y-4" onSubmit={formik.handleSubmit}>
