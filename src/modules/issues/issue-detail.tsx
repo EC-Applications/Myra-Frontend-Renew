@@ -70,15 +70,7 @@ import { useDeleteCommentHook } from "@/hooks/use-comment-delete";
 import { useCommentUpdateHook } from "@/hooks/use-update-comment";
 import { formatFileSize } from "@/components/hepler-format-filesize";
 
-interface SubIssue {
-  id: string;
-  title: string;
-  priority: number;
-  assignee: {
-    name: string;
-    avatar: string;
-  };
-}
+
 
 interface ActivityItem {
   id: string;
