@@ -33,6 +33,10 @@ export const useUpdateIssueHook = () => {
       queryClient.invalidateQueries({
         queryKey: ["cycle-detail"],
       });
+      queryClient.invalidateQueries({
+        queryKey: ["activity", variables.issueId],
+        exact:false 
+      });
     },
     onError: (error) => {
       toast.error(error.message || "Failed to update issue");

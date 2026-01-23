@@ -69,8 +69,8 @@ import {
 import { useDeleteCommentHook } from "@/hooks/use-comment-delete";
 import { useCommentUpdateHook } from "@/hooks/use-update-comment";
 import { formatFileSize } from "@/components/hepler-format-filesize";
-
-
+import { useActivityHook } from "@/hooks/use-activity-hook";
+import Activity from "./components/issues-activity";
 
 interface ActivityItem {
   id: string;
@@ -149,6 +149,16 @@ export default function IssueDetailView() {
   // UPDATE COmment hook
 
   const updateComment = useCommentUpdateHook();
+
+  // Activity Hook
+
+  const { data: activityData } = useActivityHook(
+    currentWorkspace?.slug ?? "",
+    "issue",
+    Number(id),
+  );
+
+  console.log(activityData,"ACTIVITY DATA")
 
   useEffect(() => {
     setLoading(true);
@@ -541,7 +551,8 @@ export default function IssueDetailView() {
           commentable_id: Number(id),
           commentable_type: "issue",
           parent_id: null,
-          attachments: values.attachments.length > 0 ? values.attachments : undefined,
+          attachments:
+            values.attachments.length > 0 ? values.attachments : undefined,
         },
       },
       {
@@ -922,7 +933,7 @@ dark:bg-[#101012]"
               </div>
             </div>
 
-            <div className="space-y-4">
+            {/* <div className="space-y-4">
               {activities.map((activity) => (
                 <div key={activity.id} className="flex items-start gap-3">
                   <Avatar className="h-6 w-6">
@@ -942,9 +953,11 @@ dark:bg-[#101012]"
                   </div>
                 </div>
               ))}
-            </div>
+            </div> */}
+
+            <Activity activityData={activityData?.data ?? []}/>
           </div>
-          
+
           {/* Comment Box */}
 
           <div className="space-y-4">
@@ -1598,7 +1611,12 @@ dark:bg-[#101012]"
                       size="sm"
                       type="submit"
                       variant="custom"
-                      disabled={isSubmitting || postComment.isPending || (!values.comment_body.trim() && values.attachments.length === 0)}
+                      disabled={
+                        isSubmitting ||
+                        postComment.isPending ||
+                        (!values.comment_body.trim() &&
+                          values.attachments.length === 0)
+                      }
                     >
                       <ArrowUp className="h-4 w-4" />
                     </Button>
@@ -1623,7 +1641,6 @@ dark:bg-[#101012]"
               </Form>
             )}
           </Formik>
-        
         </div>
       </div>
       {/* Properties Sidebar */}
