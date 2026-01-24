@@ -57,6 +57,10 @@ import {
 import { formatFileSize } from "@/components/hepler-format-filesize";
 import { useDeleteCommentHook } from "@/hooks/use-comment-delete";
 import { useCommentUpdateHook } from "@/hooks/use-update-comment";
+import { useActivityHook } from "@/hooks/use-activity-hook";
+import Activity from "./components/issues-activity";
+import { useGetSubIssuesDetailHook } from "@/hooks/use-get-subissue-detail";
+import { useUpdateSubIssueHook } from "@/hooks/use-update-subissue";
 
 interface ActivityItem {
   id: string;
@@ -74,7 +78,8 @@ export default function SubIssueDetailView() {
 
   console.log("IssueID", id);
   const [loading, setLoading] = useState(false);
-  const [data, setData] = useState<iIussesDetail | undefined>();
+  const { data } = useGetSubIssuesDetailHook(Number(id));
+  // const [data, setData] = useState<iIussesDetail | undefined>();
 
   const status = useSelector((state: any) => state.issuesStatus);
   const statusList = status ?? [];
@@ -104,6 +109,7 @@ export default function SubIssueDetailView() {
   const [documents, setDocuments] = useState<DocumentItem[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const commentfileInputRef = useRef<HTMLInputElement>(null);
   const [uploadingDocs, setUploadingDocs] = useState(false);
 
   const deleteComment = useDeleteCommentHook();
@@ -117,24 +123,37 @@ export default function SubIssueDetailView() {
   const editTextareaRef = useRef<HTMLTextAreaElement>(null);
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
 
+  // UPDATE SUB ISSUE
+  const updateSubIssue = useUpdateSubIssueHook();
+
   // UPDATE COmment hook
 
   const updateComment = useCommentUpdateHook();
 
-  useEffect(() => {
-    setLoading(true);
-    try {
-      fetchSubissuesDetailUri(Number(id)).then((res) => {
-        console.log("SUB ISSUE DETAIL DATA", res.data);
-        setData(res.data);
-        console.log("issue_id", data?.issue_id);
-      });
-    } catch (e) {
-      setLoading(false);
-    } finally {
-      setLoading(false);
-    }
-  }, [data?.issue_id, id]);
+  // Activity
+
+  const { data: activityData } = useActivityHook(
+    currentWorkspace?.slug ?? "",
+    "sub-issue",
+    Number(id),
+  );
+
+  console.log("ACTIViTY in sub issue", activityData);
+
+  // useEffect(() => {
+  //   setLoading(true);
+  //   try {
+  //     fetchSubissuesDetailUri(Number(id)).then((res) => {
+  //       console.log("SUB ISSUE DETAIL DATA", res.data);
+  //       setData(res.data);
+  //       console.log("issue_id", data?.issue_id);
+  //     });
+  //   } catch (e) {
+  //     setLoading(false);
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // }, [data?.issue_id, id]);
 
   useEffect(() => {
     if (data?.name) {
@@ -189,41 +208,28 @@ export default function SubIssueDetailView() {
     Number(id),
   );
 
-  const activities: ActivityItem[] = [
-    {
-      id: "1",
-      type: "created",
-      user: "ahmedsaif",
-      action: "created the issue",
-      timestamp: "5w ago",
-    },
-    {
-      id: "2",
-      type: "moved",
-      user: "abdurrehman",
-      action: "moved from Todo to In Progress",
-      timestamp: "1mo ago",
-    },
-    {
-      id: "3",
-      type: "system",
-      user: "MyRa",
-      action: "moved issue through four cycles to Cycle 7",
-      timestamp: "4d ago",
-    },
-  ];
-
-  const handlePriorityUpdate = async (issuid: number) => {
+  const handlePriorityUpdate = async (prioirityId: number) => {
     try {
-      const payload = {
-        issue_id: data?.issue_id,
-        priority_id: issuid,
-        workspace_id: currentWorkspace?.id,
-        team_id: data?.team_id,
-      };
+      updateSubIssue.mutate({
+        issueId: Number(id),
+        body: {
+          issue_id: data?.issue_id,
+          priority_id: prioirityId,
+          workspace_id: currentWorkspace?.id,
+          team_id: Number(data?.team_id),
+        },
+        teamId: Number(data?.team_id),
+        workspaceId: Number(currentWorkspace?.id),
+      });
+      // const payload = {
+      //   issue_id: data?.issue_id,
+      //   priority_id: issuid,
+      //   workspace_id: currentWorkspace?.id,
+      //   team_id: data?.team_id,
+      // };
 
-      await updateSubIssuesUri(Number(id), payload);
-      setPriorityId(issuid);
+      // await updateSubIssuesUri(Number(id), payload);
+      setPriorityId(prioirityId);
       // toast.success("Priority updated");
     } catch (error: any) {
       toast.error(error.message || "Failed to update priority");
@@ -232,13 +238,24 @@ export default function SubIssueDetailView() {
 
   const handleStatusUpdate = async (status: iIssueStatus) => {
     try {
-      const payload = {
-        issue_id: data?.issue_id,
-        status_id: status.id,
-        workspace_id: currentWorkspace?.id,
-        team_id: data?.team_id,
-      };
-      await updateSubIssuesUri(Number(id), payload);
+      updateSubIssue.mutate({
+        issueId: Number(id),
+        body: {
+          issue_id: data?.issue_id,
+          status_id: status.id,
+          workspace_id: currentWorkspace?.id,
+          team_id: Number(data?.team_id),
+        },
+        teamId: Number(data?.team_id),
+        workspaceId: Number(currentWorkspace?.id),
+      });
+      // const payload = {
+      //   issue_id: data?.issue_id,
+      //   status_id: status.id,
+      //   workspace_id: currentWorkspace?.id,
+      //   team_id: data?.team_id,
+      // };
+      // await updateSubIssuesUri(Number(id), payload);
       setSelectedStatus(status);
       // toast.success("Status updated");
     } catch (error: any) {
@@ -248,13 +265,24 @@ export default function SubIssueDetailView() {
 
   const handleMemberUpdate = async (member: iMember | undefined) => {
     try {
-      const payload = {
-        issue_id: data?.issue_id,
-        assignee_id: member?.id,
-        workspace_id: currentWorkspace?.id,
-        team_id: data?.team_id,
-      };
-      await updateSubIssuesUri(Number(id), payload);
+      updateSubIssue.mutate({
+        issueId: Number(id),
+        body: {
+          issue_id: data?.issue_id,
+          assignee_id: member?.id,
+          workspace_id: currentWorkspace?.id,
+          team_id: Number(data?.team_id),
+        },
+        teamId: Number(data?.team_id),
+        workspaceId: Number(currentWorkspace?.id),
+      });
+      // const payload = {
+      //   issue_id: data?.issue_id,
+      //   assignee_id: member?.id,
+      //   workspace_id: currentWorkspace?.id,
+      //   team_id: data?.team_id,
+      // };
+      // await updateSubIssuesUri(Number(id), payload);
       setSelectedMember(member);
       // toast.success("Member updated");
     } catch (error: any) {
@@ -264,13 +292,24 @@ export default function SubIssueDetailView() {
 
   const handleProjectUpdate = async (project: iProject | undefined) => {
     try {
-      const payload = {
-        issue_id: data?.issue_id,
-        project_id: project?.id,
-        workspace_id: currentWorkspace?.id,
-        team_id: data?.team_id,
-      };
-      await updateSubIssuesUri(Number(id), payload);
+      updateSubIssue.mutate({
+        issueId: Number(id),
+        body: {
+          issue_id: data?.issue_id,
+          project_id: project?.id,
+          workspace_id: currentWorkspace?.id,
+          team_id: Number(data?.team_id),
+        },
+        teamId: Number(data?.team_id),
+        workspaceId: Number(currentWorkspace?.id),
+      });
+      // const payload = {
+      //   issue_id: data?.issue_id,
+      //   project_id: project?.id,
+      //   workspace_id: currentWorkspace?.id,
+      //   team_id: data?.team_id,
+      // };
+      // await updateSubIssuesUri(Number(id), payload);
       setSelectedProjects(project);
       // toast.success("Project updated");
     } catch (error: any) {
@@ -280,13 +319,24 @@ export default function SubIssueDetailView() {
 
   const handleIssueName = async () => {
     try {
-      const payload = {
-        issue_id: data?.issue_id,
-        name: issueName,
-        workspace_id: currentWorkspace?.id,
-        team_id: data?.team_id,
-      };
-      await updateSubIssuesUri(Number(id), payload);
+      updateSubIssue.mutate({
+        issueId: Number(id),
+        body: {
+          issue_id: data?.issue_id,
+          name: issueName,
+          workspace_id: currentWorkspace?.id,
+          team_id: Number(data?.team_id),
+        },
+        teamId: Number(data?.team_id),
+        workspaceId: Number(currentWorkspace?.id),
+      });
+      // const payload = {
+      //   issue_id: data?.issue_id,
+      //   name: issueName,
+      //   workspace_id: currentWorkspace?.id,
+      //   team_id: data?.team_id,
+      // };
+      // await updateSubIssuesUri(Number(id), payload);
       setIssueName(issueName);
       // toast.success("Name updated");
     } catch (error: any) {
@@ -301,36 +351,43 @@ export default function SubIssueDetailView() {
     // setSaving(true);
 
     try {
-      await updateSubIssuesUri(Number(id), {
-        issue_id: data?.issue_id,
-        workspace_id: currentWorkspace?.id,
-        labels: labels.map((x) => x.id), // Updated labels use karo
-        team_id: data?.team_id,
+      updateSubIssue.mutate({
+        issueId: Number(id),
+        body: {
+          issue_id: data?.issue_id,
+          labels: labels?.map((l) => l.id),
+          workspace_id: currentWorkspace?.id,
+          team_id: Number(data?.team_id),
+        },
+        teamId: Number(data?.team_id),
+        workspaceId: Number(currentWorkspace?.id),
       });
-
-      // dispatch(
-      //   updateProject({
-      //     projectId: Number(id),
-      //     data: { labels: labels.map((x) => x.id) },
-      //   })
-      // );
-
-      // toast.success("Sub-Issue Label updated");
     } catch (error) {
-      setSelectedLabels(selectedLabels); // Error pe purani state revert karo
+      setSelectedLabels(selectedLabels);
       toast.error("Failed to update issue labels");
     }
   };
 
   const handleTargetDate = async (date: Date | null) => {
     try {
-      const payload = {
-        issue_id: data?.issue_id,
-        due_date: date ? format(date, "yyyy-MM-dd") : undefined,
-        workspace_id: currentWorkspace?.id,
-        team_id: data?.team_id,
-      };
-      await updateSubIssuesUri(Number(id), payload);
+      updateSubIssue.mutate({
+        issueId: Number(id),
+        body: {
+          issue_id: data?.issue_id,
+          due_date: date ? format(date, "yyyy-MM-dd") : undefined,
+          workspace_id: currentWorkspace?.id,
+          team_id: Number(data?.team_id),
+        },
+        teamId: Number(data?.team_id),
+        workspaceId: Number(currentWorkspace?.id),
+      });
+      // const payload = {
+      //   issue_id: data?.issue_id,
+      //   due_date: date ? format(date, "yyyy-MM-dd") : undefined,
+      //   workspace_id: currentWorkspace?.id,
+      //   team_id: data?.team_id,
+      // };
+      // await updateSubIssuesUri(Number(id), payload);
       setStartDate(date);
       // toast.success("Date updated");
     } catch (error: any) {
@@ -354,14 +411,26 @@ export default function SubIssueDetailView() {
     try {
       setIsSaving(true);
 
-      const payload = {
-        issue_id: data?.issue_id,
-        description: des,
-        workspace_id: currentWorkspace?.id,
-        team_id: data?.team_id,
-      };
+      updateSubIssue.mutate({
+        issueId: Number(id),
+        body: {
+          issue_id: data?.issue_id,
+          description: des,
+          workspace_id: currentWorkspace?.id,
+          team_id: Number(data?.team_id),
+        },
+        teamId: Number(data?.team_id),
+        workspaceId: Number(currentWorkspace?.id),
+      });
 
-      await updateSubIssuesUri(Number(id), payload);
+      // const payload = {
+      //   issue_id: data?.issue_id,
+      //   description: des,
+      //   workspace_id: currentWorkspace?.id,
+      //   team_id: data?.team_id,
+      // };
+
+      // await updateSubIssuesUri(Number(id), payload);
     } catch (error: any) {
       toast.error(error.message || "Failed to update description");
     } finally {
@@ -389,25 +458,37 @@ export default function SubIssueDetailView() {
       const filesArray = Array.from(files);
       console.log("Uploading files:", filesArray);
 
-      const payload = {
-        issue_id: data?.issue_id,
-        workspace_id: currentWorkspace?.id,
-        team_id: data.team_id,
-      };
+       updateSubIssue.mutate({
+        issueId: Number(id),
+        body: {
+          issue_id: data?.issue_id,
+          workspace_id: currentWorkspace?.id,
+          team_id: Number(data?.team_id),
+        },
+        newAttachments: filesArray,
+        teamId: Number(data?.team_id),
+        workspaceId: Number(currentWorkspace?.id),
+      });
 
-      await updateSubIssuesUri(
-        Number(id),
-        payload,
-        // undefined,
-        filesArray,
-      );
+      // const payload = {
+      //   issue_id: data?.issue_id,
+      //   workspace_id: currentWorkspace?.id,
+      //   team_id: data.team_id,
+      // };
 
-      console.log("Upload successful, fetching updated data");
+      // await updateSubIssuesUri(
+      //   Number(id),
+      //   payload,
+      //   // undefined,
+      //   filesArray,
+      // );
 
-      const response = await fetchSubissuesDetailUri(Number(id));
+      // console.log("Upload successful, fetching updated data");
 
-      console.log("Updated documents:", response.data.documents);
-      setDocuments(response.data.documents || []);
+      // const response = await fetchSubissuesDetailUri(Number(id));
+
+      // console.log("Updated documents:", response.data.documents);
+      // setDocuments(response.data.documents || []);
 
       toast.dismiss(loadingToast);
       toast.success(`${filesArray.length} document(s) uploaded`);
@@ -870,7 +951,7 @@ export default function SubIssueDetailView() {
               </div>
             </div>
 
-            <div className="space-y-4">
+            {/* <div className="space-y-4">
               {activities.map((activity) => (
                 <div key={activity.id} className="flex items-start gap-3">
                   <Avatar className="h-6 w-6">
@@ -890,7 +971,9 @@ export default function SubIssueDetailView() {
                   </div>
                 </div>
               ))}
-            </div>
+            </div> */}
+
+            <Activity activityData={activityData?.data ?? []} />
           </div>
 
           <div className="space-y-4">
@@ -1533,7 +1616,7 @@ export default function SubIssueDetailView() {
                       type="button"
                       variant="ghost"
                       size="sm"
-                      onClick={() => fileInputRef.current?.click()}
+                      onClick={() => commentfileInputRef.current?.click()}
                     >
                       <Paperclip className="h-4 w-4" />
                     </Button>
@@ -1541,13 +1624,18 @@ export default function SubIssueDetailView() {
                       size="sm"
                       type="submit"
                       variant="custom"
-                      disabled={isSubmitting || postComment.isPending || (!values.comment_body.trim() && values.attachments.length === 0)}
+                      disabled={
+                        isSubmitting ||
+                        postComment.isPending ||
+                        (!values.comment_body.trim() &&
+                          values.attachments.length === 0)
+                      }
                     >
                       <ArrowUp className="h-4 w-4" />
                     </Button>
                   </div>
                   <input
-                    ref={fileInputRef}
+                    ref={commentfileInputRef}
                     type="file"
                     multiple
                     accept="image/*,.pdf,.doc,.docx,.xls,.xlsx"
@@ -1591,7 +1679,7 @@ export default function SubIssueDetailView() {
           {/* Priority */}
           <div className="gap-2">
             <PriorityPicker
-              value={priorityId}
+              value={data?.priority_id || undefined}
               onChange={handlePriorityUpdate}
               buttonVarient="dark"
               className="border-0"

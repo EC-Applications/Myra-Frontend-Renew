@@ -15,6 +15,7 @@ import { toast } from "sonner";
 import * as yup from "yup";
 import OtpVerification from "./otp-verification";
 import { useSearchParams } from "react-router";
+import { baseUrl } from "@/constants";
 
 const validationSchema = yup.object({
   email: yup
@@ -32,16 +33,16 @@ const SignIn = () => {
 
   const handleGoogleLogin = () => {
     // Google OAuth endpoint pe redirect
-    window.location.href = "http://api.myracloud.io/auth/google?platform=web";
+    window.location.href = `${baseUrl}/auth/google?platform=web`;
   };
 
   const handleMicrosoftLogin = () => {
     window.location.href =
-      "https://api.myracloud.io/auth/microsoft?platform=web";
+      `${baseUrl}/auth/microsoft?platform=web`;
   };
 
   const handleGithubLogin = () => {
-    window.location.href = "https://api.myracloud.io/auth/github?platform=web";
+    window.location.href = `${baseUrl}/auth/github?platform=web`;
   };
 
   const formik = useFormik<iLoginRequest>({
@@ -156,8 +157,10 @@ const SignIn = () => {
                   </div>
 
                   <Button
-                    className="w-full h-12"
+                    className="w-full h-12 cursor-pointer"
                     type="submit"
+                    variant="custom"
+                    
                     disabled={loading}
                   >
                     {loading ? (
