@@ -37,7 +37,7 @@ export interface iWorkspaceAddResponse {
   url: string;
 }
 export interface iWorkspaceInviteRequest {
-  email: string;
+  emails: string[];
   role: "member" | "owner";
 }
 export interface iWorkspaceInviteResponse {

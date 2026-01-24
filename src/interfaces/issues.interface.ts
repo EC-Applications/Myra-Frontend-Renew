@@ -1,4 +1,5 @@
 // import type { iStatus } from "./issues";
+import type { iUserResponse } from "./auth.interface";
 import type { iLabel } from "./label.interface";
 import type { iMilestone } from "./milestone.interface";
 import type { iMember } from "./teams.interface";
@@ -18,7 +19,7 @@ export interface iIssuePayload {
   external_link?: string;
   attachments?: File[];
   issue_id?: number;
-  cycle_id? : number;
+  cycle_id?: number;
 }
 
 export interface iIssuesLabelPayload {
@@ -40,6 +41,8 @@ export interface iIssuesLabel {
   color: string;
   created_at?: string;
 }
+
+
 
 // export interface iStatus {
 //     id: number;

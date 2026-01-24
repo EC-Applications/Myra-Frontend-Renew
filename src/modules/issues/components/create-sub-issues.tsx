@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Formik, Form } from "formik";
 import * as yup from "yup";
 import { LinkIcon, Paperclip, X } from "lucide-react";
@@ -23,6 +23,7 @@ import type { iTeams } from "@/interfaces/teams.interface";
 import { createSubIssueUri } from "@/services/sub-issues.service";
 import { issueDetailUri } from "@/services/issues.service";
 import type { RootState } from "@/store/store";
+import { useCreateSubIssueHook } from "@/hooks/use-create-subissue";
 
 // Validation schema
 const subIssueSchema = yup.object({
@@ -30,6 +31,7 @@ const subIssueSchema = yup.object({
     .string()
     .required("Title is required")
     .min(3, "Title must be at least 3 characters"),
+  team_id: yup.number().required("Team is required"),
   description: yup.string(),
   status_id: yup.number().required("Status is required"),
   priority_id: yup.number(),
@@ -43,14 +45,17 @@ interface SubIssueFormProps {
   parentIssueId: number;
   onSuccess?: (updatedData?: iIussesDetail) => void;
   onCancel?: () => void;
+  defTeam: number;
 }
 
 export default function SubIssueForm({
   parentIssueId,
   onSuccess,
   onCancel,
+  defTeam,
 }: SubIssueFormProps) {
   const { id } = useParams();
+  console.log("ISSUES ID", id);
   const { currentWorkspace } = useUser();
 
   const status = useSelector((state: RootState) => state.issuesStatus);
@@ -65,10 +70,21 @@ export default function SubIssueForm({
   const teamsData = useSelector((state: any) => state.teams);
   const [selectedTeam, setSelectedTeam] = useState<iTeams | null>(null);
 
+  const createSubIssueMutation = useCreateSubIssueHook(Number(parentIssueId));
+
+  useEffect(() => {
+    if (defTeam && teamsData) {
+      const defaultTeam = teamsData.find((team: any) => team.id === defTeam);
+      if (defaultTeam) {
+        setSelectedTeam(defaultTeam);
+      }
+    }
+  }, [defTeam, teamsData]);
+
   const initialValues: iSubIssuePayload = {
     name: "",
     description: "",
-    team_id: Number(selectedTeam?.id),
+    team_id: Number(selectedTeam?.id) || Number(defTeam) || 0,
     workspace_id: currentWorkspace?.id || 0,
     status_id: statusList?.[0]?.id || 0,
     priority_id: undefined,
@@ -81,10 +97,10 @@ export default function SubIssueForm({
 
   const handleSubmit = async (
     values: iSubIssuePayload,
-    { setSubmitting, resetForm }: any
+    { setSubmitting, resetForm }: any,
   ) => {
-    const loadingToast = toast.loading("Creating sub-issue...");
     try {
+      console.log("ISSUE IDDDD",id)
       const payload: iSubIssuePayload = {
         ...values,
         due_date: values.due_date
@@ -92,16 +108,13 @@ export default function SubIssueForm({
           : null,
       };
 
-      const response = await createSubIssueUri(payload);
+      // Mutation call
+      await createSubIssueMutation.mutateAsync(payload);
 
-      toast.dismiss(loadingToast);
-      toast.success(response.message || "Sub-issue created successfully");
-      const res = await issueDetailUri(Number(id));
+      // Success ke baad
       resetForm();
-      onSuccess?.(res.data);
+      onSuccess?.();
     } catch (e: any) {
-      toast.dismiss(loadingToast);
-      toast.error(e.response?.data?.message || "Failed to create sub-issue");
       console.error(e);
     } finally {
       setSubmitting(false);
@@ -180,8 +193,8 @@ export default function SubIssueForm({
                                 setFieldValue(
                                   "documents",
                                   values.documents?.filter(
-                                    (_, i) => i !== index
-                                  )
+                                    (_, i) => i !== index,
+                                  ),
                                 );
                                 setSelectedIndex(null);
                               }}
@@ -214,8 +227,8 @@ export default function SubIssueForm({
                                 setFieldValue(
                                   "documents",
                                   values.documents?.filter(
-                                    (_, i) => i !== index
-                                  )
+                                    (_, i) => i !== index,
+                                  ),
                                 );
                                 setSelectedIndex(null);
                               }}
@@ -264,12 +277,12 @@ export default function SubIssueForm({
                 <ProjectFormLabels
                   labels={labels}
                   value={labels.filter((l: any) =>
-                    values.label_id?.includes(l.id)
+                    values.label_id?.includes(l.id),
                   )}
                   onChange={(selectedLabels) =>
                     setFieldValue(
                       "label_id",
-                      selectedLabels.map((l) => l.id)
+                      selectedLabels.map((l) => l.id),
                     )
                   }
                 />

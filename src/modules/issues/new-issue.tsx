@@ -13,14 +13,12 @@ import { Textarea } from "@/components/ui/textarea";
 import { useUser } from "@/hooks/use-user";
 import type { iIssuePayload } from "@/interfaces/issues.interface";
 import { issueSchema } from "@/schema/issue-schema";
-import { createIssuesUri, fetchIssuesUri } from "@/services/issues.service";
-import { setIssues } from "@/store/slices/issues.slice";
+import { useCreateIssueHook } from "@/hooks/use-create-issue";
 import { Form, Formik, type FormikHelpers } from "formik";
 import { LucideSquareArrowRight, Paperclip, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { useFetcher, useParams } from "react-router";
-import { toast } from "sonner";
+import { useParams } from "react-router";
 import { ProjectDatePicker } from "../projects/components/date-picker";
 import { ProjectFormLabels } from "../projects/components/label-picker";
 import { PriorityPicker } from "../projects/components/priority-picker";
@@ -39,7 +37,6 @@ import { CyclePicker } from "../cycles/components/cycle-picker";
 import { TeamPicker } from "../projects/components/team-picker";
 import type { iTeams } from "@/interfaces/teams.interface";
 import { SingleTeamPicker } from "@/components/single-team-picker";
-import { fetchProjectIssueUri } from "@/services/project.service";
 
 interface NewIssueDialogProps {
   open: boolean;
@@ -56,7 +53,7 @@ export default function NewIssueDialog({
   defStatus,
   defProject,
 }: NewIssueDialogProps) {
-  const { "team-id": teamId, id: projectId, "cycleId": cycleID } = useParams();
+  const { "team-id": teamId, "cycleId": cycleID } = useParams();
   const projects = useSelector((state: any) => state.project.projects);
   const teams = useSelector((state: any) => state.teams);
   const status = useSelector((state: RootState) => state.issuesStatus);
@@ -67,6 +64,7 @@ export default function NewIssueDialog({
   const workspace = useUser();
 
   const dispatch = useDispatch();
+  const createIssue = useCreateIssueHook();
 
   const fiterTeam = teams.find((f: any) => f.id == teamId);
   console.log("FILTER TEAM", fiterTeam);
@@ -113,57 +111,35 @@ export default function NewIssueDialog({
     attachments: [],
   };
 
-  const handleSubmit = async (
+  const handleSubmit = (
     values: iIssuePayload,
-    { setSubmitting, resetForm }: FormikHelpers<iIssuePayload>,
+    { resetForm }: FormikHelpers<iIssuePayload>,
   ) => {
-    const loadingToast = toast.loading("Creating issue...");
+    const payload: iIssuePayload = {
+      ...values,
+      team_id: selectedTeams?.id ? Number(selectedTeams.id) : 0,
+      due_date: values.due_date
+        ? new Date(values.due_date).toISOString().split("T")[0]
+        : null,
+    };
 
-    try {
-      const payload: iIssuePayload = {
-        ...values,
-        due_date: values.due_date
-          ? new Date(values.due_date).toISOString().split("T")[0]
-          : null,
-      };
-      // console.log("PAYLOAD",payload)
-      setSelectedCycle(undefined);
-      const response = await createIssuesUri(payload);
+    setSelectedCycle(undefined);
 
-      toast.dismiss(loadingToast);
-      toast.success(response.data.message);
-      if (cycleID) {
-        cycleDetailUri(
-          workspace.currentWorkspace?.slug ?? "",
-          Number(teamId),
-          Number(cycleID),
-        ).then((res) => dispatch(setCycleIssues(res.data)));
-      } else {
-        const method = projectId
-          ? fetchProjectIssueUri(Number(projectId))
-          : fetchIssuesUri(
-              Number(workspace.currentWorkspace?.id),
-              Number(teamId),
-            );
+    createIssue.mutate(payload, {
+      onSuccess: () => {
+        // Cycle issues ke liye Redux update (kyunki React Query use nahi ho raha)
+        if (cycleID) {
+          cycleDetailUri(
+            workspace.currentWorkspace?.slug ?? "",
+            Number(teamId),
+            Number(cycleID),
+          ).then((res) => dispatch(setCycleIssues(res.data)));
+        }
 
-        method.then((res) => dispatch(setIssues(res.data)));
-      }
-
-      cycleDetailUri(
-        workspace.currentWorkspace?.slug ?? "",
-        Number(teamId),
-        208,
-      ).then((res) => dispatch(setCycleIssues(res.data)));
-
-      resetForm();
-      onOpenChange(false);
-    } catch (e: any) {
-      toast.dismiss(loadingToast);
-      toast.error(e.response?.data?.message || "Failed to create issue");
-      console.error(e);
-    } finally {
-      setSubmitting(false);
-    }
+        resetForm();
+        onOpenChange(false);
+      },
+    });
   };
 
   return (
@@ -177,14 +153,7 @@ export default function NewIssueDialog({
           validationSchema={issueSchema}
           onSubmit={handleSubmit}
         >
-          {({
-            values,
-            errors,
-            touched,
-            setFieldValue,
-            isSubmitting,
-            resetForm,
-          }) => (
+          {({ values, errors, touched, setFieldValue, resetForm }) => (
             <Form>
               {/* Header */}
               <DialogHeader className="flex flex-row items-center justify-between py-1 px-3 dark:border-zinc-700">
@@ -453,10 +422,10 @@ export default function NewIssueDialog({
                     type="submit"
                     variant="custom"
                     size="custom"
-                    disabled={isSubmitting}
+                    disabled={createIssue.isPending}
                     className="cursor-pointer hover:bg-gray-400"
                   >
-                    {isSubmitting ? "Creating..." : "Create issue"}
+                    {createIssue.isPending ? "Creating..." : "Create issue"}
                   </Button>
                 </div>
               </div>

@@ -235,9 +235,9 @@ export function SettingsSidebar() {
                   console.log('Is Active:', isActive);
 
                   return (
-                    <SidebarMenuItem key={item.title}>
-                      <SidebarMenuButton asChild isActive={isActive}>
-                        <Link to={item.url}>
+                    <SidebarMenuItem key={item.title} >
+                      <SidebarMenuButton asChild isActive={isActive} >
+                        <Link to={item.url} >
                           <item.icon />
                           <span>{item.title}</span>
                         </Link>

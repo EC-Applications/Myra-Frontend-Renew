@@ -3,11 +3,12 @@
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { SidebarTrigger } from "@/components/ui/sidebar";
-import { useProjectDetail } from "@/hooks/use-project-detail";
+// import { useProjectDetail } from "@/hooks/use-project-detail";
 import { Copy, FileText, PanelRightIcon } from "lucide-react";
 import { useState } from "react";
 import { NavLink, Outlet, useParams } from "react-router";
 import ProjectProperties from "./components/project-properties";
+import { useProjectDetail } from "@/hooks/use-project-detail";
 
 export default function DetailWrapper() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -16,7 +17,7 @@ export default function DetailWrapper() {
   const { data: project } = useProjectDetail(Number(id));
 
   return (
-  <div className="min-h-screen dark:bg-[#17181b]">
+  <div className="min-h-screen dark:bg-[#17181b] border">
       {/* Header */}
 
       <header className="flex justify-between h-16 shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12 border dark:border-zinc-800 rounded ">

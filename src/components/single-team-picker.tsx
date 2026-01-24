@@ -12,6 +12,8 @@ import {
 import { useEffect, useState } from "react";
 import { Users, X } from "lucide-react";
 import { useParams } from "react-router";
+import type { RootState } from "@/store/store";
+import { useSelector } from "react-redux";
 
 interface SingleTeamPickerProps {
   teams: iTeams[];
@@ -29,8 +31,9 @@ export const SingleTeamPicker = ({
   const { "team-id": teamId } = useParams();
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
+  const teamset = useSelector((state: RootState) => state.useTeamId);
 
-  const currentTeam = teams.find(t => t.id === Number(teamId));
+  const currentTeam = teams.find(t => [Number(teamId), Number(teamset)].includes(Number(t.id)));
 
   // default select current team
   useEffect(() => {
@@ -53,8 +56,12 @@ export const SingleTeamPicker = ({
     onChange(null);
   };
 
+  useEffect(() => {
+    if (teams.length == 1) onChange(teams[0]);
+  }, [teams, onChange]);
+
   return (
-    <DropdownMenu open={open} onOpenChange={setOpen}>
+    <DropdownMenu open={open && teams.length > 1} onOpenChange={setOpen}>
       <DropdownMenuTrigger asChild>
         <Button
           variant="ghost"

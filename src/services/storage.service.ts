@@ -2,6 +2,7 @@ import { storageSecret } from "@/constants";
 import { EncryptStorage } from "encrypt-storage";
 
 export const storage = new EncryptStorage(storageSecret);
+export const tempStorage = new EncryptStorage(storageSecret, {storageType: "sessionStorage"});
 export function setItem<T>(key: string, value: T) {
   storage.setItem(key, value);
 }

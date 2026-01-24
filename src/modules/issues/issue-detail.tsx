@@ -22,12 +22,20 @@ import {
 import { setSubIssues } from "@/store/slices/sub-issues.slice";
 import { format } from "date-fns";
 import {
+  ArrowUp,
+  Check,
   ChevronDown,
   ChevronUp,
+  Download,
   MoreHorizontal,
   Paperclip,
+  Pencil,
   Plus,
+  Reply,
+  ReplyAll,
   Star,
+  Trash2,
+  X,
 } from "lucide-react";
 import type React from "react";
 import { useEffect, useRef, useState } from "react";
@@ -48,41 +56,48 @@ import SubIssuesList from "./components/sub-issues-list";
 import type { iIssueStatus } from "@/interfaces/issues-status.interface";
 import type { RootState } from "@/store/store";
 import { IconPicker } from "../projects/components/icon-picker";
-
-interface SubIssue {
-  id: string;
-  title: string;
-  priority: number;
-  assignee: {
-    name: string;
-    avatar: string;
-  };
-}
-
-interface ActivityItem {
-  id: string;
-  type: "created" | "moved" | "system";
-  user: string;
-  action: string;
-  timestamp: string;
-  icon?: React.ReactNode;
-}
+import { Form, Formik, type FormikHelpers } from "formik";
+import { usePostCommentHook } from "@/hooks/use-post-comments";
+import { useGetComments } from "@/hooks/use-get-comments";
+import { formatCommentTime } from "@/components/date-converter";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@radix-ui/react-dropdown-menu";
+import { useDeleteCommentHook } from "@/hooks/use-comment-delete";
+import { useCommentUpdateHook } from "@/hooks/use-update-comment";
+import { formatFileSize } from "@/components/hepler-format-filesize";
+import { useActivityHook } from "@/hooks/use-activity-hook";
+import Activity from "./components/issues-activity";
+import { useGetIssuesHook } from "@/hooks/use-get-issues";
+import { useGetIssuesDetailHook } from "@/hooks/use-get-issues-detail.hook";
+import { useGetSubIssuesHook } from "@/hooks/use-get-subissues.hook";
+import { useUpdateIssueHook } from "@/hooks/use-issue-update";
 
 export default function IssueDetailView() {
   const issues = useSelector((state: any) => state.issues);
   const { id } = useParams();
+  const currentUser = useUser();
+
+  const { data } = useGetIssuesDetailHook(Number(id));
+  const {} = useGetSubIssuesHook(Number(id));
+
+  const updateIssueStatus = useUpdateIssueHook();
+
   console.log("IssueID", id);
   const { currentWorkspace } = useUser();
   const navigate = useNavigate();
   const dispatch = useDispatch();
 
   const [loading, setLoading] = useState(false);
-  const [data, setData] = useState<iIussesDetail | undefined>();
+  // const [data, setData] = useState<iIussesDetail | undefined>();
 
   const status = useSelector((state: RootState) => state.issuesStatus);
   const statusList = status ?? [];
   const [selectedStatus, setSelectedStatus] = useState<iIssueStatus | null>(
-    null
+    null,
   );
   const [priorityId, setPriorityId] = useState<number | undefined>();
   const [issueName, setIssueName] = useState("");
@@ -93,7 +108,9 @@ export default function IssueDetailView() {
 
   const workspaceMember = useSelector((state: any) => state.workspace);
   const members = Array.isArray(workspaceMember) ? workspaceMember : [];
-  const [selectedMember, setSelectedMember] = useState<iMember | undefined>();
+  const [selectedMember, setSelectedMember] = useState<iMember | undefined>(
+    data?.assignee,
+  );
   const [startDate, setStartDate] = useState<Date | null>(null);
 
   const projects = useSelector((state: any) => state.project.projects);
@@ -109,26 +126,76 @@ export default function IssueDetailView() {
   const [documents, setDocuments] = useState<DocumentItem[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const commentfileInputRef = useRef<HTMLInputElement>(null);
   const [uploadingDocs, setUploadingDocs] = useState(false);
 
-  useEffect(() => {
-    setLoading(true);
-    try {
-      issueDetailUri(Number(id)).then((res) => {
-        console.log("ISSUE DETAIL DATA", res.data);
-        setData(res.data);
-      });
+  const [repOpen, setRepOpen] = useState<number | null>(null);
+  const [replyText, setReplyText] = useState<Record<number, string>>({});
 
-      fetchSubIssues(Number(id)).then((res) => {
-        console.log("SUB ISSUES DATA", res.data);
-        dispatch(setSubIssues(res.data));
-      });
-    } catch (e) {
-      setLoading(false);
-    } finally {
-      setLoading(false);
-    }
-  }, [id]);
+  // Edit comment state
+  const [editingCommentId, setEditingCommentId] = useState<number | null>(null);
+  const [editCommentText, setEditCommentText] = useState("");
+  const [editCommentAttachments, setEditCommentAttachments] = useState<File[]>(
+    [],
+  );
+  const editTextareaRef = useRef<HTMLTextAreaElement>(null);
+
+  // POST COMMENT
+  const postComment = usePostCommentHook();
+  const { data: comments } = useGetComments(
+    currentWorkspace?.slug ?? "",
+    Number(id),
+  );
+
+  // DELETE COMENT HOOK
+  const deleteComment = useDeleteCommentHook();
+
+  // UPDATE COmment hook
+
+  const updateComment = useCommentUpdateHook();
+
+  // Activity Hook
+
+  const { data: activityData } = useActivityHook(
+    currentWorkspace?.slug ?? "",
+    "issue",
+    Number(id),
+  );
+
+  console.log(activityData, "ACTIVITY DATA");
+
+  // useEffect(() => {
+  //   setLoading(true);
+  //   try {
+  //     issueDetailUri(Number(id)).then((res) => {
+  //       console.log("ISSUE DETAIL DATA", res.data);
+  //       // setData(res.data);
+  //     });
+
+  //     fetchSubIssues(Number(id)).then((res) => {
+  //       console.log("SUB ISSUES DATA", res.data);
+  //       dispatch(setSubIssues(res.data));
+  //     });
+  //   } catch (e) {
+  //     setLoading(false);
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // }, [id]);
+
+  // useEffect(() => {
+  //   if (data?.assignee) {
+  //     setSelectedMember(data.assignee);
+  //   }
+  //   if (data?.labels) {
+  //     console.log("Setting labels:", data.labels);
+  //     setSelectedLabels(data.labels);
+
+  //   }
+  //    if (data?.project_id) {
+  //     setSelectedProjects(data?.projects);
+  //   }
+  // }, [data?.assignee, data?.labels, data?.projects]);
 
   useEffect(() => {
     if (data?.name) {
@@ -169,48 +236,25 @@ export default function IssueDetailView() {
   console.log("ISSUES", issues);
 
   const [subIssuesExpanded, setSubIssuesExpanded] = useState(true);
-  const [comment, setComment] = useState("");
   const [showAddSubIssue, setShowAddSubIssue] = useState(false);
   const [newSubIssueTitle, setNewSubIssueTitle] = useState("");
   const [newSubIssueDescription, setNewSubIssueDescription] = useState("");
+  const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
 
   const [isDeleting, setIsDeleting] = useState(false);
 
-  const activities: ActivityItem[] = [
-    {
-      id: "1",
-      type: "created",
-      user: "ahmedsaif",
-      action: "created the issue",
-      timestamp: "5w ago",
-    },
-    {
-      id: "2",
-      type: "moved",
-      user: "abdurrehman",
-      action: "moved from Todo to In Progress",
-      timestamp: "1mo ago",
-    },
-    {
-      id: "3",
-      type: "system",
-      user: "MyRa",
-      action: "moved issue through four cycles to Cycle 7",
-      timestamp: "4d ago",
-    },
-  ];
-
-  const handlePriorityUpdate = async (issuid: number) => {
+  const handlePriorityUpdate = async (prioirityId: number) => {
     try {
-      const payload = {
-        priority_id: issuid,
-        workspace_id: currentWorkspace?.id,
-        team_id: data?.team_id,
-      };
-
-      await updateIssuesUri(Number(id), payload);
-      setPriorityId(issuid);
-      toast.success("Priority updated");
+      updateIssueStatus.mutate({
+        issueId: Number(id),
+        body: {
+          priority_id: prioirityId,
+          workspace_id: currentWorkspace?.id,
+          team_id: Number(data?.team_id),
+        },
+        teamId: Number(data?.team_id),
+        workspaceId: Number(currentWorkspace?.id),
+      });
     } catch (error: any) {
       toast.error(error.message || "Failed to update priority");
     }
@@ -218,14 +262,24 @@ export default function IssueDetailView() {
 
   const handleStatusUpdate = async (status: iIssueStatus) => {
     try {
-      const payload = {
-        status_id: status.id,
-        workspace_id: currentWorkspace?.id,
-        team_id: data?.team_id,
-      };
-      await updateIssuesUri(Number(id), payload);
+      updateIssueStatus.mutate({
+        issueId: Number(id),
+        body: {
+          status_id: status.id,
+          workspace_id: currentWorkspace?.id,
+          team_id: Number(data?.team_id),
+        },
+        teamId: Number(data?.team_id),
+        workspaceId: Number(currentWorkspace?.id),
+      });
+      // const payload = {
+      //   status_id: status.id,
+      //   workspace_id: currentWorkspace?.id,
+      //   team_id: data?.team_id,
+      // };
+      // await updateIssuesUri(Number(id), payload);
       setSelectedStatus(status);
-      toast.success("Status updated");
+      // toast.success("Status updated");
     } catch (error: any) {
       toast.error(error.message || "Failed to update status");
     }
@@ -233,14 +287,24 @@ export default function IssueDetailView() {
 
   const handleMemberUpdate = async (member: iMember | undefined) => {
     try {
-      const payload = {
-        assignee_id: selectedMember?.id,
-        workspace_id: currentWorkspace?.id,
-        team_id: data?.team_id,
-      };
-      await updateIssuesUri(Number(id), payload);
+      //   const payload = {
+      //     assignee_id: selectedMember?.id,
+      //     workspace_id: currentWorkspace?.id,
+      //     team_id: data?.team_id,
+      //   };
+      updateIssueStatus.mutate({
+        issueId: Number(id),
+        body: {
+          assignee_id: member?.id,
+          workspace_id: currentWorkspace?.id,
+          team_id: Number(data?.team_id),
+        },
+        teamId: Number(data?.team_id),
+        workspaceId: Number(currentWorkspace?.id),
+      });
+      // await updateIssuesUri(Number(id), payload);
       setSelectedMember(member);
-      toast.success("Assigne updated");
+      // toast.success("Assigne updated");
     } catch (error: any) {
       toast.error(error.message || "Failed to update status");
     }
@@ -248,14 +312,24 @@ export default function IssueDetailView() {
 
   const handleProjectUpdate = async (project: iProject | undefined) => {
     try {
-      const payload = {
-        project_id: project?.id,
-        workspace_id: currentWorkspace?.id,
-        team_id: data?.team_id,
-      };
-      await updateIssuesUri(Number(id), payload);
+      updateIssueStatus.mutate({
+        issueId: Number(id),
+        body: {
+          project_id: project?.id,
+          workspace_id: currentWorkspace?.id,
+          team_id: Number(data?.team_id),
+        },
+        teamId: Number(data?.team_id),
+        workspaceId: Number(currentWorkspace?.id),
+      });
       setSelectedProjects(project);
-      toast.success("Project updated");
+      //   const payload = {
+      //     project_id: project?.id,
+      //     workspace_id: currentWorkspace?.id,
+      //     team_id: data?.team_id,
+      //   };
+      //   await updateIssuesUri(Number(id), payload);
+      // toast.success("Project updated");
     } catch (error: any) {
       toast.error(error.message || "Failed to update status");
     }
@@ -270,24 +344,34 @@ export default function IssueDetailView() {
       };
       await updateIssuesUri(Number(id), payload);
       setIssueName(issueName);
-      toast.success("Name updated");
+      // toast.success("Name updated");
     } catch (error: any) {
       toast.error(error.message || "Failed to update status");
     }
   };
 
   const handleUpdateLabel = async (labels: Label[]) => {
-    console.log("janaaaa");
+    console.log("n");
 
     setSelectedLabels(labels); // Pehle state update karo
     // setSaving(true);
 
     try {
-      await updateIssuesUri(Number(id), {
-        workspace_id: currentWorkspace?.id,
-        labels: labels.map((x) => x.id), // Updated labels use karo
-        team_id: data?.team_id,
+      updateIssueStatus.mutate({
+        issueId: Number(id),
+        body: {
+          labels: labels?.map((l) => l.id),
+          workspace_id: currentWorkspace?.id,
+          team_id: Number(data?.team_id),
+        },
+        teamId: Number(data?.team_id),
+        workspaceId: Number(currentWorkspace?.id),
       });
+      // await updateIssuesUri(Number(id), {
+      //   workspace_id: currentWorkspace?.id,
+      //   labels: labels.map((x) => x.id), // Updated labels use karo
+      //   team_id: data?.team_id,
+      // });
 
       // dispatch(
       //   updateProject({
@@ -296,7 +380,7 @@ export default function IssueDetailView() {
       //   })
       // );
 
-      toast.success("Issue Label updated");
+      // toast.success("Issue Label updated");
     } catch (error) {
       setSelectedLabels(selectedLabels); // Error pe purani state revert karo
       toast.error("Failed to update issue labels");
@@ -305,14 +389,24 @@ export default function IssueDetailView() {
 
   const handleTargetDate = async (date: Date | null) => {
     try {
-      const payload = {
-        due_date: date ? format(date, "yyyy-MM-dd") : undefined,
-        workspace_id: currentWorkspace?.id,
-        team_id: data?.team_id,
-      };
-      await updateIssuesUri(Number(id), payload);
-      setStartDate(date);
-      toast.success("Date updated");
+      updateIssueStatus.mutate({
+        issueId: Number(id),
+        body: {
+          due_date: date ? format(date, "yyyy-MM-dd") : undefined,
+          workspace_id: currentWorkspace?.id,
+          team_id: Number(data?.team_id),
+        },
+        teamId: Number(data?.team_id),
+        workspaceId: Number(currentWorkspace?.id),
+      });
+      // const payload = {
+      //   due_date: date ? format(date, "yyyy-MM-dd") : undefined,
+      //   workspace_id: currentWorkspace?.id,
+      //   team_id: data?.team_id,
+      // };
+      // await updateIssuesUri(Number(id), payload);
+      // setStartDate(date);
+      // toast.success("Date updated");
     } catch (error: any) {
       toast.error(error.message || "Failed to update status");
     }
@@ -328,27 +422,59 @@ export default function IssueDetailView() {
 
     // naya debounce
     saveTimeoutRef.current = setTimeout(() => {
-      handleDescriptionUpdate(value);
-    }, 700); // 👈 700ms = Linear jaisa feel
+      handleUpdateDescription(value);
+    }, 700);
   };
 
-  const handleDescriptionUpdate = async (des: string) => {
-    try {
-      setIsSaving(true);
+  const handleUpdateDescription = async (des: string) => {
+    setIsSaving(true);
 
-      const payload = {
-        description: des,
-        workspace_id: currentWorkspace?.id,
-        team_id: data?.team_id,
-      };
-
-      await updateIssuesUri(Number(id), payload);
-    } catch (error: any) {
-      toast.error(error.message || "Failed to update description");
-    } finally {
-      setIsSaving(false);
-    }
+    updateIssueStatus.mutate(
+      {
+        issueId: Number(id),
+        body: {
+          description: des,
+          workspace_id: currentWorkspace?.id,
+          team_id: Number(data?.team_id),
+        },
+        teamId: Number(data?.team_id),
+        workspaceId: Number(currentWorkspace?.id),
+      },
+      {
+        onSettled: () => {
+          setIsSaving(false);
+        },
+      },
+    );
   };
+
+  // const handleDescriptionUpdate = async (des: string) => {
+  //   try {
+  //     setIsSaving(true);
+
+  //     updateIssueStatus.mutate({
+  //       issueId: Number(id),
+  //       body: {
+  //         description: des,
+  //         workspace_id: currentWorkspace?.id,
+  //         team_id: Number(data?.team_id),
+  //       },
+  //       teamId: Number(data?.team_id),
+  //       workspaceId: Number(currentWorkspace?.id),
+  //     });
+  //     // const payload = {
+  //     //   description: des,
+  //     //   workspace_id: currentWorkspace?.id,
+  //     //   team_id: data?.team_id,
+  //     // };
+
+  //     // await updateIssuesUri(Number(id), payload);
+  //   } catch (error: any) {
+  //     toast.error(error.message || "Failed to update description");
+  //   } finally {
+  //     setIsSaving(false);
+  //   }
+  // };
 
   const handleDocumentUpload = async (files: FileList | null) => {
     console.log("handleDocumentUpload called with:", files);
@@ -364,36 +490,35 @@ export default function IssueDetailView() {
     }
 
     setUploadingDocs(true);
-    const loadingToast = toast.loading("Uploading documents...");
 
     try {
       const filesArray = Array.from(files);
-      console.log("Uploading files:", filesArray);
 
-      await updateIssuesUri(
-        Number(id),
-        {
+      updateIssueStatus.mutate({
+        issueId: Number(id),
+        body: {
           workspace_id: currentWorkspace?.id,
-          team_id: data.team_id,
+          team_id: Number(data?.team_id),
         },
-        // undefined,
-        filesArray
-      );
+        newAttachments: filesArray,
+        teamId: Number(data?.team_id),
+        workspaceId: Number(currentWorkspace?.id),
+      });
 
-      console.log("Upload successful, fetching updated data");
+      // console.log("Upload successful, fetching updated data");
 
-      const response = await issueDetailUri(Number(id));
+      // const response = await issueDetailUri(Number(id));
 
-      console.log("Updated documents:", response.data.documents);
-      setDocuments(response.data.documents || []);
+      // console.log("Updated documents:", response.data.documents);
+      // setDocuments(response.data.documents || []);
 
-      toast.dismiss(loadingToast);
-      toast.success(`${filesArray.length} document(s) uploaded`);
+      // toast.dismiss(loadingToast);
+      // toast.success(`${filesArray.length} document(s) uploaded`);
     } catch (error: any) {
       console.error("Upload error:", error);
-      toast.dismiss(loadingToast);
+
       toast.error(
-        error?.response?.data?.message || "Failed to upload documents"
+        error?.response?.data?.message || "Failed to upload documents",
       );
     } finally {
       setUploadingDocs(false);
@@ -402,7 +527,7 @@ export default function IssueDetailView() {
 
   const handleSubIssueDelete = async (
     selectedSubIssues: number[],
-    onSuccess?: () => void
+    onSuccess?: () => void,
   ) => {
     if (selectedSubIssues.length === 0) return;
 
@@ -410,7 +535,7 @@ export default function IssueDetailView() {
     const loadingToast = toast.loading(
       `Deleting ${selectedSubIssues.length} sub-issue${
         selectedSubIssues.length > 1 ? "s" : ""
-      }...`
+      }...`,
     );
 
     try {
@@ -424,25 +549,25 @@ export default function IssueDetailView() {
       toast.success(
         `${selectedSubIssues.length} sub-issue${
           selectedSubIssues.length > 1 ? "s" : ""
-        } deleted successfully`
+        } deleted successfully`,
       );
 
       onSuccess?.();
 
-      setData((prev) => {
-        if (!prev) return prev;
-        return {
-          ...prev,
-          sub_issues:
-            prev.sub_issues?.filter(
-              (sub) => !selectedSubIssues.includes(sub.id)
-            ) || [],
-        };
-      });
+      // setData((prev) => {
+      //   if (!prev) return prev;
+      //   return {
+      //     ...prev,
+      //     sub_issues:
+      //       prev.sub_issues?.filter(
+      //         (sub) => !selectedSubIssues.includes(sub.id),
+      //       ) || [],
+      //   };
+      // });
     } catch (error: any) {
       toast.dismiss(loadingToast);
       toast.error(
-        error?.response?.data?.message || "Failed to delete sub-issues"
+        error?.response?.data?.message || "Failed to delete sub-issues",
       );
       console.error("Delete error:", error);
     } finally {
@@ -457,7 +582,7 @@ export default function IssueDetailView() {
       await deleteIssueAttachmentUri(
         currentWorkspace?.id as number,
         Number(id),
-        [attachmentId]
+        [attachmentId],
       );
 
       const response = await issueDetailUri(Number(id));
@@ -470,13 +595,132 @@ export default function IssueDetailView() {
     }
   };
 
-  const refreshIssueData = async () => {
-    try {
-      const response = await issueDetailUri(Number(id));
-      setData(response.data);
-    } catch (error) {
-      console.error("Failed to refresh:", error);
-    }
+  // const refreshIssueData = async () => {
+  //   try {
+  //     const response = await issueDetailUri(Number(id));
+  //     setData(response.data);
+  //   } catch (error) {
+  //     console.error("Failed to refresh:", error);
+  //   }
+  // };
+
+  // REPLAY
+
+  // PARENT COMMENT
+
+  const initialVal: { comment_body: string; attachments: File[] } = {
+    comment_body: "",
+    attachments: [],
+  };
+
+  const handleCommentSubmit = (
+    values: typeof initialVal,
+    { resetForm }: { resetForm: () => void },
+  ) => {
+    if (!values.comment_body.trim() && values.attachments.length === 0) return;
+
+    postComment.mutate(
+      {
+        issueId: Number(id),
+        body: {
+          body: values.comment_body,
+          commentable_id: Number(id),
+          commentable_type: "issue",
+          parent_id: null,
+          attachments:
+            values.attachments.length > 0 ? values.attachments : undefined,
+        },
+      },
+      {
+        onSuccess: () => {
+          resetForm();
+          setSelectedIndex(null);
+        },
+      },
+    );
+  };
+
+  const handleReplySubmit = (commentId: number) => {
+    const text = replyText[commentId]?.trim();
+    if (!text) return;
+
+    postComment.mutate(
+      {
+        issueId: Number(id),
+        body: {
+          body: text,
+          commentable_id: Number(id),
+          commentable_type: "issue",
+          parent_id: commentId,
+        },
+      },
+      {
+        onSuccess: () => {
+          setReplyText((prev) => ({ ...prev, [commentId]: "" }));
+          setRepOpen(null);
+        },
+      },
+    );
+  };
+
+  const handleDownloadAttachment = (doc: any) => {
+    const link = document.createElement("a");
+    link.href = doc.file_url;
+    link.download = doc.doc_name;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  // handle delete comment
+  const handleDeletComment = (commentId: number) => {
+    deleteComment.mutate({
+      commentId: commentId,
+      issueId: Number(id),
+      workspaceSlug: currentWorkspace?.slug ?? "",
+    });
+  };
+
+  const handleStartEdit = (commentId: number, currentText: string) => {
+    setEditingCommentId(commentId);
+    setEditCommentText(currentText);
+    setEditCommentAttachments([]);
+    setTimeout(() => {
+      editTextareaRef.current?.focus();
+      editTextareaRef.current?.select();
+    }, 0);
+  };
+
+  // Cancel editing
+  const handleCancelEdit = () => {
+    setEditingCommentId(null);
+    setEditCommentText("");
+    setEditCommentAttachments([]);
+  };
+
+  // Save edited comment
+  const handleSaveEdit = () => {
+    if (!editingCommentId || !editCommentText.trim()) return;
+
+    updateComment.mutate(
+      {
+        body: {
+          comment: editCommentText,
+          attachments:
+            editCommentAttachments.length > 0
+              ? editCommentAttachments
+              : undefined,
+        },
+        commentId: editingCommentId,
+        issueId: Number(id),
+        workspaceSlug: currentWorkspace?.slug ?? "",
+      },
+      {
+        onSuccess: () => {
+          handleCancelEdit();
+        },
+      },
+    );
   };
 
   if (loading) {
@@ -495,7 +739,7 @@ dark:bg-[#101012]"
       {/* Main Content */}
       <div className="flex-1 flex flex-col">
         {/* Header */}
-        <div className="flex items-center justify-between px-4 py-2 border-b border-border">
+        <div className="flex items-center justify-between px-6 py-2 border-b border-border">
           <div className="flex items-center gap-2">
             <div className="flex items-center gap-1 text-sm text-muted-foreground">
               <NavLink to={`/teams/${data?.team.id}/issues`}>
@@ -530,11 +774,11 @@ dark:bg-[#101012]"
         </div>
 
         {/* Content */}
-        <div className="flex-1 p-6 overflow-auto">
+        <div className="flex-1 py-6 px-12 overflow-auto">
           {/* Title */}
           <Input
             className="md:text-2xl font-semibold mb-6 border-0 p-0 focus-visible:ring-0 dark:bg-transparent"
-            defaultValue={issueName}
+            defaultValue={data?.name}
             onChange={(e) => setIssueName(e.target.value)}
             onBlur={handleIssueName}
             onKeyDown={(e) => {
@@ -556,12 +800,12 @@ dark:bg-[#101012]"
     focus-visible:ring-0
     dark:bg-transparent
 
-    text-[25px] leading-7
+    text-[18px] leading-7
     placeholder:text-[18px]"
             />
-            {documents.length > 0 ? (
-              <div className="space-y-2">
-                {documents.map((doc) => {
+            {data?.documents && data.documents.length > 0 ? (
+              <div className="pt-2 space-y-2">
+                {data?.documents.map((doc) => {
                   const isSelected = selectedId === doc.id;
 
                   return (
@@ -590,19 +834,32 @@ dark:bg-[#101012]"
                       </div>
 
                       {isSelected && (
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleDeleteAttachment(Number(doc.id));
-                            setDocuments((prev) =>
-                              prev.filter((d) => d.id !== doc.id)
-                            );
-                            setSelectedId(null);
-                          }}
-                          className="absolute right-2 top-2 p-1 rounded hover:bg-destructive/10 text-destructive"
-                        >
-                          🗑️
-                        </button>
+                        <div className="absolute right-2 top-2 flex gap-1">
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDownloadAttachment(doc);
+                            }}
+                            className="p-1 rounded hover:bg-primary/10 text-primary"
+                            title="Download"
+                          >
+                            <Download className="h-5" />
+                          </button>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDeleteAttachment(Number(doc.id));
+                              setDocuments((prev) =>
+                                prev.filter((d) => d.id !== doc.id),
+                              );
+                              setSelectedId(null);
+                            }}
+                            className="p-1 rounded hover:bg-destructive/10 text-destructive"
+                            title="Delete"
+                          >
+                            🗑️
+                          </button>
+                        </div>
                       )}
                     </div>
                   );
@@ -612,7 +869,6 @@ dark:bg-[#101012]"
               <div className=""></div>
             )}
           </div>
-
           {/* Action Buttons */}
           <div className="flex items-center justify-end gap-2 mb-8 w-full">
             <Button
@@ -649,7 +905,6 @@ dark:bg-[#101012]"
               }}
             />
           </div>
-
           {/* Sub-issues */}
           <div className="mb-8">
             <div className="flex items-center justify-between mb-4">
@@ -657,7 +912,7 @@ dark:bg-[#101012]"
                 variant="ghost"
                 size="sm"
                 onClick={() => setSubIssuesExpanded(!subIssuesExpanded)}
-                className="flex items-center gap-2 p-0 h-auto font-medium"
+                className="flex items-center gap-2 p-0 h-auto text-[18px] font-medium"
               >
                 {subIssuesExpanded ? (
                   <ChevronDown className="h-4 w-4" />
@@ -691,8 +946,9 @@ dark:bg-[#101012]"
               <IssueForm
                 parentIssueId={Number(id)}
                 onCancel={() => setShowAddSubIssue(!showAddSubIssue)}
+                defTeam={data?.team_id || 0}
                 onSuccess={(updatedData) => {
-                  setData(updatedData);
+                  // setData(updatedData);
                   setShowAddSubIssue(!showAddSubIssue);
                 }}
               />
@@ -710,15 +966,17 @@ dark:bg-[#101012]"
                       navigate(`/issues/${subIssue.id}/sub-issue`);
                     }}
                     onSubIssueUpdate={(updatedSubIssue) => {
-                      setData((prev:any) => {
-                        if (!prev) return prev;
-                        return {
-                          ...prev,
-                          sub_issues: prev.sub_issues?.map((sub:any) =>
-                            sub.id === updatedSubIssue.id ? updatedSubIssue : sub
-                          ),
-                        };
-                      });
+                      // setData((prev: any) => {
+                      //   if (!prev) return prev;
+                      //   return {
+                      //     ...prev,
+                      //     sub_issues: prev.sub_issues?.map((sub: any) =>
+                      //       sub.id === updatedSubIssue.id
+                      //         ? updatedSubIssue
+                      //         : sub,
+                      //     ),
+                      //   };
+                      // });
                     }}
                   />
                 ) : (
@@ -727,7 +985,6 @@ dark:bg-[#101012]"
               </div>
             )}
           </div>
-
           {/* Activity */}
           <div className="mb-8">
             <div className="flex items-center justify-between mb-4">
@@ -753,7 +1010,7 @@ dark:bg-[#101012]"
               </div>
             </div>
 
-            <div className="space-y-4">
+            {/* <div className="space-y-4">
               {activities.map((activity) => (
                 <div key={activity.id} className="flex items-start gap-3">
                   <Avatar className="h-6 w-6">
@@ -773,30 +1030,696 @@ dark:bg-[#101012]"
                   </div>
                 </div>
               ))}
-            </div>
+            </div> */}
+
+            <Activity activityData={activityData?.data ?? []} />
           </div>
 
           {/* Comment Box */}
-          {/* <div className="border border-border rounded-lg p-4">
-            <Textarea
-              placeholder="Leave a comment..."
-              value={comment}
-              onChange={(e) => setComment(e.target.value)}
-              className="border-0 p-0 resize-none focus-visible:ring-0 dark:bg-transparent"
-              rows={3}
-            />
-            <div className="flex items-center justify-between mt-3 pt-3 border-t border-border">
-              <Button variant="ghost" size="sm">
-                <Paperclip className="h-4 w-4" />
-              </Button>
-              <Button size="sm">
-                <ArrowUp className="h-4 w-4" />
-              </Button>
-            </div>
-          </div> */}
+
+          <div className="space-y-4">
+            {comments?.map((comment) => (
+              <div
+                key={comment.id}
+                className="border rounded-lg dark:bg-[#17181b] border-zinc-800 pb-4"
+              >
+                <div className="">
+                  {/* Row: Avatar + Content + Actions */}
+                  <div className="flex gap-3 p-2">
+                    {/* Avatar */}
+                    <Avatar className="h-9 w-9">
+                      <AvatarImage src={comment?.author?.avatar} />
+                      <AvatarFallback className="text-xs bg-primary/10">
+                        {comment?.author?.name?.slice(0, 2)?.toUpperCase() ||
+                          "NA"}
+                      </AvatarFallback>
+                    </Avatar>
+
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between mb-1">
+                        <div className="flex items-center gap-2">
+                          <span className="text-[15px] font-semibold dark:text-white">
+                            {comment?.author?.name}
+                          </span>
+                          <span className="text-[14px] font-semibold  text-muted-foreground">
+                            {formatCommentTime(comment?.created_at)}
+                          </span>
+                        </div>
+
+                        {/* Action Buttons (Right Side) */}
+                        <div className="flex items-center gap-1">
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            className="h-7 w-7 text-muted-foreground hover:text-white"
+                            onClick={() =>
+                              setRepOpen(
+                                repOpen === comment.id ? null : comment.id,
+                              )
+                            }
+                          >
+                            <Reply className="h-4 w-4" />
+                          </Button>
+                          {/* <Button
+                            size="icon"
+                            variant="ghost"
+                            className="h-7 w-7 text-muted-foreground hover:text-white"
+                          >
+                            <Check className="h-4 w-4" />
+                          </Button>
+                          */}
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button
+                                size="icon"
+                                variant="ghost"
+                                className="h-7 w-7 text-muted-foreground hover:text-white"
+                              >
+                                <MoreHorizontal className="h-4 w-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+
+                            <DropdownMenuContent
+                              align="end"
+                              className="w-40 dark:bg-[#1c1d1f] border  dark:border-zinc-800 rounded p-1 space-y-1"
+                            >
+                              {/* Edit */}
+                              <DropdownMenuItem
+                                onClick={() =>
+                                  handleStartEdit(comment.id, comment.body)
+                                }
+                                className="cursor-pointer flex items-center gap-2 text-[14px] font-semibold  dark:hover:bg-[#292b30] p-1 rounded text-muted-foreground dark:hover:text-white"
+                              >
+                                <Pencil className="h-4 w-4 text-muted-foreground" />
+                                Edit
+                              </DropdownMenuItem>
+
+                              {/* Delete */}
+                              {currentUser.currentUser?.id ===
+                                comment.author.id && (
+                                <DropdownMenuItem
+                                  onClick={() => handleDeletComment(comment.id)}
+                                  className="cursor-pointer flex items-center gap-2 text-[14px] font-semibold dark:hover:bg-[#292b30] p-1 rounded text-muted-foreground dark:hover:text-white"
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                  Delete
+                                </DropdownMenuItem>
+                              )}
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+
+                          {/* <Button
+                            size="icon"
+                            variant="ghost"
+                            className="h-7 w-7 text-muted-foreground hover:text-white"
+                          >
+                            <MoreHorizontal className="h-4 w-4" />
+                          </Button>  */}
+                        </div>
+                      </div>
+
+                      {/* Comment Text */}
+                      {editingCommentId === comment.id ? (
+                        <div className="space-y-2">
+                          <Textarea
+                            ref={editTextareaRef}
+                            value={editCommentText}
+                            onChange={(e) => setEditCommentText(e.target.value)}
+                            className="border-0 resize-none focus-visible:ring-0 dark:bg-transparent p-3 dark:placeholder:font-semibold font-semibold"
+                            placeholder="Edit your comment..."
+                          />
+                          {editCommentAttachments.length > 0 && (
+                            <div className="space-y-2 mt-3">
+                              {editCommentAttachments.map((file, index) => (
+                                <div
+                                  key={index}
+                                  className="relative flex items-center gap-3 p-3 rounded-md dark:bg-[#17181b] border dark:border-zinc-800 hover:border-zinc-700 transition-colors"
+                                >
+                                  {/* File Icon */}
+                                  <div className="flex-shrink-0 w-8 h-8 flex items-center justify-center rounded bg-zinc-800 text-zinc-400">
+                                    {getFileIcon(file.type)}
+                                  </div>
+
+                                  {/* File Info */}
+                                  <div className="flex-1 min-w-0">
+                                    <p className="text-sm font-medium text-white truncate">
+                                      {file.name}
+                                    </p>
+                                    <p className="text-xs text-muted-foreground">
+                                      {formatFileSize(file.size)}
+                                    </p>
+                                  </div>
+
+                                  {/* Remove Button */}
+                                  <Button
+                                    size="icon"
+                                    variant="ghost"
+                                    className="h-6 w-6 text-muted-foreground hover:text-white hover:bg-zinc-800"
+                                    onClick={() => {
+                                      setEditCommentAttachments(
+                                        editCommentAttachments.filter(
+                                          (_, i) => i !== index,
+                                        ),
+                                      );
+                                    }}
+                                  >
+                                    <X className="h-3 w-3" />
+                                  </Button>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                              <input
+                                type="file"
+                                id={`edit-attachment-${comment.id}`}
+                                multiple
+                                className="hidden"
+                                onChange={(e) => {
+                                  if (e.target.files) {
+                                    setEditCommentAttachments([
+                                      ...editCommentAttachments,
+                                      ...Array.from(e.target.files),
+                                    ]);
+                                  }
+                                }}
+                              />
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                onClick={() =>
+                                  document
+                                    .getElementById(
+                                      `edit-attachment-${comment.id}`,
+                                    )
+                                    ?.click()
+                                }
+                              >
+                                <Paperclip className="h-4 w-4" />
+                              </Button>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                onClick={handleCancelEdit}
+                              >
+                                Cancel
+                              </Button>
+                              <Button
+                                type="button"
+                                variant="custom"
+                                size="sm"
+                                onClick={handleSaveEdit}
+                                disabled={
+                                  updateComment.isPending ||
+                                  !editCommentText.trim()
+                                }
+                              >
+                                {updateComment.isPending ? "Saving..." : "Save"}
+                              </Button>
+                            </div>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="">
+                          <p className="text-[15px] font-semibold dark:text-white whitespace-pre-line leading-relaxed">
+                            {comment.body}
+                          </p>
+                          {comment.attachments.length > 0 ? (
+                            <div className="pt-2 space-y-2">
+                              {comment.attachments.map((doc) => {
+                                return (
+                                  <div
+                                    key={doc.id}
+                                    className="group/attachment relative flex items-center gap-3 p-3 rounded-md border cursor-pointer transition-all hover:bg-muted/50"
+                                  >
+                                    <div className="w-8 h-8 bg-muted rounded flex items-center justify-center">
+                                      {getFileIcon(doc.mime_type)}
+                                    </div>
+
+                                    <div className="flex-1">
+                                      <p className="text-sm font-medium">
+                                        {doc.file_name}
+                                      </p>
+                                      <p className="text-xs text-muted-foreground">
+                                        {new Date(
+                                          doc.created_at,
+                                        ).toLocaleDateString()}
+                                      </p>
+                                    </div>
+
+                                    <button
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleDownloadAttachment(doc);
+                                      }}
+                                      className="p-1 rounded hover:bg-primary/10 text-primary opacity-0 group-hover/attachment:opacity-100 transition-opacity"
+                                      title="Download"
+                                    >
+                                      <Download className="h-4 w-4" />
+                                    </button>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          ) : (
+                            <div className=""></div>
+                          )}
+                        </div>
+                      )}
+
+                      {/* Replies Section */}
+                      {comment.replies && comment.replies.length > 0 && (
+                        <div className="mt-3 space-y-3 pl-2   border-zinc-700">
+                          {comment.replies.map((reply) => (
+                            <div
+                              key={reply.id}
+                              className="flex border-t gap-2 pt-2 group"
+                            >
+                              <Avatar className="h-6 w-6">
+                                <AvatarImage src={reply?.author?.avatar} />
+                                <AvatarFallback className="text-[10px] bg-primary/10">
+                                  {reply?.author?.name
+                                    ?.slice(0, 2)
+                                    ?.toUpperCase() || "NA"}
+                                </AvatarFallback>
+                              </Avatar>
+                              <div className="flex-1">
+                                <div className="flex items-center gap-2">
+                                  <span className="text-[15px] font-semibold dark:text-white">
+                                    {reply?.author?.name}
+                                  </span>
+                                  <span className="text-[13px] font-semibold text-muted-foreground">
+                                    {formatCommentTime(reply?.created_at)}
+                                  </span>
+                                </div>
+                                {editingCommentId === reply.id ? (
+                                  <div className="space-y-2 mt-1">
+                                    <Textarea
+                                      ref={editTextareaRef}
+                                      value={editCommentText}
+                                      onChange={(e) =>
+                                        setEditCommentText(e.target.value)
+                                      }
+                                      className="border-0 resize-none focus-visible:ring-0 dark:bg-transparent p-3 dark:placeholder:font-semibold font-semibold"
+                                      placeholder="Edit your reply..."
+                                    />
+
+                                    {editCommentAttachments.length > 0 && (
+                                      <div className="space-y-2 mt-3">
+                                        {editCommentAttachments.map(
+                                          (file, index) => (
+                                            <div
+                                              key={index}
+                                              className="relative flex items-center gap-3 p-3 rounded-md dark:bg-[#17181b] border dark:border-zinc-800 hover:border-zinc-700 transition-colors"
+                                            >
+                                              {/* File Icon */}
+                                              <div className="flex-shrink-0 w-8 h-8 flex items-center justify-center rounded bg-zinc-800 text-zinc-400">
+                                                {getFileIcon(file.type)}
+                                              </div>
+
+                                              {/* File Info */}
+                                              <div className="flex-1 min-w-0">
+                                                <p className="text-sm font-medium text-white truncate">
+                                                  {file.name}
+                                                </p>
+                                                <p className="text-xs text-muted-foreground">
+                                                  {formatFileSize(file.size)}
+                                                </p>
+                                              </div>
+
+                                              {/* Remove Button */}
+                                              <Button
+                                                size="icon"
+                                                variant="ghost"
+                                                className="h-6 w-6 text-muted-foreground hover:text-white hover:bg-zinc-800"
+                                                onClick={() => {
+                                                  setEditCommentAttachments(
+                                                    editCommentAttachments.filter(
+                                                      (_, i) => i !== index,
+                                                    ),
+                                                  );
+                                                }}
+                                              >
+                                                <X className="h-3 w-3" />
+                                              </Button>
+                                            </div>
+                                          ),
+                                        )}
+                                      </div>
+                                    )}
+
+                                    <div className="flex items-center justify-between">
+                                      <div className="flex items-center gap-2">
+                                        <input
+                                          type="file"
+                                          id={`edit-reply-attachment-${reply.id}`}
+                                          multiple
+                                          className="hidden"
+                                          onChange={(e) => {
+                                            if (e.target.files) {
+                                              setEditCommentAttachments([
+                                                ...editCommentAttachments,
+                                                ...Array.from(e.target.files),
+                                              ]);
+                                            }
+                                          }}
+                                        />
+                                        <Button
+                                          type="button"
+                                          variant="ghost"
+                                          size="sm"
+                                          onClick={() =>
+                                            document
+                                              .getElementById(
+                                                `edit-reply-attachment-${reply.id}`,
+                                              )
+                                              ?.click()
+                                          }
+                                        >
+                                          <Paperclip className="h-4 w-4" />
+                                        </Button>
+                                      </div>
+                                      <div className="flex items-center gap-2">
+                                        <Button
+                                          type="button"
+                                          variant="ghost"
+                                          size="sm"
+                                          onClick={handleCancelEdit}
+                                        >
+                                          Cancel
+                                        </Button>
+                                        <Button
+                                          type="button"
+                                          variant="custom"
+                                          size="sm"
+                                          onClick={handleSaveEdit}
+                                          disabled={
+                                            updateComment.isPending ||
+                                            !editCommentText.trim()
+                                          }
+                                        >
+                                          {updateComment.isPending
+                                            ? "Saving..."
+                                            : "Save"}
+                                        </Button>
+                                      </div>
+                                    </div>
+                                  </div>
+                                ) : (
+                                  <>
+                                    <p className="text-sm font-semibold dark:text-white/90 mt-0.5">
+                                      {reply.body}
+                                    </p>
+                                    {reply.attachments.length > 0 ? (
+                                      <div className="pt-2 space-y-2">
+                                        {reply.attachments.map((doc) => {
+                                          return (
+                                            <div
+                                              key={doc.id}
+                                              className="group/attachment relative flex items-center gap-3 p-3 rounded-md border cursor-pointer transition-all hover:bg-muted/50"
+                                            >
+                                              <div className="w-8 h-8 bg-muted rounded flex items-center justify-center">
+                                                {getFileIcon(doc.mime_type)}
+                                              </div>
+
+                                              <div className="flex-1">
+                                                <p className="text-sm font-medium">
+                                                  {doc.file_name}
+                                                </p>
+                                                <p className="text-xs text-muted-foreground">
+                                                  {new Date(
+                                                    doc.created_at,
+                                                  ).toLocaleDateString()}
+                                                </p>
+                                              </div>
+
+                                              <button
+                                                onClick={(e) => {
+                                                  e.stopPropagation();
+                                                  handleDownloadAttachment(doc);
+                                                }}
+                                                className="p-1 rounded hover:bg-primary/10 text-primary opacity-0 group-hover/attachment:opacity-100 transition-opacity"
+                                                title="Download"
+                                              >
+                                                <Download className="h-4 w-4" />
+                                              </button>
+                                            </div>
+                                          );
+                                        })}
+                                      </div>
+                                    ) : (
+                                      <div className=""></div>
+                                    )}
+                                  </>
+                                )}
+                              </div>
+                              <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                  <Button
+                                    size="icon"
+                                    variant="ghost"
+                                    className="h-7 w-7 text-muted-foreground hover:text-white  opacity-0 group-hover:opacity-100 transition-opacity"
+                                  >
+                                    <MoreHorizontal className="h-4 w-4" />
+                                  </Button>
+                                </DropdownMenuTrigger>
+
+                                <DropdownMenuContent
+                                  align="end"
+                                  className="w-40 dark:bg-[#1c1d1f] border  dark:border-zinc-800 rounded p-1 space-y-1"
+                                >
+                                  {/* Edit */}
+                                  <DropdownMenuItem
+                                    onClick={() =>
+                                      handleStartEdit(reply.id, reply.body)
+                                    }
+                                    className="cursor-pointer flex items-center gap-2 text-[14px] font-semibold  dark:hover:bg-[#292b30] p-1 rounded text-muted-foreground dark:hover:text-white"
+                                  >
+                                    <Pencil className="h-4 w-4 text-muted-foreground" />
+                                    Edit
+                                  </DropdownMenuItem>
+
+                                  {/* Delete */}
+                                  {currentUser.currentUser?.id ===
+                                    reply.author.id && (
+                                    <DropdownMenuItem
+                                      onClick={() =>
+                                        handleDeletComment(reply.id)
+                                      }
+                                      className="cursor-pointer flex items-center gap-2 text-[14px] font-semibold dark:hover:bg-[#292b30] p-1 rounded text-muted-foreground dark:hover:text-white"
+                                    >
+                                      <Trash2 className="h-4 w-4" />
+                                      Delete
+                                    </DropdownMenuItem>
+                                  )}
+                                </DropdownMenuContent>
+                              </DropdownMenu>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Reply Input Box - only show for this specific comment */}
+                  {repOpen === comment.id && (
+                    <div className="border-t px-2 mt-3 py-0.5">
+                      <div className="mt-3 flex gap-2">
+                        <Avatar className="h-7 w-7">
+                          <AvatarImage src={currentUser.currentUser?.avatar} />
+                          <AvatarFallback className="text-xs bg-primary/10">
+                            {currentUser.currentUser?.name
+                              ?.slice(0, 2)
+                              ?.toUpperCase() || "U"}
+                          </AvatarFallback>
+                        </Avatar>
+
+                        <div className="flex-1 flex items-start gap-2">
+                          <Textarea
+                            placeholder="Leave a reply..."
+                            className="flex-1 border-0 resize-none focus:outline-none focus-visible:ring-0 text-sm text-white placeholder:text-muted-foreground min-h-[20px] dark:bg-transparent dark:placeholder:font-semibold font-semibold"
+                            value={replyText[comment.id] || ""}
+                            onChange={(e) =>
+                              setReplyText((prev) => ({
+                                ...prev,
+                                [comment.id]: e.target.value,
+                              }))
+                            }
+                          />
+                          <Button
+                            size="icon"
+                            type="button"
+                            className="h-7 w-7 shrink-0"
+                            variant="noBorder"
+                            disabled={postComment.isPending}
+                            onClick={() => handleReplySubmit(comment.id)}
+                          >
+                            <ArrowUp className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <Formik initialValues={initialVal} onSubmit={handleCommentSubmit}>
+            {({ values, setFieldValue, isSubmitting }) => (
+              <Form className="pt-5">
+                <div className="border dark:border-zinc-800 dark:bg-[#17181b] rounded-lg">
+                  <Textarea
+                    placeholder="Leave a comment..."
+                    value={values.comment_body}
+                    onChange={(e) =>
+                      setFieldValue("comment_body", e.target.value)
+                    }
+                    className="border-0 resize-none focus-visible:ring-0 dark:bg-transparent p-3 dark:placeholder:font-semibold font-semibold"
+                    rows={3}
+                    onPaste={(e) => {
+                      const files = Array.from(e.clipboardData.files);
+                      if (files.length) {
+                        setFieldValue("attachments", [
+                          ...(values.attachments || []),
+                          ...files,
+                        ]);
+                      }
+                    }}
+                  />
+                  {values.attachments && values.attachments.length > 0 && (
+                    <div className="mt-3 space-y-3 px-2 dark:bg-">
+                      {values.attachments.map((file, index) => {
+                        const isImage = file.type.startsWith("image/");
+                        const isSelected = selectedIndex === index;
+
+                        return (
+                          <div
+                            key={index}
+                            onClick={() => setSelectedIndex(index)}
+                            className={`relative cursor-pointer rounded-md transition ${
+                              isSelected ? "ring-2 ring-blue-500" : ""
+                            }`}
+                          >
+                            {isImage ? (
+                              <div className="relative">
+                                <img
+                                  src={URL.createObjectURL(file)}
+                                  className="max-h-[420px] w-full rounded-md object-contain"
+                                  alt="attachment"
+                                />
+                                {isSelected && (
+                                  <button
+                                    type="button"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      setFieldValue(
+                                        "attachments",
+                                        values.attachments?.filter(
+                                          (_, i) => i !== index,
+                                        ),
+                                      );
+                                      setSelectedIndex(null);
+                                    }}
+                                    className="absolute right-2 top-2 rounded bg-background p-1 shadow"
+                                  >
+                                    🗑️
+                                  </button>
+                                )}
+                              </div>
+                            ) : (
+                              <div
+                                className={`flex items-center gap-3 rounded-md border p-2 ${
+                                  isSelected ? "border-blue-500" : ""
+                                }`}
+                              >
+                                <div className="flex h-10 w-10 items-center justify-center rounded bg-muted">
+                                  📎
+                                </div>
+                                <div className="flex-1 truncate">
+                                  <p className="truncate text-sm">
+                                    {file.name}
+                                  </p>
+                                  <p className="text-xs text-muted-foreground">
+                                    {(file.size / 1024).toFixed(1)} KB
+                                  </p>
+                                </div>
+                                {isSelected && (
+                                  <button
+                                    type="button"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      setFieldValue(
+                                        "attachments",
+                                        values.attachments?.filter(
+                                          (_, i) => i !== index,
+                                        ),
+                                      );
+                                      setSelectedIndex(null);
+                                    }}
+                                    className="text-sm"
+                                  >
+                                    🗑️
+                                  </button>
+                                )}
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+
+                  <div className="flex items-center justify-between p-2">
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => commentfileInputRef.current?.click()}
+                    >
+                      <Paperclip className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      size="sm"
+                      type="submit"
+                      variant="custom"
+                      disabled={
+                        isSubmitting ||
+                        postComment.isPending ||
+                        (!values.comment_body.trim() &&
+                          values.attachments.length === 0)
+                      }
+                    >
+                      <ArrowUp className="h-4 w-4" />
+                    </Button>
+                  </div>
+                  <input
+                    ref={commentfileInputRef}
+                    type="file"
+                    multiple
+                    accept="image/*,.pdf,.doc,.docx,.xls,.xlsx"
+                    className="hidden"
+                    onChange={(e) => {
+                      if (!e.target.files) return;
+                      const files = Array.from(e.target.files);
+                      setFieldValue("attachments", [
+                        ...(values.attachments || []),
+                        ...files,
+                      ]);
+                      e.target.value = "";
+                    }}
+                  />
+                </div>
+              </Form>
+            )}
+          </Formik>
         </div>
       </div>
-
       {/* Properties Sidebar */}
       <div className="w-80 border-l border-border bg-muted/20 px-4 py-2 border dark:border-zinc-800">
         <h3 className="font-medium mb-6">Properties</h3>
@@ -807,7 +1730,7 @@ dark:bg-[#101012]"
             <div className="flex items-center gap-2">
               <IssuesStatusPicker
                 statuses={statusList}
-                value={selectedStatus}
+                value={data?.status || null}
                 onChange={handleStatusUpdate}
                 className="border-0 "
                 buttonVarient="dark"
@@ -818,7 +1741,7 @@ dark:bg-[#101012]"
           {/* Priority */}
           <div className="gap-2">
             <PriorityPicker
-              value={priorityId}
+              value={data?.priority_id || undefined}
               // varirent="create"
               onChange={handlePriorityUpdate}
               buttonVarient="dark"
@@ -890,12 +1813,13 @@ dark:bg-[#101012]"
           <div className="flex items-center gap-2">
             <ProjectDatePicker
               label="Due Date"
-              value={startDate ? new Date(startDate) : undefined}
+              value={data?.due_date ? new Date(data?.due_date) : undefined}
               onChange={handleTargetDate}
               className="border-0"
               buttonVarient="dark"
             />
           </div>
+
           {/* Milestone */}
           {/* <div>
             <div className="flex items-center justify-between mb-2">

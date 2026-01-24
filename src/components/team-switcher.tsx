@@ -82,7 +82,7 @@ export function TeamSwitcher() {
             <SidebarMenuButton className="w-full px-1.5">
               {/* <div className="bg-sidebar-primary text-sidebar-primary-foreground flex aspect-square size-5 items-center justify-center rounded-md"> */}
               <Avatar className="h-6 rounded-sm">
-                <AvatarFallback className="bg-[#2a2c33] dark:text-white font-medium text-xs rounded-sm">
+                <AvatarFallback className="dark:bg-[#2a2c33] dark:text-white font-medium text-xs rounded-sm">
                   {getWorkspaceInitials(currentWorkspace?.name || "")}
                 </AvatarFallback>
               </Avatar>
