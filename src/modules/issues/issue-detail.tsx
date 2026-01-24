@@ -71,6 +71,7 @@ import { useCommentUpdateHook } from "@/hooks/use-update-comment";
 import { formatFileSize } from "@/components/hepler-format-filesize";
 import { useActivityHook } from "@/hooks/use-activity-hook";
 import Activity from "./components/issues-activity";
+import { useGetIssuesHook } from "@/hooks/use-get-issues";
 
 interface ActivityItem {
   id: string;
