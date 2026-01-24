@@ -1,6 +1,7 @@
 "use client";
 
-import { Badge } from "@/components/ui/badge";
+import { Editor } from "@/components/blocks/editor-00/editor";
+import { SingleTeamPicker } from "@/components/single-team-picker";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -9,34 +10,28 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { useUser } from "@/hooks/use-user";
-import type { iIssuePayload } from "@/interfaces/issues.interface";
-import { issueSchema } from "@/schema/issue-schema";
 import { useCreateIssueHook } from "@/hooks/use-create-issue";
+import { useUser } from "@/hooks/use-user";
+import type { iCycleListResponse } from "@/interfaces/cycle.interface";
+import type { iIssuePayload } from "@/interfaces/issues.interface";
+import type { iTeams } from "@/interfaces/teams.interface";
+import { issueSchema } from "@/schema/issue-schema";
+import { cycleDetailUri } from "@/services/cycle.service";
+import { setCycleIssues } from "@/store/slices/cycle-issues.slice";
+import type { RootState } from "@/store/store";
 import { Form, Formik, type FormikHelpers } from "formik";
-import { LucideSquareArrowRight, Paperclip, X } from "lucide-react";
+import { Paperclip, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useParams } from "react-router";
+import { CyclePicker } from "../cycles/components/cycle-picker";
 import { ProjectDatePicker } from "../projects/components/date-picker";
 import { ProjectFormLabels } from "../projects/components/label-picker";
 import { PriorityPicker } from "../projects/components/priority-picker";
 import { SingleMemberPicker } from "../projects/components/single-member-picker";
 import { IssuesStatusPicker } from "./components/issues-status-picker";
 import { ProjectPicker } from "./components/project-picker";
-import { cn } from "@/lib/utils";
-import type { RootState } from "@/store/store";
-import { cycleDetailUri } from "@/services/cycle.service";
-import { setCycleIssues } from "@/store/slices/cycle-issues.slice";
-import type {
-  iCycleListResponse,
-  iCycleResponse,
-} from "@/interfaces/cycle.interface";
-import { CyclePicker } from "../cycles/components/cycle-picker";
-import { TeamPicker } from "../projects/components/team-picker";
-import type { iTeams } from "@/interfaces/teams.interface";
-import { SingleTeamPicker } from "@/components/single-team-picker";
+import { Textarea } from "@/components/ui/textarea";
 
 interface NewIssueDialogProps {
   open: boolean;
@@ -53,7 +48,7 @@ export default function NewIssueDialog({
   defStatus,
   defProject,
 }: NewIssueDialogProps) {
-  const { "team-id": teamId, "cycleId": cycleID } = useParams();
+  const { "team-id": teamId, cycleId: cycleID } = useParams();
   const projects = useSelector((state: any) => state.project.projects);
   const teams = useSelector((state: any) => state.teams);
   const status = useSelector((state: RootState) => state.issuesStatus);
@@ -81,18 +76,11 @@ export default function NewIssueDialog({
     iCycleListResponse | undefined
   >(currentCycle);
 
-  console.log("TEAM ID", teamId);
   useEffect(() => {
     if (open && currentCycle) {
       setSelectedCycle(currentCycle);
     }
   }, [open, currentCycle]);
-
-  console.log("LOAD DATA IN NEW ISSUE", cycleData);
-  console.log("SELECTED TEAM ID", selectedTeams?.id);
-
-  console.log("SET TEAM ID", teamset);
-  console.log("CYCLE ID", cycleID);
 
   // Initial values
   const initialValues: iIssuePayload = {
@@ -214,10 +202,15 @@ export default function NewIssueDialog({
                       ...(values.attachments || []),
                       ...files,
                     ]);
-                  }}
+                  }} 
                   onDragOver={(e) => e.preventDefault()}
                 >
-                  <Textarea
+                  <Editor
+                    editorHtmlState={values.description}
+                    onHtmlChange={(html) => setFieldValue("description", html)}
+                  />
+
+                  {/* <Textarea
                     placeholder="Add description..."
                     value={values.description}
                     onChange={(e) =>
@@ -232,8 +225,8 @@ export default function NewIssueDialog({
                         ]);
                       }
                     }}
-                    className="min-h-[80px] dark:placeholder:text-[#616265] placeholder:text-[20px] resize-none border-0 shadow-none focus-visible:ring-0 dark:bg-transparent"
-                  />
+                    className="min-h-[80px] dark:placeholder:text-[#616265] placeholder:text-base resize-none border-0 shadow-none focus-visible:ring-0 dark:bg-transparent"
+                  /> */}
 
                   {/* Attachments */}
                   {values.attachments && values.attachments.length > 0 && (
