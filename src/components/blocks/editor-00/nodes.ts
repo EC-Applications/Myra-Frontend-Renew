@@ -1,3 +1,4 @@
+import { ImageNode } from "@/components/editor/nodes/image-node";
 import { CodeHighlightNode, CodeNode } from "@lexical/code";
 import { HeadingNode, QuoteNode } from "@lexical/rich-text";
 import {
@@ -16,4 +17,5 @@ export const nodes: ReadonlyArray<Klass<LexicalNode> | LexicalNodeReplacement> =
     QuoteNode,
     CodeNode,
     CodeHighlightNode,
+    ImageNode,
   ];

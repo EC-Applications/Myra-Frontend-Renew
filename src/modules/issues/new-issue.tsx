@@ -193,18 +193,7 @@ export default function NewIssueDialog({
                 </div>
 
                 {/* Description Editor */}
-                <div
-                  className="rounded-md"
-                  onDrop={(e) => {
-                    e.preventDefault();
-                    const files = Array.from(e.dataTransfer.files);
-                    setFieldValue("attachments", [
-                      ...(values.attachments || []),
-                      ...files,
-                    ]);
-                  }} 
-                  onDragOver={(e) => e.preventDefault()}
-                >
+                <div className="rounded-md">
                   <Editor
                     editorHtmlState={values.description}
                     onHtmlChange={(html) => setFieldValue("description", html)}

@@ -5,7 +5,9 @@ import { useState } from "react";
 import { ContentEditable } from "@/components/editor/editor-ui/content-editable";
 import { CodeActionMenuPlugin } from "@/components/editor/plugins/code-action-menu-plugin";
 import { CodeHighlightPlugin } from "@/components/editor/plugins/code-highlight-plugin";
+import { DragDropPastePlugin } from "@/components/editor/plugins/drag-drop-paste-plugin";
 import { FloatingTextFormatToolbarPlugin } from "@/components/editor/plugins/floating-text-format-plugin";
+import { ImagesPlugin } from "@/components/editor/plugins/images-plugin";
 import { HistoryPlugin } from "@lexical/react/LexicalHistoryPlugin";
 
 export function Plugins() {
@@ -40,6 +42,8 @@ export function Plugins() {
         <CodeActionMenuPlugin anchorElem={floatingAnchorElem} />
         <CodeHighlightPlugin />
         <HistoryPlugin />
+        <ImagesPlugin captionsEnabled={false} />
+        <DragDropPastePlugin />
         {/* editor plugins */}
       </div>
       {/* actions plugins */}
