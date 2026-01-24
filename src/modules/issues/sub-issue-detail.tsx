@@ -24,7 +24,10 @@ import {
   Download,
   MoreHorizontal,
   Paperclip,
+  Pencil,
   Reply,
+  Trash2,
+  X,
 } from "lucide-react";
 import type React from "react";
 import { useEffect, useRef, useState } from "react";
@@ -45,6 +48,15 @@ import { Form, Formik } from "formik";
 import { usePostCommentHook } from "@/hooks/use-post-comments";
 import { useGetComments } from "@/hooks/use-get-comments";
 import { formatCommentTime } from "@/components/date-converter";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { formatFileSize } from "@/components/hepler-format-filesize";
+import { useDeleteCommentHook } from "@/hooks/use-comment-delete";
+import { useCommentUpdateHook } from "@/hooks/use-update-comment";
 
 interface ActivityItem {
   id: string;
@@ -58,7 +70,8 @@ interface ActivityItem {
 export default function SubIssueDetailView() {
   const issues = useSelector((state: any) => state.subIssues);
   const { id } = useParams();
-  const { currentWorkspace } = useUser();
+  const { currentWorkspace, currentUser } = useUser();
+
   console.log("IssueID", id);
   const [loading, setLoading] = useState(false);
   const [data, setData] = useState<iIussesDetail | undefined>();
@@ -92,6 +105,21 @@ export default function SubIssueDetailView() {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [uploadingDocs, setUploadingDocs] = useState(false);
+
+  const deleteComment = useDeleteCommentHook();
+
+  // Edit comment state
+  const [editingCommentId, setEditingCommentId] = useState<number | null>(null);
+  const [editCommentText, setEditCommentText] = useState("");
+  const [editCommentAttachments, setEditCommentAttachments] = useState<File[]>(
+    [],
+  );
+  const editTextareaRef = useRef<HTMLTextAreaElement>(null);
+  const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
+
+  // UPDATE COmment hook
+
+  const updateComment = useCommentUpdateHook();
 
   useEffect(() => {
     setLoading(true);
@@ -415,8 +443,9 @@ export default function SubIssueDetailView() {
   };
 
   // COMMENT BOX
-  const initialVal = {
+  const initialVal: { comment_body: string; attachments: File[] } = {
     comment_body: "",
+    attachments: [],
   };
 
   const handleCommentSubmit = (
@@ -433,11 +462,14 @@ export default function SubIssueDetailView() {
           commentable_id: Number(id),
           commentable_type: "subissue",
           parent_id: null,
+          attachments:
+            values.attachments.length > 0 ? values.attachments : undefined,
         },
       },
       {
         onSuccess: () => {
           resetForm();
+          setSelectedIndex(null);
         },
       },
     );
@@ -475,6 +507,54 @@ export default function SubIssueDetailView() {
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+  };
+
+  const handleDeletComment = (commentId: number) => {
+    deleteComment.mutate({
+      commentId: commentId,
+      issueId: Number(id),
+      workspaceSlug: currentWorkspace?.slug ?? "",
+    });
+  };
+
+  const handleCancelEdit = () => {
+    setEditingCommentId(null);
+    setEditCommentText("");
+    setEditCommentAttachments([]);
+  };
+
+  const handleStartEdit = (commentId: number, currentText: string) => {
+    setEditingCommentId(commentId);
+    setEditCommentText(currentText);
+    setEditCommentAttachments([]);
+    setTimeout(() => {
+      editTextareaRef.current?.focus();
+      editTextareaRef.current?.select();
+    }, 0);
+  };
+
+  const handleSaveEdit = () => {
+    if (!editingCommentId || !editCommentText.trim()) return;
+
+    updateComment.mutate(
+      {
+        body: {
+          comment: editCommentText,
+          attachments:
+            editCommentAttachments.length > 0
+              ? editCommentAttachments
+              : undefined,
+        },
+        commentId: editingCommentId,
+        issueId: Number(id),
+        workspaceSlug: currentWorkspace?.slug ?? "",
+      },
+      {
+        onSuccess: () => {
+          handleCancelEdit();
+        },
+      },
+    );
   };
 
   if (loading) {
@@ -856,27 +936,216 @@ export default function SubIssueDetailView() {
                           >
                             <Reply className="h-4 w-4" />
                           </Button>
-                          <Button
+                          {/* <Button
                             size="icon"
                             variant="ghost"
                             className="h-7 w-7 text-muted-foreground hover:text-white"
                           >
                             <Check className="h-4 w-4" />
                           </Button>
-                          <Button
+                          */}
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button
+                                size="icon"
+                                variant="ghost"
+                                className="h-7 w-7 text-muted-foreground hover:text-white"
+                              >
+                                <MoreHorizontal className="h-4 w-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+
+                            <DropdownMenuContent
+                              align="end"
+                              className="w-40 dark:bg-[#1c1d1f] border  dark:border-zinc-800 rounded p-1 space-y-1"
+                            >
+                              {/* Edit */}
+                              <DropdownMenuItem
+                                onClick={() =>
+                                  handleStartEdit(comment.id, comment.body)
+                                }
+                                className="cursor-pointer flex items-center gap-2 text-[14px] font-semibold  dark:hover:bg-[#292b30] p-1 rounded text-muted-foreground dark:hover:text-white"
+                              >
+                                <Pencil className="h-4 w-4 text-muted-foreground" />
+                                Edit
+                              </DropdownMenuItem>
+
+                              {/* Delete */}
+                              {currentUser?.id === comment.author.id && (
+                                <DropdownMenuItem
+                                  onClick={() => handleDeletComment(comment.id)}
+                                  className="cursor-pointer flex items-center gap-2 text-[14px] font-semibold dark:hover:bg-[#292b30] p-1 rounded text-muted-foreground dark:hover:text-white"
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                  Delete
+                                </DropdownMenuItem>
+                              )}
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+
+                          {/* <Button
                             size="icon"
                             variant="ghost"
                             className="h-7 w-7 text-muted-foreground hover:text-white"
                           >
                             <MoreHorizontal className="h-4 w-4" />
-                          </Button>
+                          </Button>  */}
                         </div>
                       </div>
 
                       {/* Comment Text */}
-                      <p className="text-[15px] font-semibold dark:text-white whitespace-pre-line leading-relaxed">
-                        {comment.body}
-                      </p>
+                      {editingCommentId === comment.id ? (
+                        <div className="space-y-2">
+                          <Textarea
+                            ref={editTextareaRef}
+                            value={editCommentText}
+                            onChange={(e) => setEditCommentText(e.target.value)}
+                            className="border-0 resize-none focus-visible:ring-0 dark:bg-transparent p-3 dark:placeholder:font-semibold font-semibold"
+                            placeholder="Edit your comment..."
+                          />
+                          {editCommentAttachments.length > 0 && (
+                            <div className="space-y-2 mt-3">
+                              {editCommentAttachments.map((file, index) => (
+                                <div
+                                  key={index}
+                                  className="relative flex items-center gap-3 p-3 rounded-md dark:bg-[#17181b] border dark:border-zinc-800 hover:border-zinc-700 transition-colors"
+                                >
+                                  {/* File Icon */}
+                                  <div className="flex-shrink-0 w-8 h-8 flex items-center justify-center rounded bg-zinc-800 text-zinc-400">
+                                    {getFileIcon(file.type)}
+                                  </div>
+
+                                  {/* File Info */}
+                                  <div className="flex-1 min-w-0">
+                                    <p className="text-sm font-medium text-white truncate">
+                                      {file.name}
+                                    </p>
+                                    <p className="text-xs text-muted-foreground">
+                                      {formatFileSize(file.size)}
+                                    </p>
+                                  </div>
+
+                                  {/* Remove Button */}
+                                  <Button
+                                    size="icon"
+                                    variant="ghost"
+                                    className="h-6 w-6 text-muted-foreground hover:text-white hover:bg-zinc-800"
+                                    onClick={() => {
+                                      setEditCommentAttachments(
+                                        editCommentAttachments.filter(
+                                          (_, i) => i !== index,
+                                        ),
+                                      );
+                                    }}
+                                  >
+                                    <X className="h-3 w-3" />
+                                  </Button>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                              <input
+                                type="file"
+                                id={`edit-attachment-${comment.id}`}
+                                multiple
+                                className="hidden"
+                                onChange={(e) => {
+                                  if (e.target.files) {
+                                    setEditCommentAttachments([
+                                      ...editCommentAttachments,
+                                      ...Array.from(e.target.files),
+                                    ]);
+                                  }
+                                }}
+                              />
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                onClick={() =>
+                                  document
+                                    .getElementById(
+                                      `edit-attachment-${comment.id}`,
+                                    )
+                                    ?.click()
+                                }
+                              >
+                                <Paperclip className="h-4 w-4" />
+                              </Button>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                onClick={handleCancelEdit}
+                              >
+                                Cancel
+                              </Button>
+                              <Button
+                                type="button"
+                                variant="custom"
+                                size="sm"
+                                onClick={handleSaveEdit}
+                                disabled={
+                                  updateComment.isPending ||
+                                  !editCommentText.trim()
+                                }
+                              >
+                                {updateComment.isPending ? "Saving..." : "Save"}
+                              </Button>
+                            </div>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="">
+                          <p className="text-[15px] font-semibold dark:text-white whitespace-pre-line leading-relaxed">
+                            {comment.body}
+                          </p>
+                          {comment.attachments.length > 0 ? (
+                            <div className="pt-2 space-y-2">
+                              {comment.attachments.map((doc) => {
+                                return (
+                                  <div
+                                    key={doc.id}
+                                    className="group/attachment relative flex items-center gap-3 p-3 rounded-md border cursor-pointer transition-all hover:bg-muted/50"
+                                  >
+                                    <div className="w-8 h-8 bg-muted rounded flex items-center justify-center">
+                                      {getFileIcon(doc.mime_type)}
+                                    </div>
+
+                                    <div className="flex-1">
+                                      <p className="text-sm font-medium">
+                                        {doc.file_name}
+                                      </p>
+                                      <p className="text-xs text-muted-foreground">
+                                        {new Date(
+                                          doc.created_at,
+                                        ).toLocaleDateString()}
+                                      </p>
+                                    </div>
+
+                                    <button
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleDownloadAttachment(doc);
+                                      }}
+                                      className="p-1 rounded hover:bg-primary/10 text-primary opacity-0 group-hover/attachment:opacity-100 transition-opacity"
+                                      title="Download"
+                                    >
+                                      <Download className="h-4 w-4" />
+                                    </button>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          ) : (
+                            <div className=""></div>
+                          )}
+                        </div>
+                      )}
 
                       {/* Replies Section */}
                       {comment.replies && comment.replies.length > 0 && (
@@ -884,7 +1153,7 @@ export default function SubIssueDetailView() {
                           {comment.replies.map((reply) => (
                             <div
                               key={reply.id}
-                              className="flex border-t gap-2 pt-2"
+                              className="flex border-t gap-2 pt-2 group"
                             >
                               <Avatar className="h-6 w-6">
                                 <AvatarImage src={reply?.author?.avatar} />
@@ -903,10 +1172,207 @@ export default function SubIssueDetailView() {
                                     {formatCommentTime(reply?.created_at)}
                                   </span>
                                 </div>
-                                <p className="text-sm font-semibold dark:text-white/90 mt-0.5">
-                                  {reply.body}
-                                </p>
+                                {editingCommentId === reply.id ? (
+                                  <div className="space-y-2 mt-1">
+                                    <Textarea
+                                      ref={editTextareaRef}
+                                      value={editCommentText}
+                                      onChange={(e) =>
+                                        setEditCommentText(e.target.value)
+                                      }
+                                      className="border-0 resize-none focus-visible:ring-0 dark:bg-transparent p-3 dark:placeholder:font-semibold font-semibold"
+                                      placeholder="Edit your reply..."
+                                    />
+
+                                    {editCommentAttachments.length > 0 && (
+                                      <div className="space-y-2 mt-3">
+                                        {editCommentAttachments.map(
+                                          (file, index) => (
+                                            <div
+                                              key={index}
+                                              className="relative flex items-center gap-3 p-3 rounded-md dark:bg-[#17181b] border dark:border-zinc-800 hover:border-zinc-700 transition-colors"
+                                            >
+                                              {/* File Icon */}
+                                              <div className="flex-shrink-0 w-8 h-8 flex items-center justify-center rounded bg-zinc-800 text-zinc-400">
+                                                {getFileIcon(file.type)}
+                                              </div>
+
+                                              {/* File Info */}
+                                              <div className="flex-1 min-w-0">
+                                                <p className="text-sm font-medium text-white truncate">
+                                                  {file.name}
+                                                </p>
+                                                <p className="text-xs text-muted-foreground">
+                                                  {formatFileSize(file.size)}
+                                                </p>
+                                              </div>
+
+                                              {/* Remove Button */}
+                                              <Button
+                                                size="icon"
+                                                variant="ghost"
+                                                className="h-6 w-6 text-muted-foreground hover:text-white hover:bg-zinc-800"
+                                                onClick={() => {
+                                                  setEditCommentAttachments(
+                                                    editCommentAttachments.filter(
+                                                      (_, i) => i !== index,
+                                                    ),
+                                                  );
+                                                }}
+                                              >
+                                                <X className="h-3 w-3" />
+                                              </Button>
+                                            </div>
+                                          ),
+                                        )}
+                                      </div>
+                                    )}
+
+                                    <div className="flex items-center justify-between">
+                                      <div className="flex items-center gap-2">
+                                        <input
+                                          type="file"
+                                          id={`edit-reply-attachment-${reply.id}`}
+                                          multiple
+                                          className="hidden"
+                                          onChange={(e) => {
+                                            if (e.target.files) {
+                                              setEditCommentAttachments([
+                                                ...editCommentAttachments,
+                                                ...Array.from(e.target.files),
+                                              ]);
+                                            }
+                                          }}
+                                        />
+                                        <Button
+                                          type="button"
+                                          variant="ghost"
+                                          size="sm"
+                                          onClick={() =>
+                                            document
+                                              .getElementById(
+                                                `edit-reply-attachment-${reply.id}`,
+                                              )
+                                              ?.click()
+                                          }
+                                        >
+                                          <Paperclip className="h-4 w-4" />
+                                        </Button>
+                                      </div>
+                                      <div className="flex items-center gap-2">
+                                        <Button
+                                          type="button"
+                                          variant="ghost"
+                                          size="sm"
+                                          onClick={handleCancelEdit}
+                                        >
+                                          Cancel
+                                        </Button>
+                                        <Button
+                                          type="button"
+                                          variant="custom"
+                                          size="sm"
+                                          onClick={handleSaveEdit}
+                                          disabled={
+                                            updateComment.isPending ||
+                                            !editCommentText.trim()
+                                          }
+                                        >
+                                          {updateComment.isPending
+                                            ? "Saving..."
+                                            : "Save"}
+                                        </Button>
+                                      </div>
+                                    </div>
+                                  </div>
+                                ) : (
+                                  <>
+                                    <p className="text-sm font-semibold dark:text-white/90 mt-0.5">
+                                      {reply.body}
+                                    </p>
+                                    {reply.attachments.length > 0 ? (
+                                      <div className="pt-2 space-y-2">
+                                        {reply.attachments.map((doc) => {
+                                          return (
+                                            <div
+                                              key={doc.id}
+                                              className="group/attachment relative flex items-center gap-3 p-3 rounded-md border cursor-pointer transition-all hover:bg-muted/50"
+                                            >
+                                              <div className="w-8 h-8 bg-muted rounded flex items-center justify-center">
+                                                {getFileIcon(doc.mime_type)}
+                                              </div>
+
+                                              <div className="flex-1">
+                                                <p className="text-sm font-medium">
+                                                  {doc.file_name}
+                                                </p>
+                                                <p className="text-xs text-muted-foreground">
+                                                  {new Date(
+                                                    doc.created_at,
+                                                  ).toLocaleDateString()}
+                                                </p>
+                                              </div>
+
+                                              <button
+                                                onClick={(e) => {
+                                                  e.stopPropagation();
+                                                  handleDownloadAttachment(doc);
+                                                }}
+                                                className="p-1 rounded hover:bg-primary/10 text-primary opacity-0 group-hover/attachment:opacity-100 transition-opacity"
+                                                title="Download"
+                                              >
+                                                <Download className="h-4 w-4" />
+                                              </button>
+                                            </div>
+                                          );
+                                        })}
+                                      </div>
+                                    ) : (
+                                      <div className=""></div>
+                                    )}
+                                  </>
+                                )}
                               </div>
+                              <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                  <Button
+                                    size="icon"
+                                    variant="ghost"
+                                    className="h-7 w-7 text-muted-foreground hover:text-white  opacity-0 group-hover:opacity-100 transition-opacity"
+                                  >
+                                    <MoreHorizontal className="h-4 w-4" />
+                                  </Button>
+                                </DropdownMenuTrigger>
+
+                                <DropdownMenuContent
+                                  align="end"
+                                  className="w-40 dark:bg-[#1c1d1f] border  dark:border-zinc-800 rounded p-1 space-y-1"
+                                >
+                                  {/* Edit */}
+                                  <DropdownMenuItem
+                                    onClick={() =>
+                                      handleStartEdit(reply.id, reply.body)
+                                    }
+                                    className="cursor-pointer flex items-center gap-2 text-[14px] font-semibold  dark:hover:bg-[#292b30] p-1 rounded text-muted-foreground dark:hover:text-white"
+                                  >
+                                    <Pencil className="h-4 w-4 text-muted-foreground" />
+                                    Edit
+                                  </DropdownMenuItem>
+
+                                  {/* Delete */}
+                                  {currentUser?.id === reply.author.id && (
+                                    <DropdownMenuItem
+                                      onClick={() =>
+                                        handleDeletComment(reply.id)
+                                      }
+                                      className="cursor-pointer flex items-center gap-2 text-[14px] font-semibold dark:hover:bg-[#292b30] p-1 rounded text-muted-foreground dark:hover:text-white"
+                                    >
+                                      <Trash2 className="h-4 w-4" />
+                                      Delete
+                                    </DropdownMenuItem>
+                                  )}
+                                </DropdownMenuContent>
+                              </DropdownMenu>
                             </div>
                           ))}
                         </div>
@@ -919,11 +1385,10 @@ export default function SubIssueDetailView() {
                     <div className="border-t px-2 mt-3 py-0.5">
                       <div className="mt-3 flex gap-2">
                         <Avatar className="h-7 w-7">
-                          <AvatarImage src={comment?.author?.avatar} />
+                          <AvatarImage src={currentUser?.avatar} />
                           <AvatarFallback className="text-xs bg-primary/10">
-                            {comment?.author?.name
-                              ?.slice(0, 2)
-                              ?.toUpperCase() || "U"}
+                            {currentUser?.name?.slice(0, 2)?.toUpperCase() ||
+                              "U"}
                           </AvatarFallback>
                         </Avatar>
 
@@ -958,7 +1423,6 @@ export default function SubIssueDetailView() {
             ))}
           </div>
 
-          {/* Comment Box */}
           <Formik initialValues={initialVal} onSubmit={handleCommentSubmit}>
             {({ values, setFieldValue, isSubmitting }) => (
               <Form className="pt-5">
@@ -971,20 +1435,133 @@ export default function SubIssueDetailView() {
                     }
                     className="border-0 resize-none focus-visible:ring-0 dark:bg-transparent p-3 dark:placeholder:font-semibold font-semibold"
                     rows={3}
+                    onPaste={(e) => {
+                      const files = Array.from(e.clipboardData.files);
+                      if (files.length) {
+                        setFieldValue("attachments", [
+                          ...(values.attachments || []),
+                          ...files,
+                        ]);
+                      }
+                    }}
                   />
-                  <div className="flex items-center justify-end p-2">
-                    {/* <Button variant="ghost" size="sm" type="button">
+                  {values.attachments && values.attachments.length > 0 && (
+                    <div className="mt-3 space-y-3 px-2 dark:bg-">
+                      {values.attachments.map((file, index) => {
+                        const isImage = file.type.startsWith("image/");
+                        const isSelected = selectedIndex === index;
+
+                        return (
+                          <div
+                            key={index}
+                            onClick={() => setSelectedIndex(index)}
+                            className={`relative cursor-pointer rounded-md transition ${
+                              isSelected ? "ring-2 ring-blue-500" : ""
+                            }`}
+                          >
+                            {isImage ? (
+                              <div className="relative">
+                                <img
+                                  src={URL.createObjectURL(file)}
+                                  className="max-h-[420px] w-full rounded-md object-contain"
+                                  alt="attachment"
+                                />
+                                {isSelected && (
+                                  <button
+                                    type="button"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      setFieldValue(
+                                        "attachments",
+                                        values.attachments?.filter(
+                                          (_, i) => i !== index,
+                                        ),
+                                      );
+                                      setSelectedIndex(null);
+                                    }}
+                                    className="absolute right-2 top-2 rounded bg-background p-1 shadow"
+                                  >
+                                    🗑️
+                                  </button>
+                                )}
+                              </div>
+                            ) : (
+                              <div
+                                className={`flex items-center gap-3 rounded-md border p-2 ${
+                                  isSelected ? "border-blue-500" : ""
+                                }`}
+                              >
+                                <div className="flex h-10 w-10 items-center justify-center rounded bg-muted">
+                                  📎
+                                </div>
+                                <div className="flex-1 truncate">
+                                  <p className="truncate text-sm">
+                                    {file.name}
+                                  </p>
+                                  <p className="text-xs text-muted-foreground">
+                                    {(file.size / 1024).toFixed(1)} KB
+                                  </p>
+                                </div>
+                                {isSelected && (
+                                  <button
+                                    type="button"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      setFieldValue(
+                                        "attachments",
+                                        values.attachments?.filter(
+                                          (_, i) => i !== index,
+                                        ),
+                                      );
+                                      setSelectedIndex(null);
+                                    }}
+                                    className="text-sm"
+                                  >
+                                    🗑️
+                                  </button>
+                                )}
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+
+                  <div className="flex items-center justify-between p-2">
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => fileInputRef.current?.click()}
+                    >
                       <Paperclip className="h-4 w-4" />
-                    </Button> */}
+                    </Button>
                     <Button
                       size="sm"
                       type="submit"
                       variant="custom"
-                      disabled={isSubmitting || postComment.isPending}
+                      disabled={isSubmitting || postComment.isPending || (!values.comment_body.trim() && values.attachments.length === 0)}
                     >
                       <ArrowUp className="h-4 w-4" />
                     </Button>
                   </div>
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    multiple
+                    accept="image/*,.pdf,.doc,.docx,.xls,.xlsx"
+                    className="hidden"
+                    onChange={(e) => {
+                      if (!e.target.files) return;
+                      const files = Array.from(e.target.files);
+                      setFieldValue("attachments", [
+                        ...(values.attachments || []),
+                        ...files,
+                      ]);
+                      e.target.value = "";
+                    }}
+                  />
                 </div>
               </Form>
             )}

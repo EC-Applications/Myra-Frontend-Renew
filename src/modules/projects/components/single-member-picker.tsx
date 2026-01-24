@@ -74,6 +74,7 @@ export const SingleMemberPicker = ({
           )}
         >
           <Avatar className="w-6 h-6">
+            <AvatarImage src={value?.image || value?.avatar || "/placeholder.svg"} />
             <AvatarFallback className="text-xs">
               {value ? getAvatarText(value.name) : "U"}
             </AvatarFallback>

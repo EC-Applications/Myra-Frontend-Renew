@@ -3,6 +3,10 @@ import type { iWorkspaceInviteDto, iWorkspace } from "./workspace.interface";
 export interface iLoginRequest {
   email: string;
 }
+export interface iOtpRequest {
+  code: string;
+  email: string;
+}
 export interface iLoginResponse {
   token: string;
   user: iUserResponse;

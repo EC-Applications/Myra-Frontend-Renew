@@ -69,16 +69,8 @@ import {
 import { useDeleteCommentHook } from "@/hooks/use-comment-delete";
 import { useCommentUpdateHook } from "@/hooks/use-update-comment";
 import { formatFileSize } from "@/components/hepler-format-filesize";
-
-interface SubIssue {
-  id: string;
-  title: string;
-  priority: number;
-  assignee: {
-    name: string;
-    avatar: string;
-  };
-}
+import { useActivityHook } from "@/hooks/use-activity-hook";
+import Activity from "./components/issues-activity";
 
 interface ActivityItem {
   id: string;
@@ -158,6 +150,16 @@ export default function IssueDetailView() {
 
   const updateComment = useCommentUpdateHook();
 
+  // Activity Hook
+
+  const { data: activityData } = useActivityHook(
+    currentWorkspace?.slug ?? "",
+    "issue",
+    Number(id),
+  );
+
+  console.log(activityData,"ACTIVITY DATA")
+
   useEffect(() => {
     setLoading(true);
     try {
@@ -219,6 +221,7 @@ export default function IssueDetailView() {
   const [showAddSubIssue, setShowAddSubIssue] = useState(false);
   const [newSubIssueTitle, setNewSubIssueTitle] = useState("");
   const [newSubIssueDescription, setNewSubIssueDescription] = useState("");
+  const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
 
   const [isDeleting, setIsDeleting] = useState(false);
 
@@ -529,15 +532,16 @@ export default function IssueDetailView() {
 
   // PARENT COMMENT
 
-  const initialVal = {
+  const initialVal: { comment_body: string; attachments: File[] } = {
     comment_body: "",
+    attachments: [],
   };
 
   const handleCommentSubmit = (
     values: typeof initialVal,
     { resetForm }: { resetForm: () => void },
   ) => {
-    if (!values.comment_body.trim()) return;
+    if (!values.comment_body.trim() && values.attachments.length === 0) return;
 
     postComment.mutate(
       {
@@ -547,11 +551,14 @@ export default function IssueDetailView() {
           commentable_id: Number(id),
           commentable_type: "issue",
           parent_id: null,
+          attachments:
+            values.attachments.length > 0 ? values.attachments : undefined,
         },
       },
       {
         onSuccess: () => {
           resetForm();
+          setSelectedIndex(null);
         },
       },
     );
@@ -926,7 +933,7 @@ dark:bg-[#101012]"
               </div>
             </div>
 
-            <div className="space-y-4">
+            {/* <div className="space-y-4">
               {activities.map((activity) => (
                 <div key={activity.id} className="flex items-start gap-3">
                   <Avatar className="h-6 w-6">
@@ -946,8 +953,11 @@ dark:bg-[#101012]"
                   </div>
                 </div>
               ))}
-            </div>
+            </div> */}
+
+            <Activity activityData={activityData?.data ?? []}/>
           </div>
+
           {/* Comment Box */}
 
           <div className="space-y-4">
@@ -1495,27 +1505,144 @@ dark:bg-[#101012]"
                     }
                     className="border-0 resize-none focus-visible:ring-0 dark:bg-transparent p-3 dark:placeholder:font-semibold font-semibold"
                     rows={3}
+                    onPaste={(e) => {
+                      const files = Array.from(e.clipboardData.files);
+                      if (files.length) {
+                        setFieldValue("attachments", [
+                          ...(values.attachments || []),
+                          ...files,
+                        ]);
+                      }
+                    }}
                   />
-                  <div className="flex items-center justify-end p-2">
-                    {/* <Button variant="ghost" size="sm" type="button">
+                  {values.attachments && values.attachments.length > 0 && (
+                    <div className="mt-3 space-y-3 px-2 dark:bg-">
+                      {values.attachments.map((file, index) => {
+                        const isImage = file.type.startsWith("image/");
+                        const isSelected = selectedIndex === index;
+
+                        return (
+                          <div
+                            key={index}
+                            onClick={() => setSelectedIndex(index)}
+                            className={`relative cursor-pointer rounded-md transition ${
+                              isSelected ? "ring-2 ring-blue-500" : ""
+                            }`}
+                          >
+                            {isImage ? (
+                              <div className="relative">
+                                <img
+                                  src={URL.createObjectURL(file)}
+                                  className="max-h-[420px] w-full rounded-md object-contain"
+                                  alt="attachment"
+                                />
+                                {isSelected && (
+                                  <button
+                                    type="button"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      setFieldValue(
+                                        "attachments",
+                                        values.attachments?.filter(
+                                          (_, i) => i !== index,
+                                        ),
+                                      );
+                                      setSelectedIndex(null);
+                                    }}
+                                    className="absolute right-2 top-2 rounded bg-background p-1 shadow"
+                                  >
+                                    🗑️
+                                  </button>
+                                )}
+                              </div>
+                            ) : (
+                              <div
+                                className={`flex items-center gap-3 rounded-md border p-2 ${
+                                  isSelected ? "border-blue-500" : ""
+                                }`}
+                              >
+                                <div className="flex h-10 w-10 items-center justify-center rounded bg-muted">
+                                  📎
+                                </div>
+                                <div className="flex-1 truncate">
+                                  <p className="truncate text-sm">
+                                    {file.name}
+                                  </p>
+                                  <p className="text-xs text-muted-foreground">
+                                    {(file.size / 1024).toFixed(1)} KB
+                                  </p>
+                                </div>
+                                {isSelected && (
+                                  <button
+                                    type="button"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      setFieldValue(
+                                        "attachments",
+                                        values.attachments?.filter(
+                                          (_, i) => i !== index,
+                                        ),
+                                      );
+                                      setSelectedIndex(null);
+                                    }}
+                                    className="text-sm"
+                                  >
+                                    🗑️
+                                  </button>
+                                )}
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+
+                  <div className="flex items-center justify-between p-2">
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => fileInputRef.current?.click()}
+                    >
                       <Paperclip className="h-4 w-4" />
-                    </Button> */}
+                    </Button>
                     <Button
                       size="sm"
                       type="submit"
                       variant="custom"
-                      disabled={isSubmitting || postComment.isPending}
+                      disabled={
+                        isSubmitting ||
+                        postComment.isPending ||
+                        (!values.comment_body.trim() &&
+                          values.attachments.length === 0)
+                      }
                     >
                       <ArrowUp className="h-4 w-4" />
                     </Button>
                   </div>
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    multiple
+                    accept="image/*,.pdf,.doc,.docx,.xls,.xlsx"
+                    className="hidden"
+                    onChange={(e) => {
+                      if (!e.target.files) return;
+                      const files = Array.from(e.target.files);
+                      setFieldValue("attachments", [
+                        ...(values.attachments || []),
+                        ...files,
+                      ]);
+                      e.target.value = "";
+                    }}
+                  />
                 </div>
               </Form>
             )}
           </Formik>
         </div>
       </div>
-
       {/* Properties Sidebar */}
       <div className="w-80 border-l border-border bg-muted/20 px-4 py-2 border dark:border-zinc-800">
         <h3 className="font-medium mb-6">Properties</h3>
