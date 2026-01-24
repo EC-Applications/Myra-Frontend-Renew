@@ -72,27 +72,28 @@ import { formatFileSize } from "@/components/hepler-format-filesize";
 import { useActivityHook } from "@/hooks/use-activity-hook";
 import Activity from "./components/issues-activity";
 import { useGetIssuesHook } from "@/hooks/use-get-issues";
+import { useGetIssuesDetailHook } from "@/hooks/use-get-issues-detail.hook";
+import { useGetSubIssuesHook } from "@/hooks/use-get-subissues.hook";
+import { useUpdateIssueHook } from "@/hooks/use-issue-update";
 
-interface ActivityItem {
-  id: string;
-  type: "created" | "moved" | "system";
-  user: string;
-  action: string;
-  timestamp: string;
-  icon?: React.ReactNode;
-}
 
 export default function IssueDetailView() {
   const issues = useSelector((state: any) => state.issues);
   const { id } = useParams();
   const currentUser = useUser();
+
+  const { data } = useGetIssuesDetailHook(Number(id));
+  const {} = useGetSubIssuesHook(Number(id));
+
+  const updateIssueStatus = useUpdateIssueHook();
+
   console.log("IssueID", id);
   const { currentWorkspace } = useUser();
   const navigate = useNavigate();
   const dispatch = useDispatch();
 
   const [loading, setLoading] = useState(false);
-  const [data, setData] = useState<iIussesDetail | undefined>();
+  // const [data, setData] = useState<iIussesDetail | undefined>();
 
   const status = useSelector((state: RootState) => state.issuesStatus);
   const statusList = status ?? [];
@@ -108,7 +109,9 @@ export default function IssueDetailView() {
 
   const workspaceMember = useSelector((state: any) => state.workspace);
   const members = Array.isArray(workspaceMember) ? workspaceMember : [];
-  const [selectedMember, setSelectedMember] = useState<iMember | undefined>();
+  const [selectedMember, setSelectedMember] = useState<iMember | undefined>(
+    data?.assignee,
+  );
   const [startDate, setStartDate] = useState<Date | null>(null);
 
   const projects = useSelector((state: any) => state.project.projects);
@@ -159,26 +162,40 @@ export default function IssueDetailView() {
     Number(id),
   );
 
-  console.log(activityData,"ACTIVITY DATA")
+  console.log(activityData, "ACTIVITY DATA");
 
-  useEffect(() => {
-    setLoading(true);
-    try {
-      issueDetailUri(Number(id)).then((res) => {
-        console.log("ISSUE DETAIL DATA", res.data);
-        setData(res.data);
-      });
+  // useEffect(() => {
+  //   setLoading(true);
+  //   try {
+  //     issueDetailUri(Number(id)).then((res) => {
+  //       console.log("ISSUE DETAIL DATA", res.data);
+  //       // setData(res.data);
+  //     });
 
-      fetchSubIssues(Number(id)).then((res) => {
-        console.log("SUB ISSUES DATA", res.data);
-        dispatch(setSubIssues(res.data));
-      });
-    } catch (e) {
-      setLoading(false);
-    } finally {
-      setLoading(false);
-    }
-  }, [id]);
+  //     fetchSubIssues(Number(id)).then((res) => {
+  //       console.log("SUB ISSUES DATA", res.data);
+  //       dispatch(setSubIssues(res.data));
+  //     });
+  //   } catch (e) {
+  //     setLoading(false);
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // }, [id]);
+
+  // useEffect(() => {
+  //   if (data?.assignee) {
+  //     setSelectedMember(data.assignee);
+  //   }
+  //   if (data?.labels) {
+  //     console.log("Setting labels:", data.labels);
+  //     setSelectedLabels(data.labels);
+
+  //   }
+  //    if (data?.project_id) {
+  //     setSelectedProjects(data?.projects);
+  //   }
+  // }, [data?.assignee, data?.labels, data?.projects]);
 
   useEffect(() => {
     if (data?.name) {
@@ -226,41 +243,18 @@ export default function IssueDetailView() {
 
   const [isDeleting, setIsDeleting] = useState(false);
 
-  const activities: ActivityItem[] = [
-    {
-      id: "1",
-      type: "created",
-      user: "ahmedsaif",
-      action: "created the issue",
-      timestamp: "5w ago",
-    },
-    {
-      id: "2",
-      type: "moved",
-      user: "abdurrehman",
-      action: "moved from Todo to In Progress",
-      timestamp: "1mo ago",
-    },
-    {
-      id: "3",
-      type: "system",
-      user: "MyRa",
-      action: "moved issue through four cycles to Cycle 7",
-      timestamp: "4d ago",
-    },
-  ];
-
-  const handlePriorityUpdate = async (issuid: number) => {
+  const handlePriorityUpdate = async (prioirityId: number) => {
     try {
-      const payload = {
-        priority_id: issuid,
-        workspace_id: currentWorkspace?.id,
-        team_id: data?.team_id,
-      };
-
-      await updateIssuesUri(Number(id), payload);
-      setPriorityId(issuid);
-      // toast.success("Priority updated");
+      updateIssueStatus.mutate({
+        issueId: Number(id),
+        body: {
+          priority_id: prioirityId,
+          workspace_id: currentWorkspace?.id,
+          team_id: Number(data?.team_id),
+        },
+        teamId: Number(data?.team_id),
+        workspaceId: Number(currentWorkspace?.id),
+      });
     } catch (error: any) {
       toast.error(error.message || "Failed to update priority");
     }
@@ -268,12 +262,22 @@ export default function IssueDetailView() {
 
   const handleStatusUpdate = async (status: iIssueStatus) => {
     try {
-      const payload = {
-        status_id: status.id,
-        workspace_id: currentWorkspace?.id,
-        team_id: data?.team_id,
-      };
-      await updateIssuesUri(Number(id), payload);
+      updateIssueStatus.mutate({
+        issueId: Number(id),
+        body: {
+          status_id: status.id,
+          workspace_id: currentWorkspace?.id,
+          team_id: Number(data?.team_id),
+        },
+        teamId: Number(data?.team_id),
+        workspaceId: Number(currentWorkspace?.id),
+      });
+      // const payload = {
+      //   status_id: status.id,
+      //   workspace_id: currentWorkspace?.id,
+      //   team_id: data?.team_id,
+      // };
+      // await updateIssuesUri(Number(id), payload);
       setSelectedStatus(status);
       // toast.success("Status updated");
     } catch (error: any) {
@@ -283,12 +287,22 @@ export default function IssueDetailView() {
 
   const handleMemberUpdate = async (member: iMember | undefined) => {
     try {
-      const payload = {
-        assignee_id: selectedMember?.id,
-        workspace_id: currentWorkspace?.id,
-        team_id: data?.team_id,
-      };
-      await updateIssuesUri(Number(id), payload);
+      //   const payload = {
+      //     assignee_id: selectedMember?.id,
+      //     workspace_id: currentWorkspace?.id,
+      //     team_id: data?.team_id,
+      //   };
+      updateIssueStatus.mutate({
+        issueId: Number(id),
+        body: {
+          assignee_id: member?.id,
+          workspace_id: currentWorkspace?.id,
+          team_id: Number(data?.team_id),
+        },
+        teamId: Number(data?.team_id),
+        workspaceId: Number(currentWorkspace?.id),
+      });
+      // await updateIssuesUri(Number(id), payload);
       setSelectedMember(member);
       // toast.success("Assigne updated");
     } catch (error: any) {
@@ -298,13 +312,23 @@ export default function IssueDetailView() {
 
   const handleProjectUpdate = async (project: iProject | undefined) => {
     try {
-      const payload = {
-        project_id: project?.id,
-        workspace_id: currentWorkspace?.id,
-        team_id: data?.team_id,
-      };
-      await updateIssuesUri(Number(id), payload);
+      updateIssueStatus.mutate({
+        issueId: Number(id),
+        body: {
+          project_id: project?.id,
+          workspace_id: currentWorkspace?.id,
+          team_id: Number(data?.team_id),
+        },
+        teamId: Number(data?.team_id),
+        workspaceId: Number(currentWorkspace?.id),
+      });
       setSelectedProjects(project);
+      //   const payload = {
+      //     project_id: project?.id,
+      //     workspace_id: currentWorkspace?.id,
+      //     team_id: data?.team_id,
+      //   };
+      //   await updateIssuesUri(Number(id), payload);
       // toast.success("Project updated");
     } catch (error: any) {
       toast.error(error.message || "Failed to update status");
@@ -333,11 +357,21 @@ export default function IssueDetailView() {
     // setSaving(true);
 
     try {
-      await updateIssuesUri(Number(id), {
-        workspace_id: currentWorkspace?.id,
-        labels: labels.map((x) => x.id), // Updated labels use karo
-        team_id: data?.team_id,
+      updateIssueStatus.mutate({
+        issueId: Number(id),
+        body: {
+          labels: labels?.map((l) => l.id),
+          workspace_id: currentWorkspace?.id,
+          team_id: Number(data?.team_id),
+        },
+        teamId: Number(data?.team_id),
+        workspaceId: Number(currentWorkspace?.id),
       });
+      // await updateIssuesUri(Number(id), {
+      //   workspace_id: currentWorkspace?.id,
+      //   labels: labels.map((x) => x.id), // Updated labels use karo
+      //   team_id: data?.team_id,
+      // });
 
       // dispatch(
       //   updateProject({
@@ -355,13 +389,23 @@ export default function IssueDetailView() {
 
   const handleTargetDate = async (date: Date | null) => {
     try {
-      const payload = {
-        due_date: date ? format(date, "yyyy-MM-dd") : undefined,
-        workspace_id: currentWorkspace?.id,
-        team_id: data?.team_id,
-      };
-      await updateIssuesUri(Number(id), payload);
-      setStartDate(date);
+      updateIssueStatus.mutate({
+        issueId: Number(id),
+        body: {
+          due_date: date ? format(date, "yyyy-MM-dd") : undefined,
+          workspace_id: currentWorkspace?.id,
+          team_id: Number(data?.team_id),
+        },
+        teamId: Number(data?.team_id),
+        workspaceId: Number(currentWorkspace?.id),
+      });
+      // const payload = {
+      //   due_date: date ? format(date, "yyyy-MM-dd") : undefined,
+      //   workspace_id: currentWorkspace?.id,
+      //   team_id: data?.team_id,
+      // };
+      // await updateIssuesUri(Number(id), payload);
+      // setStartDate(date);
       // toast.success("Date updated");
     } catch (error: any) {
       toast.error(error.message || "Failed to update status");
@@ -378,27 +422,59 @@ export default function IssueDetailView() {
 
     // naya debounce
     saveTimeoutRef.current = setTimeout(() => {
-      handleDescriptionUpdate(value);
-    }, 700); // 👈 700ms = Linear jaisa feel
+      handleUpdateDescription(value);
+    }, 700);
   };
 
-  const handleDescriptionUpdate = async (des: string) => {
-    try {
-      setIsSaving(true);
+  const handleUpdateDescription = async (des: string) => {
+    setIsSaving(true);
 
-      const payload = {
-        description: des,
-        workspace_id: currentWorkspace?.id,
-        team_id: data?.team_id,
-      };
-
-      await updateIssuesUri(Number(id), payload);
-    } catch (error: any) {
-      toast.error(error.message || "Failed to update description");
-    } finally {
-      setIsSaving(false);
-    }
+    updateIssueStatus.mutate(
+      {
+        issueId: Number(id),
+        body: {
+          description: des,
+          workspace_id: currentWorkspace?.id,
+          team_id: Number(data?.team_id),
+        },
+        teamId: Number(data?.team_id),
+        workspaceId: Number(currentWorkspace?.id),
+      },
+      {
+        onSettled: () => {
+          setIsSaving(false);
+        },
+      },
+    );
   };
+
+  // const handleDescriptionUpdate = async (des: string) => {
+  //   try {
+  //     setIsSaving(true);
+
+  //     updateIssueStatus.mutate({
+  //       issueId: Number(id),
+  //       body: {
+  //         description: des,
+  //         workspace_id: currentWorkspace?.id,
+  //         team_id: Number(data?.team_id),
+  //       },
+  //       teamId: Number(data?.team_id),
+  //       workspaceId: Number(currentWorkspace?.id),
+  //     });
+  //     // const payload = {
+  //     //   description: des,
+  //     //   workspace_id: currentWorkspace?.id,
+  //     //   team_id: data?.team_id,
+  //     // };
+
+  //     // await updateIssuesUri(Number(id), payload);
+  //   } catch (error: any) {
+  //     toast.error(error.message || "Failed to update description");
+  //   } finally {
+  //     setIsSaving(false);
+  //   }
+  // };
 
   const handleDocumentUpload = async (files: FileList | null) => {
     console.log("handleDocumentUpload called with:", files);
@@ -479,16 +555,16 @@ export default function IssueDetailView() {
 
       onSuccess?.();
 
-      setData((prev) => {
-        if (!prev) return prev;
-        return {
-          ...prev,
-          sub_issues:
-            prev.sub_issues?.filter(
-              (sub) => !selectedSubIssues.includes(sub.id),
-            ) || [],
-        };
-      });
+      // setData((prev) => {
+      //   if (!prev) return prev;
+      //   return {
+      //     ...prev,
+      //     sub_issues:
+      //       prev.sub_issues?.filter(
+      //         (sub) => !selectedSubIssues.includes(sub.id),
+      //       ) || [],
+      //   };
+      // });
     } catch (error: any) {
       toast.dismiss(loadingToast);
       toast.error(
@@ -520,14 +596,14 @@ export default function IssueDetailView() {
     }
   };
 
-  const refreshIssueData = async () => {
-    try {
-      const response = await issueDetailUri(Number(id));
-      setData(response.data);
-    } catch (error) {
-      console.error("Failed to refresh:", error);
-    }
-  };
+  // const refreshIssueData = async () => {
+  //   try {
+  //     const response = await issueDetailUri(Number(id));
+  //     setData(response.data);
+  //   } catch (error) {
+  //     console.error("Failed to refresh:", error);
+  //   }
+  // };
 
   // REPLAY
 
@@ -703,7 +779,7 @@ dark:bg-[#101012]"
           {/* Title */}
           <Input
             className="md:text-2xl font-semibold mb-6 border-0 p-0 focus-visible:ring-0 dark:bg-transparent"
-            defaultValue={issueName}
+            defaultValue={data?.name}
             onChange={(e) => setIssueName(e.target.value)}
             onBlur={handleIssueName}
             onKeyDown={(e) => {
@@ -716,7 +792,7 @@ dark:bg-[#101012]"
           <div className="mb-8">
             <Textarea
               placeholder="Write a description, a project brief, or collect ideas..."
-              value={description}
+              value={data?.description || ""}
               onChange={(e) => handleDescriptionChange(e.target.value)}
               className=" min-h-[100px]
     resize-none
@@ -728,9 +804,9 @@ dark:bg-[#101012]"
     text-[18px] leading-7
     placeholder:text-[18px]"
             />
-            {documents.length > 0 ? (
+            {data?.documents && data.documents.length > 0 ? (
               <div className="pt-2 space-y-2">
-                {documents.map((doc) => {
+                {data?.documents.map((doc) => {
                   const isSelected = selectedId === doc.id;
 
                   return (
@@ -871,8 +947,9 @@ dark:bg-[#101012]"
               <IssueForm
                 parentIssueId={Number(id)}
                 onCancel={() => setShowAddSubIssue(!showAddSubIssue)}
+                defTeam={data?.team_id || 0}
                 onSuccess={(updatedData) => {
-                  setData(updatedData);
+                  // setData(updatedData);
                   setShowAddSubIssue(!showAddSubIssue);
                 }}
               />
@@ -890,17 +967,17 @@ dark:bg-[#101012]"
                       navigate(`/issues/${subIssue.id}/sub-issue`);
                     }}
                     onSubIssueUpdate={(updatedSubIssue) => {
-                      setData((prev: any) => {
-                        if (!prev) return prev;
-                        return {
-                          ...prev,
-                          sub_issues: prev.sub_issues?.map((sub: any) =>
-                            sub.id === updatedSubIssue.id
-                              ? updatedSubIssue
-                              : sub,
-                          ),
-                        };
-                      });
+                      // setData((prev: any) => {
+                      //   if (!prev) return prev;
+                      //   return {
+                      //     ...prev,
+                      //     sub_issues: prev.sub_issues?.map((sub: any) =>
+                      //       sub.id === updatedSubIssue.id
+                      //         ? updatedSubIssue
+                      //         : sub,
+                      //     ),
+                      //   };
+                      // });
                     }}
                   />
                 ) : (
@@ -956,7 +1033,7 @@ dark:bg-[#101012]"
               ))}
             </div> */}
 
-            <Activity activityData={activityData?.data ?? []}/>
+            <Activity activityData={activityData?.data ?? []} />
           </div>
 
           {/* Comment Box */}
@@ -1654,7 +1731,7 @@ dark:bg-[#101012]"
             <div className="flex items-center gap-2">
               <IssuesStatusPicker
                 statuses={statusList}
-                value={selectedStatus}
+                value={data?.status || null}
                 onChange={handleStatusUpdate}
                 className="border-0 "
                 buttonVarient="dark"
@@ -1665,7 +1742,7 @@ dark:bg-[#101012]"
           {/* Priority */}
           <div className="gap-2">
             <PriorityPicker
-              value={priorityId}
+              value={data?.priority_id || undefined}
               // varirent="create"
               onChange={handlePriorityUpdate}
               buttonVarient="dark"
@@ -1737,7 +1814,7 @@ dark:bg-[#101012]"
           <div className="flex items-center gap-2">
             <ProjectDatePicker
               label="Due Date"
-              value={startDate ? new Date(startDate) : undefined}
+              value={data?.due_date ? new Date(data?.due_date) : undefined}
               onChange={handleTargetDate}
               className="border-0"
               buttonVarient="dark"
