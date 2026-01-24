@@ -109,6 +109,7 @@ export default function SubIssueDetailView() {
   const [documents, setDocuments] = useState<DocumentItem[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const commentfileInputRef = useRef<HTMLInputElement>(null);
   const [uploadingDocs, setUploadingDocs] = useState(false);
 
   const deleteComment = useDeleteCommentHook();
@@ -318,13 +319,24 @@ export default function SubIssueDetailView() {
 
   const handleIssueName = async () => {
     try {
-      const payload = {
-        issue_id: data?.issue_id,
-        name: issueName,
-        workspace_id: currentWorkspace?.id,
-        team_id: data?.team_id,
-      };
-      await updateSubIssuesUri(Number(id), payload);
+      updateSubIssue.mutate({
+        issueId: Number(id),
+        body: {
+          issue_id: data?.issue_id,
+          name: issueName,
+          workspace_id: currentWorkspace?.id,
+          team_id: Number(data?.team_id),
+        },
+        teamId: Number(data?.team_id),
+        workspaceId: Number(currentWorkspace?.id),
+      });
+      // const payload = {
+      //   issue_id: data?.issue_id,
+      //   name: issueName,
+      //   workspace_id: currentWorkspace?.id,
+      //   team_id: data?.team_id,
+      // };
+      // await updateSubIssuesUri(Number(id), payload);
       setIssueName(issueName);
       // toast.success("Name updated");
     } catch (error: any) {
@@ -351,7 +363,7 @@ export default function SubIssueDetailView() {
         workspaceId: Number(currentWorkspace?.id),
       });
     } catch (error) {
-      setSelectedLabels(selectedLabels); 
+      setSelectedLabels(selectedLabels);
       toast.error("Failed to update issue labels");
     }
   };
@@ -399,14 +411,26 @@ export default function SubIssueDetailView() {
     try {
       setIsSaving(true);
 
-      const payload = {
-        issue_id: data?.issue_id,
-        description: des,
-        workspace_id: currentWorkspace?.id,
-        team_id: data?.team_id,
-      };
+      updateSubIssue.mutate({
+        issueId: Number(id),
+        body: {
+          issue_id: data?.issue_id,
+          description: des,
+          workspace_id: currentWorkspace?.id,
+          team_id: Number(data?.team_id),
+        },
+        teamId: Number(data?.team_id),
+        workspaceId: Number(currentWorkspace?.id),
+      });
 
-      await updateSubIssuesUri(Number(id), payload);
+      // const payload = {
+      //   issue_id: data?.issue_id,
+      //   description: des,
+      //   workspace_id: currentWorkspace?.id,
+      //   team_id: data?.team_id,
+      // };
+
+      // await updateSubIssuesUri(Number(id), payload);
     } catch (error: any) {
       toast.error(error.message || "Failed to update description");
     } finally {
@@ -434,25 +458,37 @@ export default function SubIssueDetailView() {
       const filesArray = Array.from(files);
       console.log("Uploading files:", filesArray);
 
-      const payload = {
-        issue_id: data?.issue_id,
-        workspace_id: currentWorkspace?.id,
-        team_id: data.team_id,
-      };
+       updateSubIssue.mutate({
+        issueId: Number(id),
+        body: {
+          issue_id: data?.issue_id,
+          workspace_id: currentWorkspace?.id,
+          team_id: Number(data?.team_id),
+        },
+        newAttachments: filesArray,
+        teamId: Number(data?.team_id),
+        workspaceId: Number(currentWorkspace?.id),
+      });
 
-      await updateSubIssuesUri(
-        Number(id),
-        payload,
-        // undefined,
-        filesArray,
-      );
+      // const payload = {
+      //   issue_id: data?.issue_id,
+      //   workspace_id: currentWorkspace?.id,
+      //   team_id: data.team_id,
+      // };
 
-      console.log("Upload successful, fetching updated data");
+      // await updateSubIssuesUri(
+      //   Number(id),
+      //   payload,
+      //   // undefined,
+      //   filesArray,
+      // );
 
-      const response = await fetchSubissuesDetailUri(Number(id));
+      // console.log("Upload successful, fetching updated data");
 
-      console.log("Updated documents:", response.data.documents);
-      setDocuments(response.data.documents || []);
+      // const response = await fetchSubissuesDetailUri(Number(id));
+
+      // console.log("Updated documents:", response.data.documents);
+      // setDocuments(response.data.documents || []);
 
       toast.dismiss(loadingToast);
       toast.success(`${filesArray.length} document(s) uploaded`);
@@ -1580,7 +1616,7 @@ export default function SubIssueDetailView() {
                       type="button"
                       variant="ghost"
                       size="sm"
-                      onClick={() => fileInputRef.current?.click()}
+                      onClick={() => commentfileInputRef.current?.click()}
                     >
                       <Paperclip className="h-4 w-4" />
                     </Button>
@@ -1599,7 +1635,7 @@ export default function SubIssueDetailView() {
                     </Button>
                   </div>
                   <input
-                    ref={fileInputRef}
+                    ref={commentfileInputRef}
                     type="file"
                     multiple
                     accept="image/*,.pdf,.doc,.docx,.xls,.xlsx"

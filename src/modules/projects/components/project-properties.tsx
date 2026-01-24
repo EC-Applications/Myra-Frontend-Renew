@@ -32,6 +32,8 @@ import type { iMilestone } from "@/interfaces/milestone.interface";
 import { useUpdateProjectHook } from "@/hooks/use-update-project";
 import { useProjectDetail } from "@/hooks/use-project-detail";
 import { MemberPicker } from "./member-picker";
+import Activity from "@/modules/issues/components/issues-activity";
+import { useActivityHook } from "@/hooks/use-activity-hook";
 
 const ProjectProperties = () => {
   const { id } = useParams();
@@ -57,12 +59,20 @@ const ProjectProperties = () => {
   const [priority, setPriority] = useState<number | undefined>();
   const [selectedStatus, setSelectedStatus] = useState(statusList?.[0] ?? null);
   const [selectedLead, setSelectedLead] = useState<iMember | undefined>();
+  const [showActivity, setShowActivity] = useState(false);
   const [startDate, setStartDate] = useState<Date | null>(null);
   const [endDate, setEndDate] = useState<Date | null>(null);
   const [selectedLabels, setSelectedLabels] = useState<any[]>([]);
   const [saving, setSaving] = useState(false);
 
   const updateProjectMutation = useUpdateProjectHook();
+
+  const { data: activityData } = useActivityHook(
+    workpsace.currentWorkspace?.slug ?? "",
+    "project",
+    Number(id),
+  );
+
   // useEffect(() => {
   //   setLoading(true);
   //   try {
@@ -676,6 +686,22 @@ const ProjectProperties = () => {
             </div>
           </div>
         </div> */}
+
+        <div className="">
+          <button
+            type="button"
+            onClick={() => setShowActivity(!showActivity)}
+            className={`flex items-center gap-1 font-semibold text-[14px] mb-2 dark:hover:text-white text-muted-foreground ${showActivity ? "dark:text-white" : "text-muted-foreground"}`} 
+          >
+            <span className={`text-[16px] font-semibold dark:hover:text-white ${showActivity ? "dark:text-white" : "text-muted-foreground"}`}>Activity</span>
+            {showActivity ? (
+              <ChevronDown className="h-4 w-4" />
+            ) : (
+              <ChevronRight className="h-4 w-4" />
+            )}
+          </button>
+          {showActivity && <Activity activityData={activityData?.data ?? []} />}
+        </div>
       </div>
     </div>
   );

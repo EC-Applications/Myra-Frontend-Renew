@@ -76,7 +76,6 @@ import { useGetIssuesDetailHook } from "@/hooks/use-get-issues-detail.hook";
 import { useGetSubIssuesHook } from "@/hooks/use-get-subissues.hook";
 import { useUpdateIssueHook } from "@/hooks/use-issue-update";
 
-
 export default function IssueDetailView() {
   const issues = useSelector((state: any) => state.issues);
   const { id } = useParams();
@@ -127,6 +126,7 @@ export default function IssueDetailView() {
   const [documents, setDocuments] = useState<DocumentItem[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const commentfileInputRef = useRef<HTMLInputElement>(null);
   const [uploadingDocs, setUploadingDocs] = useState(false);
 
   const [repOpen, setRepOpen] = useState<number | null>(null);
@@ -490,34 +490,33 @@ export default function IssueDetailView() {
     }
 
     setUploadingDocs(true);
-    const loadingToast = toast.loading("Uploading documents...");
 
     try {
       const filesArray = Array.from(files);
-      console.log("Uploading files:", filesArray);
 
-      await updateIssuesUri(
-        Number(id),
-        {
+      updateIssueStatus.mutate({
+        issueId: Number(id),
+        body: {
           workspace_id: currentWorkspace?.id,
-          team_id: data.team_id,
+          team_id: Number(data?.team_id),
         },
-        // undefined,
-        filesArray,
-      );
+        newAttachments: filesArray,
+        teamId: Number(data?.team_id),
+        workspaceId: Number(currentWorkspace?.id),
+      });
 
-      console.log("Upload successful, fetching updated data");
+      // console.log("Upload successful, fetching updated data");
 
-      const response = await issueDetailUri(Number(id));
+      // const response = await issueDetailUri(Number(id));
 
-      console.log("Updated documents:", response.data.documents);
-      setDocuments(response.data.documents || []);
+      // console.log("Updated documents:", response.data.documents);
+      // setDocuments(response.data.documents || []);
 
-      toast.dismiss(loadingToast);
-      toast.success(`${filesArray.length} document(s) uploaded`);
+      // toast.dismiss(loadingToast);
+      // toast.success(`${filesArray.length} document(s) uploaded`);
     } catch (error: any) {
       console.error("Upload error:", error);
-      toast.dismiss(loadingToast);
+
       toast.error(
         error?.response?.data?.message || "Failed to upload documents",
       );
@@ -792,7 +791,7 @@ dark:bg-[#101012]"
           <div className="mb-8">
             <Textarea
               placeholder="Write a description, a project brief, or collect ideas..."
-              value={data?.description || ""}
+              value={description}
               onChange={(e) => handleDescriptionChange(e.target.value)}
               className=" min-h-[100px]
     resize-none
@@ -1681,7 +1680,7 @@ dark:bg-[#101012]"
                       type="button"
                       variant="ghost"
                       size="sm"
-                      onClick={() => fileInputRef.current?.click()}
+                      onClick={() => commentfileInputRef.current?.click()}
                     >
                       <Paperclip className="h-4 w-4" />
                     </Button>
@@ -1700,7 +1699,7 @@ dark:bg-[#101012]"
                     </Button>
                   </div>
                   <input
-                    ref={fileInputRef}
+                    ref={commentfileInputRef}
                     type="file"
                     multiple
                     accept="image/*,.pdf,.doc,.docx,.xls,.xlsx"
