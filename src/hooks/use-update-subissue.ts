@@ -1,44 +1,35 @@
 import type { iResponse } from "@/interfaces/common.interface";
 import type { iIssues } from "@/interfaces/issues";
 import type { iIssuePayload } from "@/interfaces/issues.interface";
-import { updateIssuesUri } from "@/services/issues.service";
+import { updateSubIssuesUri } from "@/services/sub-issues.service";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
-interface updateIssueHookParam {
+interface updateSubIssueHookParam {
   workspaceId: number;
   teamId: number;
   issueId: number;
+  parentIssueId?: number;
   body: Partial<iIssuePayload>;
   newAttachments?: File[];
 }
 
-export const useUpdateIssueHook = () => {
+export const useUpdateSubIssueHook = () => {
   const queryClient = useQueryClient();
-  return useMutation<iResponse<iIssues>, Error, updateIssueHookParam>({
+  return useMutation<iResponse<iIssues>, Error, updateSubIssueHookParam>({
     mutationFn: async ({ issueId, body, newAttachments }) => {
-      const req = await updateIssuesUri(issueId, body, newAttachments);
+      const req = await updateSubIssuesUri(issueId, body, newAttachments);
       return req;
     },
     onSuccess: (_data, variables) => {
-      // toast.success("Issue updated successfully");
       queryClient.invalidateQueries({
-        queryKey: ["issues", variables.workspaceId, variables.teamId],
-      });
-
-      queryClient.invalidateQueries({
-        queryKey: ["project-issue", variables.workspaceId],
-      });
-
-      queryClient.invalidateQueries({
-        queryKey: ["cycle-detail"],
-      });
-      queryClient.invalidateQueries({
-        queryKey: ["activity", variables.issueId],
+        queryKey: ["subissue-detail", variables.issueId],
         exact: false,
       });
+
+
       queryClient.invalidateQueries({
-        queryKey: ["issue-detail", variables.issueId],
+        queryKey: ["sub-issues", variables.issueId],
         exact: false,
       });
     },

@@ -155,8 +155,10 @@ const SignIn = () => {
                   </div>
 
                   <Button
-                    className="w-full h-12"
+                    className="w-full h-12 cursor-pointer"
                     type="submit"
+                    variant="custom"
+                    
                     disabled={loading}
                   >
                     {loading ? (
