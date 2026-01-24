@@ -18,7 +18,7 @@ export function ContentEditable({
         className ??
         `
           ContentEditable__root
-          relative text-base block min-h-72 min-h-full overflow-auto py-2
+          relative text-base block min-h-72 overflow-auto py-2
           focus:outline-none
 
           /* inline code */

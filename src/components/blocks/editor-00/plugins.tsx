@@ -1,11 +1,12 @@
-import { useState } from "react";
 import { LexicalErrorBoundary } from "@lexical/react/LexicalErrorBoundary";
 import { RichTextPlugin } from "@lexical/react/LexicalRichTextPlugin";
+import { useState } from "react";
 
 import { ContentEditable } from "@/components/editor/editor-ui/content-editable";
-import { FloatingTextFormatToolbarPlugin } from "@/components/editor/plugins/floating-text-format-plugin";
 import { CodeActionMenuPlugin } from "@/components/editor/plugins/code-action-menu-plugin";
 import { CodeHighlightPlugin } from "@/components/editor/plugins/code-highlight-plugin";
+import { FloatingTextFormatToolbarPlugin } from "@/components/editor/plugins/floating-text-format-plugin";
+import { HistoryPlugin } from "@lexical/react/LexicalHistoryPlugin";
 
 export function Plugins() {
   const [floatingAnchorElem, setFloatingAnchorElem] =
@@ -38,6 +39,7 @@ export function Plugins() {
         />
         <CodeActionMenuPlugin anchorElem={floatingAnchorElem} />
         <CodeHighlightPlugin />
+        <HistoryPlugin />
         {/* editor plugins */}
       </div>
       {/* actions plugins */}
