@@ -4,17 +4,17 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import Spinner from "@/components/ui/spinner";
+import { baseUrl } from "@/constants";
 import type { iLoginRequest } from "@/interfaces/auth.interface";
 import { login } from "@/services/auth.service";
 import { tempStorage } from "@/services/storage.service";
 import { useAppDispatch } from "@/store/hook";
-import { addAccount } from "@/store/slices/auth.slice";
 import { useFormik } from "formik";
 import { useState } from "react";
+import { useSearchParams } from "react-router";
 import { toast } from "sonner";
 import * as yup from "yup";
 import OtpVerification from "./otp-verification";
-import { useSearchParams } from "react-router";
 
 const validationSchema = yup.object({
   email: yup
@@ -32,16 +32,15 @@ const SignIn = () => {
 
   const handleGoogleLogin = () => {
     // Google OAuth endpoint pe redirect
-    window.location.href = "http://api.myracloud.io/auth/google?platform=web";
+    window.location.href = `${baseUrl}/auth/google?platform=web`;
   };
 
   const handleMicrosoftLogin = () => {
-    window.location.href =
-      "https://api.myracloud.io/auth/microsoft?platform=web";
+    window.location.href = `${baseUrl}/auth/microsoft?platform=web`;
   };
 
   const handleGithubLogin = () => {
-    window.location.href = "https://api.myracloud.io/auth/github?platform=web";
+    window.location.href = `${baseUrl}/auth/github?platform=web`;
   };
 
   const formik = useFormik<iLoginRequest>({
