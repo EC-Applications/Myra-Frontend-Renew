@@ -86,7 +86,7 @@ export default function IssueDetailView() {
 
   const updateIssueStatus = useUpdateIssueHook();
 
-  console.log("IssueID", id);
+  // console.log("IssueID", id);
   const { currentWorkspace } = useUser();
   const navigate = useNavigate();
   const dispatch = useDispatch();
@@ -96,30 +96,17 @@ export default function IssueDetailView() {
 
   const status = useSelector((state: RootState) => state.issuesStatus);
   const statusList = status ?? [];
-  const [selectedStatus, setSelectedStatus] = useState<iIssueStatus | null>(
-    null,
-  );
-  const [priorityId, setPriorityId] = useState<number | undefined>();
-  const [issueName, setIssueName] = useState("");
 
+  const [issueName, setIssueName] = useState("");
   const [description, setDescription] = useState("");
   const [isSaving, setIsSaving] = useState(false);
   const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const workspaceMember = useSelector((state: any) => state.workspace);
   const members = Array.isArray(workspaceMember) ? workspaceMember : [];
-  const [selectedMember, setSelectedMember] = useState<iMember | undefined>(
-    data?.assignee,
-  );
-  const [startDate, setStartDate] = useState<Date | null>(null);
 
   const projects = useSelector((state: any) => state.project.projects);
-  const [selectedProjects, setSelectedProjects] = useState<
-    iProject | undefined
-  >();
-
   const labels = useSelector((state: any) => state.issuesLabel);
-  const [selectedLabels, setSelectedLabels] = useState<Label[]>([]);
 
   const subIssueData = useSelector((state: any) => state.issuesDetail);
 
@@ -162,7 +149,7 @@ export default function IssueDetailView() {
     Number(id),
   );
 
-  console.log(activityData, "ACTIVITY DATA");
+  // console.log(activityData, "ACTIVITY DATA");
 
   // useEffect(() => {
   //   setLoading(true);
@@ -197,43 +184,17 @@ export default function IssueDetailView() {
   //   }
   // }, [data?.assignee, data?.labels, data?.projects]);
 
+  // Sync only text fields that need local editing state
   useEffect(() => {
     if (data?.name) {
-      setIssueName(data?.name);
+      setIssueName(data.name);
     }
-
     if (data?.description) {
-      setDescription(data?.description);
+      setDescription(data.description);
     }
-    if (data?.labels && data?.labels.length > 0) {
-      setSelectedLabels(data?.labels);
-    }
-    if (data?.status) {
-      setSelectedStatus(data.status);
-    }
-    if (data?.priority_id) {
-      setPriorityId(data?.priority_detail.id);
-    }
-    if (data?.assignee_id) {
-      setSelectedMember(data.assignee);
-    }
-    if (data?.project_id) {
-      setSelectedProjects(data?.projects);
-    }
-    if (data?.labels) {
-      console.log("Setting labels:", data.labels);
-      setSelectedLabels(data.labels);
-    }
+  }, [data?.name, data?.description]);
 
-    if (data?.due_date) {
-      setStartDate(data.due_date);
-    }
-    if (data?.documents && Array.isArray(data?.documents)) {
-      setDocuments(data?.documents);
-    }
-  }, [data, data?.labels]);
-
-  console.log("ISSUES", issues);
+  // console.log("ISSUES", issues);
 
   const [subIssuesExpanded, setSubIssuesExpanded] = useState(true);
   const [showAddSubIssue, setShowAddSubIssue] = useState(false);
@@ -243,96 +204,85 @@ export default function IssueDetailView() {
 
   const [isDeleting, setIsDeleting] = useState(false);
 
+  const priorityData = useSelector((state: any) => state.priority);
+
   const handlePriorityUpdate = async (prioirityId: number) => {
-    try {
-      updateIssueStatus.mutate({
-        issueId: Number(id),
-        body: {
-          priority_id: prioirityId,
-          workspace_id: currentWorkspace?.id,
-          team_id: Number(data?.team_id),
-        },
-        teamId: Number(data?.team_id),
-        workspaceId: Number(currentWorkspace?.id),
-      });
-    } catch (error: any) {
-      toast.error(error.message || "Failed to update priority");
-    }
+    // Find full priority object for optimistic update
+    const priorityObj = priorityData?.priority?.find(
+      (p: any) => p.id === prioirityId,
+    );
+
+    updateIssueStatus.mutate({
+      issueId: Number(id),
+      body: {
+        priority_id: prioirityId,
+        workspace_id: currentWorkspace?.id,
+        team_id: Number(data?.team_id),
+      },
+      // Full object for instant UI update
+      optimisticData: {
+        priority_detail: priorityObj,
+        priority_id: prioirityId,
+      },
+      teamId: Number(data?.team_id),
+      workspaceId: Number(currentWorkspace?.id),
+    });
   };
 
-  const handleStatusUpdate = async (status: iIssueStatus) => {
-    try {
-      updateIssueStatus.mutate({
-        issueId: Number(id),
-        body: {
-          status_id: status.id,
-          workspace_id: currentWorkspace?.id,
-          team_id: Number(data?.team_id),
-        },
-        teamId: Number(data?.team_id),
-        workspaceId: Number(currentWorkspace?.id),
-      });
-      // const payload = {
-      //   status_id: status.id,
-      //   workspace_id: currentWorkspace?.id,
-      //   team_id: data?.team_id,
-      // };
-      // await updateIssuesUri(Number(id), payload);
-      setSelectedStatus(status);
-      // toast.success("Status updated");
-    } catch (error: any) {
-      toast.error(error.message || "Failed to update status");
-    }
+  const handleStatusUpdate = async (newStatus: iIssueStatus) => {
+    updateIssueStatus.mutate({
+      issueId: Number(id),
+      body: {
+        status_id: newStatus.id,
+        workspace_id: currentWorkspace?.id,
+        team_id: Number(data?.team_id),
+      },
+      // Full object for instant UI update
+      optimisticData: {
+        status: newStatus,
+        status_id: newStatus.id,
+      },
+      teamId: Number(data?.team_id),
+      workspaceId: Number(currentWorkspace?.id),
+    });
   };
 
   const handleMemberUpdate = async (member: iMember | undefined) => {
-    try {
-      //   const payload = {
-      //     assignee_id: selectedMember?.id,
-      //     workspace_id: currentWorkspace?.id,
-      //     team_id: data?.team_id,
-      //   };
-      updateIssueStatus.mutate({
-        issueId: Number(id),
-        body: {
-          assignee_id: member?.id,
-          workspace_id: currentWorkspace?.id,
-          team_id: Number(data?.team_id),
-        },
-        teamId: Number(data?.team_id),
-        workspaceId: Number(currentWorkspace?.id),
-      });
-      // await updateIssuesUri(Number(id), payload);
-      setSelectedMember(member);
-      // toast.success("Assigne updated");
-    } catch (error: any) {
-      toast.error(error.message || "Failed to update status");
-    }
+    if (!member) return;
+
+    updateIssueStatus.mutate({
+      issueId: Number(id),
+      body: {
+        assignee_id: member.id,
+        workspace_id: currentWorkspace?.id,
+        team_id: Number(data?.team_id),
+      },
+      // Full object for instant UI update
+      optimisticData: {
+        assignee: member,
+        assignee_id: member.id,
+      },
+      teamId: Number(data?.team_id),
+      workspaceId: Number(currentWorkspace?.id),
+    });
   };
 
   const handleProjectUpdate = async (project: iProject | undefined) => {
-    try {
-      updateIssueStatus.mutate({
-        issueId: Number(id),
-        body: {
-          project_id: project?.id,
-          workspace_id: currentWorkspace?.id,
-          team_id: Number(data?.team_id),
-        },
-        teamId: Number(data?.team_id),
-        workspaceId: Number(currentWorkspace?.id),
-      });
-      setSelectedProjects(project);
-      //   const payload = {
-      //     project_id: project?.id,
-      //     workspace_id: currentWorkspace?.id,
-      //     team_id: data?.team_id,
-      //   };
-      //   await updateIssuesUri(Number(id), payload);
-      // toast.success("Project updated");
-    } catch (error: any) {
-      toast.error(error.message || "Failed to update status");
-    }
+    updateIssueStatus.mutate({
+      issueId: Number(id),
+      body: {
+        project_id: project?.id,
+        workspace_id: currentWorkspace?.id,
+        team_id: Number(data?.team_id),
+      },
+      // Full object for instant UI update
+      optimisticData: {
+        projects: project,
+        project_id: project?.id,
+      },
+      teamId: Number(data?.team_id),
+      workspaceId: Number(currentWorkspace?.id),
+    });
   };
 
   const handleIssueName = async () => {
@@ -350,66 +300,38 @@ export default function IssueDetailView() {
     }
   };
 
-  const handleUpdateLabel = async (labels: Label[]) => {
-    console.log("n");
-
-    setSelectedLabels(labels); // Pehle state update karo
-    // setSaving(true);
-
-    try {
-      updateIssueStatus.mutate({
-        issueId: Number(id),
-        body: {
-          labels: labels?.map((l) => l.id),
-          workspace_id: currentWorkspace?.id,
-          team_id: Number(data?.team_id),
-        },
-        teamId: Number(data?.team_id),
-        workspaceId: Number(currentWorkspace?.id),
-      });
-      // await updateIssuesUri(Number(id), {
-      //   workspace_id: currentWorkspace?.id,
-      //   labels: labels.map((x) => x.id), // Updated labels use karo
-      //   team_id: data?.team_id,
-      // });
-
-      // dispatch(
-      //   updateProject({
-      //     projectId: Number(id),
-      //     data: { labels: labels.map((x) => x.id) },
-      //   })
-      // );
-
-      // toast.success("Issue Label updated");
-    } catch (error) {
-      setSelectedLabels(selectedLabels); // Error pe purani state revert karo
-      toast.error("Failed to update issue labels");
-    }
+  const handleUpdateLabel = async (newLabels: Label[]) => {
+    updateIssueStatus.mutate({
+      issueId: Number(id),
+      body: {
+        labels: newLabels?.length > 0 ? newLabels.map((l) => l.id) : null,
+        workspace_id: currentWorkspace?.id,
+        team_id: Number(data?.team_id),
+      },
+      // Full objects for instant UI update
+      optimisticData: {
+        labels: newLabels,
+      },
+      teamId: Number(data?.team_id),
+      workspaceId: Number(currentWorkspace?.id),
+    });
   };
 
   const handleTargetDate = async (date: Date | null) => {
-    try {
-      updateIssueStatus.mutate({
-        issueId: Number(id),
-        body: {
-          due_date: date ? format(date, "yyyy-MM-dd") : undefined,
-          workspace_id: currentWorkspace?.id,
-          team_id: Number(data?.team_id),
-        },
-        teamId: Number(data?.team_id),
-        workspaceId: Number(currentWorkspace?.id),
-      });
-      // const payload = {
-      //   due_date: date ? format(date, "yyyy-MM-dd") : undefined,
-      //   workspace_id: currentWorkspace?.id,
-      //   team_id: data?.team_id,
-      // };
-      // await updateIssuesUri(Number(id), payload);
-      // setStartDate(date);
-      // toast.success("Date updated");
-    } catch (error: any) {
-      toast.error(error.message || "Failed to update status");
-    }
+    updateIssueStatus.mutate({
+      issueId: Number(id),
+      body: {
+        due_date: date ? format(date, "yyyy-MM-dd") : undefined,
+        workspace_id: currentWorkspace?.id,
+        team_id: Number(data?.team_id),
+      },
+      // For instant UI update
+      optimisticData: {
+        due_date: date,
+      },
+      teamId: Number(data?.team_id),
+      workspaceId: Number(currentWorkspace?.id),
+    });
   };
 
   const handleDescriptionChange = (value: string) => {
@@ -477,15 +399,15 @@ export default function IssueDetailView() {
   // };
 
   const handleDocumentUpload = async (files: FileList | null) => {
-    console.log("handleDocumentUpload called with:", files);
+    // console.log("handleDocumentUpload called with:", files);
 
     if (!files || files.length === 0) {
-      console.log("No files provided");
+      // console.log("No files provided");
       return;
     }
 
     if (!data) {
-      console.log("No Issue Found");
+      // console.log("No Issue Found");
       return;
     }
 
@@ -539,10 +461,9 @@ export default function IssueDetailView() {
     );
 
     try {
-      // Payload hamesha array format mein bhejo
       await deleteSubIssuesUri({
         issue_id: Number(id),
-        sub_issue_ids: selectedSubIssues, // Yahan directly array pass karo
+        sub_issue_ids: selectedSubIssues, 
       });
 
       toast.dismiss(loadingToast);
@@ -966,6 +887,7 @@ dark:bg-[#101012]"
                       navigate(`/issues/${subIssue.id}/sub-issue`);
                     }}
                     onSubIssueUpdate={(updatedSubIssue) => {
+                      data?.sub_issues
                       // setData((prev: any) => {
                       //   if (!prev) return prev;
                       //   return {
@@ -1758,7 +1680,7 @@ dark:bg-[#101012]"
           <div>
             <div className="flex items-center gap-2 mb-2">
               <SingleMemberPicker
-                value={selectedMember}
+                value={data?.assignee}
                 members={members}
                 onChange={handleMemberUpdate}
                 className="border-0"
@@ -1775,7 +1697,7 @@ dark:bg-[#101012]"
           <div className="gap-2">
             <ProjectFormLabels
               labels={labels}
-              value={selectedLabels}
+              value={data?.labels || []}
               onChange={handleUpdateLabel}
               className="border-0"
               buttonVarient="dark"
@@ -1802,7 +1724,7 @@ dark:bg-[#101012]"
           <div>
             <ProjectPicker
               projects={projects}
-              value={selectedProjects}
+              value={data?.projects}
               onChange={handleProjectUpdate}
               buttonVarient="dark"
               className="border-0"

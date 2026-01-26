@@ -100,7 +100,7 @@ const ProjectList: FC<props> = ({ projects }) => {
   return (
     <>
       {/* Table */}
-      <div className="border">
+      <div className="border-t">
         <div className="grid grid-cols-12 gap-4 px-4 py-2 border-b text-sm font-medium text-muted-foreground">
           <div className="col-span-4">Name</div>
           {/* <div className="col-span-2">Health</div> */}

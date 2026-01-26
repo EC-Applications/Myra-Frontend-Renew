@@ -1,21 +1,16 @@
 "use client";
 
 import { getFileIcon } from "@/components/helper-function-file";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useUser } from "@/hooks/use-user";
-import type { DocumentItem, iProject } from "@/interfaces/project.interface";
 import type { iMember } from "@/interfaces/teams.interface";
 import { useDeleteProjectAttachment } from "@/hooks/use-delete-project-attachment";
-import { updateProject } from "@/store/slices/project.slice";
-import type { RootState } from "@/store/store";
 
-import { ArrowRight, Download, Link2, Paperclip, Plus } from "lucide-react";
-import { useEffect, useMemo, useRef, useState } from "react";
-import { useDispatch, useSelector } from "react-redux";
+import { ArrowRight, Download, Paperclip } from "lucide-react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useSelector } from "react-redux";
 import { useParams } from "react-router";
 import { toast } from "sonner";
 import { ProjectDatePicker } from "./components/date-picker";
@@ -25,12 +20,11 @@ import { LeadPicker } from "./components/lead-picker";
 import MilestoneSection from "./components/milestone";
 import { PriorityPicker } from "./components/priority-picker";
 import { ProjectFormStatus } from "./components/status-picker";
-import { te } from "date-fns/locale";
 import type { iLabel } from "@/interfaces/label.interface";
 import { cn } from "@/lib/utils";
-// import { useProjectDetail } from "@/hooks/use-project-detail";
 import { useUpdateProjectHook } from "@/hooks/use-update-project";
 import { useProjectDetail } from "@/hooks/use-project-detail";
+import { useFormik } from "formik";
 
 export default function Detail() {
   const { id } = useParams();
@@ -47,18 +41,7 @@ export default function Detail() {
 
   const labelState = useSelector((state: any) => state.label);
   const labels = labelState?.labels ?? [];
-  const projectData = useSelector((state: RootState) => state.project);
-  const dispatch = useDispatch();
-  // const [project, setProject] = useState<iProject>();
   const [loading, setLoading] = useState(false);
-
-  console.log("QUERY DATA", project);
-  console.log("Members", members);
-
-  // const project = useMemo(
-  //   () => projectData?.projects.find((p) => id && p.id == parseInt(id)),
-  //   [projectData, id]
-  // );
 
   // useEffect(() => {
   //   setLoading(true);
@@ -75,132 +58,35 @@ export default function Detail() {
   //   }
   // }, [id]);
 
-  // States
-
-  const [isFocused, setIsFocused] = useState(false);
-  const [projectName, setProjectName] = useState("");
-  const [shortSummary, setShortSummary] = useState("");
-  const [description, setDescription] = useState("");
-
-  const [priority, setPriority] = useState<number | undefined>();
-  const [selectedStatus, setSelectedStatus] = useState(statusList?.[0] ?? null);
-  const [selectedLead, setSelectedLead] = useState<iMember | undefined>();
-  const [startDate, setStartDate] = useState<Date | null>(null);
-  const [endDate, setEndDate] = useState<Date | null>(null);
-  const [selectedLabels, setSelectedLabels] = useState<any[]>([]);
-  const [documents, setDocuments] = useState<DocumentItem[]>([]);
-  const [expandedMilestones, setExpandedMilestones] = useState<Set<string>>(
-    new Set(),
-  );
-  const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [milestones, setMilestones] = useState<any[]>([]);
-  const [projectIcon, setProjectIcon] = useState<{
-    icon: string;
-    color: string;
-    type: "icon" | "emoji" | "image";
-    file?: File;
-    imageUrl?: string;
-  }>();
-
+  // Refs
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const descriptionTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  // UI States (non-form related)
+  const [isFocused, setIsFocused] = useState(false);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
   const [uploadingDocs, setUploadingDocs] = useState(false);
   const [uploadingIcon, setUploadingIcon] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [isDataLoaded, setIsDataLoaded] = useState(false);
-  const containerRef = useRef<HTMLDivElement>(null);
-  const descriptionTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const [isSavingDescription, setIsSavingDescription] = useState(false);
+
+  // Formik for form state management
+  // enableReinitialize: automatically syncs form when project data changes from server
+  const formik = useFormik({
+    initialValues: {
+      name: project?.name || "",
+      short_summary: project?.short_summary || "",
+      description: project?.description || "",
+    },
+    enableReinitialize: true, // Auto-sync when React Query cache updates
+    onSubmit: () => {}, // Auto-save on blur, no form submission needed
+  });
 
   const updateProjectMutation = useUpdateProjectHook();
   const deleteAttachmentMutation = useDeleteProjectAttachment();
 
-  // useEffect(() => {
-  //   if (project && !isDataLoaded) {
-  //     setProjectName(project.name || "");
-  //     setShortSummary(project.short_summary || "");
-
-  //     if (project.icon) {
-  //       if (typeof project.icon === "object") {
-  //         setProjectIcon({
-  //           icon: project.icon.icon,
-  //           color: project.icon.color,
-  //           type: project.icon.type as "icon" | "emoji",
-  //         });
-  //       } else if (typeof project.icon === "string") {
-  //         setProjectIcon({
-  //           icon: project.icon,
-  //           color: "#000000",
-  //           type: "icon",
-  //         });
-  //       }
-  //     }
-
-  //     // Priority
-  //     if (project.priority_id) {
-  //       setPriority(project.priority_id);
-  //     }
-
-  //     if (project.status_id && statusList.length > 0) {
-  //       const statusObj = statusList.find(
-  //         (s: any) => s.id === project.status_id
-  //       );
-  //       if (statusObj) {
-  //         setSelectedStatus(statusObj);
-  //       }
-  //     }
-
-  //     if (project.lead_id && project.lead) {
-  //       setSelectedLead(project.lead);
-  //     }
-
-  //     if (project.labels && project.labels.length > 0) {
-  //       setSelectedLabels(project.labels);
-  //     }
-
-  //     if (project.start_date) {
-  //       const date =
-  //         typeof project.start_date === "string"
-  //           ? new Date(project.start_date)
-  //           : project.start_date;
-  //       setStartDate(date);
-  //     }
-
-  //     if (project.target_date) {
-  //       const date =
-  //         typeof project.target_date === "string"
-  //           ? new Date(project.target_date)
-  //           : project.target_date;
-  //       setEndDate(date);
-  //     }
-
-  //     if (project.documents && Array.isArray(project.documents)) {
-  //       setDocuments(project.documents);
-  //     }
-
-  //     if (project.milestones && Array.isArray(project.milestones)) {
-  //       setMilestones(project.milestones);
-  //     }
-
-  //     setIsDataLoaded(true);
-  //   }
-  // }, [
-  //   project,
-  //   priorityData.priority,
-  //   statusList,
-  //   members,
-  //   project?.labels,
-  //   isDataLoaded,
-  // ]);
-
-  // console.log("PROJECTN PRIORITY", priority);
-
-  // Initialize description from project data
-  useEffect(() => {
-    if (project?.description !== undefined) {
-      setDescription(project.description || "");
-    }
-  }, [project?.description]);
-
+  // Keyboard and click outside handlers
   useEffect(() => {
     const handleKeyDown = (e: any) => {
       if (e.key === "Escape") {
@@ -223,87 +109,9 @@ export default function Detail() {
     };
   }, []);
 
-  const handleUpdateName = async () => {
+  const handleUpdateName = useCallback(() => {
     if (!project) return;
-
-    setSaving(true);
-    const originalName = project.name;
-
-    dispatch(
-      updateProject({
-        projectId: Number(id),
-        data: { name: projectName },
-      }),
-    );
-
-    updateProjectMutation.mutate(
-      {
-        projectId: Number(id),
-        body: {
-          name: projectName,
-          workspace_id: workpsace.currentWorkspace?.id,
-          team_id: project.teams?.map((x) => x.id as number) || [],
-        },
-      },
-      {
-        onError: () => {
-          dispatch(
-            updateProject({
-              projectId: Number(id),
-              data: { name: originalName },
-            }),
-          );
-        },
-        onSettled: () => {
-          setSaving(false);
-        },
-      },
-    );
-  };
-
-  const handleUpdateLabel = async (labels: Label[]) => {
-    if (!project) return;
-
-    const previousLabels = selectedLabels;
-    setSelectedLabels(labels);
-    setSaving(true);
-
-    // dispatch(
-    //   updateProject({
-    //     projectId: Number(id),
-    //     data: { labels: labels.map((x) => x.id) },
-    //   })
-    // );
-
-    updateProjectMutation.mutate(
-      {
-        projectId: Number(id),
-        body: {
-          workspace_id: workpsace.currentWorkspace?.id,
-          labels: labels.map((x) => x.id as number) as any,
-          team_id: project.teams?.map((x) => x.id as number) || [],
-        },
-      },
-      {
-        onError: () => {
-          setSelectedLabels(previousLabels);
-          dispatch(
-            updateProject({
-              projectId: Number(id),
-              data: { labels: previousLabels.map((x) => x.id) },
-            }),
-          );
-        },
-        onSettled: () => {
-          setSaving(false);
-        },
-      },
-    );
-  };
-
-  const handleUpdateSummary = async () => {
-    if (!project) return;
-    if (shortSummary === project.short_summary) return;
+    if (formik.values.name === project.name) return; 
 
     setSaving(true);
 
@@ -311,7 +119,7 @@ export default function Detail() {
       {
         projectId: Number(id),
         body: {
-          short_summary: shortSummary,
+          name: formik.values.name,
           workspace_id: workpsace.currentWorkspace?.id,
           team_id: project.teams?.map((x) => x.id as number) || [],
         },
@@ -322,10 +130,58 @@ export default function Detail() {
         },
       },
     );
-  };
+  }, [project, formik.values.name, id, workpsace.currentWorkspace?.id, updateProjectMutation]);
 
-  const handleDescriptionChange = (value: string) => {
-    setDescription(value);
+  const handleUpdateLabel = useCallback((newLabels: Label[]) => {
+  if (!project) return;
+
+  setSaving(true);
+
+  updateProjectMutation.mutate(
+    {
+      projectId: Number(id),
+      body: {
+        workspace_id: workpsace.currentWorkspace?.id,
+        labels_id: newLabels.length > 0 ? newLabels.map((x) => x.id as number) : null,
+        team_id: project.teams?.map((x) => x.id as number) || [],
+      },
+      optimisticData: {
+        labels: newLabels,  // ← Yeh instantly UI update karega
+      },
+    },
+    {
+      onSettled: () => {
+        setSaving(false);
+      },
+    },
+  );
+}, [project, id, workpsace.currentWorkspace?.id, updateProjectMutation]);
+
+  const handleUpdateSummary = useCallback(() => {
+    if (!project) return;
+    if (formik.values.short_summary === project.short_summary) return;
+
+    setSaving(true);
+
+    updateProjectMutation.mutate(
+      {
+        projectId: Number(id),
+        body: {
+          short_summary: formik.values.short_summary,
+          workspace_id: workpsace.currentWorkspace?.id,
+          team_id: project.teams?.map((x) => x.id as number) || [],
+        },
+      },
+      {
+        onSettled: () => {
+          setSaving(false);
+        },
+      },
+    );
+  }, [project, formik.values.short_summary, id, workpsace.currentWorkspace?.id, updateProjectMutation]);
+
+  const handleDescriptionChange = useCallback((value: string) => {
+    formik.setFieldValue("description", value);
 
     // Clear previous timeout
     if (descriptionTimeoutRef.current) {
@@ -334,64 +190,51 @@ export default function Detail() {
 
     // Debounce API call - 700ms delay
     descriptionTimeoutRef.current = setTimeout(() => {
-      handleUpdateDescription(value);
+      if (!project) return;
+      if (value === project.description) return;
+
+      setIsSavingDescription(true);
+
+      updateProjectMutation.mutate(
+        {
+          projectId: Number(id),
+          body: {
+            description: value,
+            workspace_id: workpsace.currentWorkspace?.id,
+            team_id: project.teams?.map((x) => x.id as number) || [],
+          },
+        },
+        {
+          onSettled: () => {
+            setIsSavingDescription(false);
+          },
+        },
+      );
     }, 700);
-  };
+  }, [project, id, workpsace.currentWorkspace?.id, updateProjectMutation, formik]);
 
-  const handleUpdateDescription = async (desc: string) => {
-    if (!project) return;
-    if (desc === project.description) return;
-
-    setIsSavingDescription(true);
-
-    updateProjectMutation.mutate(
-      {
-        projectId: Number(id),
-        body: {
-          description: desc,
-          workspace_id: workpsace.currentWorkspace?.id,
-          team_id: project.teams?.map((x) => x.id as number) || [],
-        },
-      },
-      {
-        onSettled: () => {
-          setIsSavingDescription(false);
-        },
-      },
-    );
-  };
-
-  const handleUpdatePriority = async (newPriority: number) => {
-    setPriority(newPriority);
-
+  const handleUpdatePriority = useCallback((newPriority: number) => {
     if (!project) return;
 
-    setSaving(true);
-
+    // Find full priority object for optimistic update
     const priorityObj = priorityData.priority?.find(
       (p: any) => p.id === newPriority,
     );
 
-    if (!priorityObj) {
-      toast.error("Priority not found");
-      setSaving(false);
-      return;
-    }
-
-    dispatch(
-      updateProject({
-        projectId: Number(id),
-        data: { priority: priorityObj.id },
-      }),
-    );
+    setSaving(true);
 
     updateProjectMutation.mutate(
       {
         projectId: Number(id),
         body: {
-          priority_id: priorityObj.id.toString(),
+          priority_id: newPriority,
           workspace_id: workpsace.currentWorkspace?.id,
           team_id: project.teams?.map((x) => x.id as number) || [],
+        },
+        // Full object for instant UI update
+        optimisticData: {
+          priority: priorityObj,
+          priority_id: newPriority,
         },
       },
       {
@@ -400,22 +243,12 @@ export default function Detail() {
         },
       },
     );
-  };
+  }, [project, id, workpsace.currentWorkspace?.id, updateProjectMutation, priorityData.priority]);
 
-  const handleUpdateStatus = async (newStatus: any) => {
-    setSelectedStatus(newStatus);
-
+  const handleUpdateStatus = useCallback((newStatus: any) => {
     if (!project) return;
 
     setSaving(true);
-
-    dispatch(
-      updateProject({
-        projectId: Number(id),
-        data: { status: newStatus.name.toLowerCase() },
-      }),
-    );
-    console.log("IDDDDD", newStatus.id);
 
     updateProjectMutation.mutate(
       {
@@ -425,6 +258,11 @@ export default function Detail() {
           workspace_id: workpsace.currentWorkspace?.id,
           team_id: project.teams?.map((x) => x.id as number) || [],
         },
+        // Full object for instant UI update
+        optimisticData: {
+          status: newStatus,
+          status_id: newStatus.id,
+        },
       },
       {
         onSettled: () => {
@@ -432,21 +270,12 @@ export default function Detail() {
         },
       },
     );
-  };
+  }, [project, id, workpsace.currentWorkspace?.id, updateProjectMutation]);
 
-  const handleUpdateLead = async (newLead: iMember | undefined) => {
-    setSelectedLead(newLead);
-
+  const handleUpdateLead = useCallback((newLead: iMember | undefined) => {
     if (!project || !newLead) return;
 
     setSaving(true);
-
-    dispatch(
-      updateProject({
-        projectId: Number(id),
-        data: { lead_id: newLead.id },
-      }),
-    );
 
     updateProjectMutation.mutate(
       {
@@ -456,6 +285,11 @@ export default function Detail() {
           workspace_id: workpsace.currentWorkspace?.id,
           team_id: project.teams?.map((x) => x.id as number) || [],
         },
+        // Full object for instant UI update
+        optimisticData: {
+          lead: newLead,
+          lead_id: newLead.id,
+        },
       },
       {
         onSettled: () => {
@@ -463,21 +297,12 @@ export default function Detail() {
         },
       },
     );
-  };
+  }, [project, id, workpsace.currentWorkspace?.id, updateProjectMutation]);
 
-  const handleUpdateStartDate = async (newDate: Date | null) => {
-    setStartDate(newDate);
-
+  const handleUpdateStartDate = useCallback((newDate: Date | null) => {
     if (!project || !newDate) return;
 
     setSaving(true);
-
-    dispatch(
-      updateProject({
-        projectId: Number(id),
-        data: { start_date: newDate.toISOString().split("T")[0] },
-      }),
-    );
 
     updateProjectMutation.mutate(
       {
@@ -494,21 +319,12 @@ export default function Detail() {
         },
       },
     );
-  };
+  }, [project, id, workpsace.currentWorkspace?.id, updateProjectMutation]);
 
-  const handleUpdateEndDate = async (newDate: Date | null) => {
-    setEndDate(newDate);
-
+  const handleUpdateEndDate = useCallback((newDate: Date | null) => {
     if (!project || !newDate) return;
 
     setSaving(true);
-
-    dispatch(
-      updateProject({
-        projectId: Number(id),
-        data: { target_date: newDate.toISOString().split("T")[0] },
-      }),
-    );
 
     updateProjectMutation.mutate(
       {
@@ -525,9 +341,9 @@ export default function Detail() {
         },
       },
     );
-  };
+  }, [project, id, workpsace.currentWorkspace?.id, updateProjectMutation]);
 
-  const handleDocumentUpload = async (files: FileList | null) => {
+  const handleDocumentUpload = useCallback((files: FileList | null) => {
     if (!files || files.length === 0) return;
     if (!project) return;
 
@@ -557,11 +373,9 @@ export default function Detail() {
         },
       },
     );
-  };
+  }, [project, id, workpsace.currentWorkspace?.id, updateProjectMutation]);
 
-  const handleIconUpdate = async (icon: any) => {
-    setProjectIcon(icon);
-
+  const handleIconUpdate = useCallback((icon: any) => {
     if (!project) return;
 
     setUploadingIcon(true);
@@ -594,32 +408,24 @@ export default function Detail() {
         },
       },
     );
-  };
+  }, [project, id, workpsace.currentWorkspace?.id, updateProjectMutation]);
 
-  const handleDeleteAttachment = (attachmentId: number) => {
+  const handleDeleteAttachment = useCallback((attachmentId: number) => {
     deleteAttachmentMutation.mutate({
       workspaceId: workpsace.currentWorkspace?.id as number,
       projectId: Number(id),
       attachmentIds: [attachmentId],
     });
-  };
+  }, [deleteAttachmentMutation, workpsace.currentWorkspace?.id, id]);
 
-  const handleDeleteMultipleAttachments = (ids: number[]) => {
-    deleteAttachmentMutation.mutate({
-      workspaceId: workpsace.currentWorkspace?.id as number,
-      projectId: Number(id),
-      attachmentIds: ids,
-    });
-  };
-
-  const handleDownloadAttachment = (doc: any) => {
+  const handleDownloadAttachment = useCallback((doc: any) => {
     const link = document.createElement("a");
-    link.href = doc.file_url; // ya doc.download_url
+    link.href = doc.file_url;
     link.download = doc.doc_name;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
-  };
+  }, []);
 
   // console.log("PROJECT ICON", projectIcon);
 
@@ -638,34 +444,38 @@ export default function Detail() {
         <div className="mb-2">
           <div className="flex items-center gap-3 mb-2">
             <IconPicker
-              value={projectIcon}
-              onChange={() => {}}
+              value={
+                typeof project?.icon === "object"
+                  ? project.icon
+                  : project?.icon
+                    ? { icon: project.icon, color: "#000000", type: "icon" as const }
+                    : undefined
+              }
+              onChange={handleIconUpdate}
               variant="compact"
             />
           </div>
           <div className="space-y-2">
             <Input
               className="sm:text-lg md:text-2xl font-semibold border-0 px-0 shadow-none focus-visible:ring-0 dark:bg-transparent"
-              // value={projectName}
-              defaultValue={project?.name}
-              onChange={(e) => setProjectName(e.target.value)}
+              name="name"
+              value={formik.values.name}
+              onChange={formik.handleChange}
               onBlur={handleUpdateName}
               onKeyDown={(e) => {
                 if (e.key === "Enter") {
                   e.currentTarget.blur();
                 }
               }}
-              disabled={false}
             />
 
             <Textarea
               placeholder="Add a short summary..."
-              // value={shortSummary}
-              defaultValue={project?.short_summary}
-              onChange={(e) => setShortSummary(e.target.value)}
+              name="short_summary"
+              value={formik.values.short_summary}
+              onChange={formik.handleChange}
               onBlur={handleUpdateSummary}
               className="md:text-lg border-0 px-0 shadow-none focus-visible:ring-0 dark:bg-transparent resize-none"
-              disabled={false}
             />
           </div>
         </div>
@@ -727,7 +537,7 @@ export default function Detail() {
           <div className="flex items-center gap-2">
             <ProjectFormLabels
               labels={labels}
-              value={project?.labels || []}
+              value={project?.labels || [] }
               onChange={handleUpdateLabel}
               className="rounded-full"
               buttonVarient="dark"
@@ -848,7 +658,7 @@ export default function Detail() {
           <div className="relative">
             <Textarea
               placeholder="Add a description..."
-              value={description}
+              value={formik.values.description}
               onChange={(e) => handleDescriptionChange(e.target.value)}
               className="min-h-36 md:text-lg border-0 px-3 shadow-none focus-visible:ring-0 dark:bg-transparent resize-none dark:text-white dark:placeholder:text-[#626366]"
             />
@@ -905,9 +715,6 @@ export default function Detail() {
                           onClick={(e) => {
                             e.stopPropagation();
                             handleDeleteAttachment(Number(doc.id));
-                            setDocuments((prev) =>
-                              prev.filter((d) => d.id !== doc.id),
-                            );
                             setSelectedId(null);
                           }}
                           className="p-1 rounded hover:bg-destructive/10 text-destructive"

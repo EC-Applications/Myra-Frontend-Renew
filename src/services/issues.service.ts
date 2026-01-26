@@ -85,7 +85,10 @@ export const updateIssuesUri = async (
   if (body.due_date) formData.append("due_date", body.due_date);
   if (body.external_link) formData.append("external_link", body.external_link);
 
-  if (body.labels) {
+  // Handle labels - send empty string to clear, or array of IDs
+  if (body.labels === null) {
+    formData.append("label_id[]", "");
+  } else if (body.labels && body.labels.length > 0) {
     body.labels.forEach((x) =>
       formData.append("label_id[]", JSON.stringify(x)),
     );

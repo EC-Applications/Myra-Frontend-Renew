@@ -53,7 +53,7 @@ export default function NewIssueDialog({
   defStatus,
   defProject,
 }: NewIssueDialogProps) {
-  const { "team-id": teamId, "cycleId": cycleID } = useParams();
+  const { "team-id": teamId, cycleId: cycleID } = useParams();
   const projects = useSelector((state: any) => state.project.projects);
   const teams = useSelector((state: any) => state.teams);
   const status = useSelector((state: RootState) => state.issuesStatus);
@@ -74,6 +74,7 @@ export default function NewIssueDialog({
   const currentCycle = cycleData?.find((cycle) => cycle.status === "current");
 
   // USE STATES
+  const [showDiscardDialog, setShowDiscardDialog] = useState(false);
   const [selectedTeams, setSelectedTeams] = useState<iTeams | null>();
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
   const teamset = useSelector((state: RootState) => state.useTeamId);
@@ -153,286 +154,337 @@ export default function NewIssueDialog({
           validationSchema={issueSchema}
           onSubmit={handleSubmit}
         >
-          {({ values, errors, touched, setFieldValue, resetForm }) => (
-            <Form>
-              {/* Header */}
-              <DialogHeader className="flex flex-row items-center justify-between py-1 px-3 dark:border-zinc-700">
-                <div className="flex items-center gap-2 pt-2">
-                  <SingleTeamPicker
-                    teams={teams}
-                    value={selectedTeams ?? null}
-                    onChange={setSelectedTeams}
-                  />
-                  {/* <LucideSquareArrowRight className="h-4 w-4" /> */}
+          {({ values, errors, touched, setFieldValue, resetForm }) => {
+            const handleCloseAttempt = () => {
+              if (!values.name?.trim() && !values.description?.trim()) {
+                resetForm();
+                onOpenChange(false);
+                return;
+              }
+              setShowDiscardDialog(true);
+            };
 
-                  <DialogTitle className="h-4 dark:text-muted-foreground">
-                    ›
-                  </DialogTitle>
-                  <DialogTitle className="text-md dark:text-muted-foreground">
-                    New issue
-                  </DialogTitle>
+            const handleDiscard = () => {
+              setShowDiscardDialog(false);
+              resetForm();
+              onOpenChange(false);
+            };
+
+            return (
+              <Form>
+                {/* Header */}
+                <DialogHeader className="flex flex-row items-center justify-between py-1 px-3 dark:border-zinc-700">
+                  <div className="flex items-center gap-2 pt-2">
+                    <SingleTeamPicker
+                      teams={teams}
+                      value={selectedTeams ?? null}
+                      onChange={setSelectedTeams}
+                    />
+                    {/* <LucideSquareArrowRight className="h-4 w-4" /> */}
+
+                    <DialogTitle className="h-4 dark:text-muted-foreground">
+                      ›
+                    </DialogTitle>
+                    <DialogTitle className="text-md dark:text-muted-foreground">
+                      New issue
+                    </DialogTitle>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={handleCloseAttempt}
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </DialogHeader>
+
+                {/* Content */}
+                <div className="flex-1 px-4 py-2 space-y-2 overflow-y-auto">
+                  {/* Title Input */}
+                  <div>
+                    <Input
+                      placeholder="Issue title"
+                      value={values.name}
+                      onChange={(e) => setFieldValue("name", e.target.value)}
+                      className={`sm:text-lg md:text-lg font-semibold border-0 px-0 shadow-none focus-visible:ring-0 dark:bg-transparent dark:placeholder:text-[#616265]`}
+                    />
+                    {errors.name && touched.name && (
+                      <p className="text-sm text-destructive mt-1">
+                        {errors.name}
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Description Editor */}
+                  <div
+                    className="rounded-md"
+                    onDrop={(e) => {
+                      e.preventDefault();
+                      const files = Array.from(e.dataTransfer.files);
+                      setFieldValue("attachments", [
+                        ...(values.attachments || []),
+                        ...files,
+                      ]);
+                    }}
+                    onDragOver={(e) => e.preventDefault()}
+                  >
+                    <Textarea
+                      placeholder="Add description..."
+                      value={values.description}
+                      onChange={(e) =>
+                        setFieldValue("description", e.target.value)
+                      }
+                      onPaste={(e) => {
+                        const files = Array.from(e.clipboardData.files);
+                        if (files.length) {
+                          setFieldValue("attachments", [
+                            ...(values.attachments || []),
+                            ...files,
+                          ]);
+                        }
+                      }}
+                      className="min-h-[80px] dark:placeholder:text-[#616265] placeholder:text-[20px] resize-none border-0 shadow-none focus-visible:ring-0 dark:bg-transparent"
+                    />
+
+                    {/* Attachments */}
+                    {values.attachments && values.attachments.length > 0 && (
+                      <div className="mt-3 space-y-3">
+                        {values.attachments.map((file, index) => {
+                          const isImage = file.type.startsWith("image/");
+                          const isSelected = selectedIndex === index;
+
+                          return (
+                            <div
+                              key={index}
+                              onClick={() => setSelectedIndex(index)}
+                              className={`relative cursor-pointer rounded-md transition ${
+                                isSelected ? "ring-2 ring-blue-500" : ""
+                              }`}
+                            >
+                              {isImage ? (
+                                <div className="relative">
+                                  <img
+                                    src={URL.createObjectURL(file)}
+                                    className="max-h-[420px] w-full rounded-md object-contain"
+                                    alt="attachment"
+                                  />
+                                  {isSelected && (
+                                    <button
+                                      type="button"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        setFieldValue(
+                                          "attachments",
+                                          values.attachments?.filter(
+                                            (_, i) => i !== index,
+                                          ),
+                                        );
+                                        setSelectedIndex(null);
+                                      }}
+                                      className="absolute right-2 top-2 rounded bg-background p-1 shadow"
+                                    >
+                                      🗑️
+                                    </button>
+                                  )}
+                                </div>
+                              ) : (
+                                <div
+                                  className={`flex items-center gap-3 rounded-md border p-2 ${
+                                    isSelected ? "border-blue-500" : ""
+                                  }`}
+                                >
+                                  <div className="flex h-10 w-10 items-center justify-center rounded bg-muted">
+                                    📎
+                                  </div>
+                                  <div className="flex-1 truncate">
+                                    <p className="truncate text-sm">
+                                      {file.name}
+                                    </p>
+                                    <p className="text-xs text-muted-foreground">
+                                      {(file.size / 1024).toFixed(1)} KB
+                                    </p>
+                                  </div>
+                                  {isSelected && (
+                                    <button
+                                      type="button"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        setFieldValue(
+                                          "attachments",
+                                          values.attachments?.filter(
+                                            (_, i) => i !== index,
+                                          ),
+                                        );
+                                        setSelectedIndex(null);
+                                      }}
+                                      className="text-sm"
+                                    >
+                                      🗑️
+                                    </button>
+                                  )}
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Property Buttons */}
+                  <div className="flex flex-wrap gap-1.5">
+                    <PriorityPicker
+                      value={values.priority_id}
+                      onChange={(priorityId) =>
+                        setFieldValue("priority_id", priorityId)
+                      }
+                    />
+
+                    <ProjectDatePicker
+                      label="Date"
+                      value={
+                        values.due_date ? new Date(values.due_date) : undefined
+                      }
+                      onChange={(date) => setFieldValue("due_date", date)}
+                    />
+
+                    <IssuesStatusPicker
+                      statuses={statusList}
+                      value={
+                        statusList.find(
+                          (s: any) => s.id === values.status_id,
+                        ) || null
+                      }
+                      onChange={(status) =>
+                        setFieldValue("status_id", status.id)
+                      }
+                      buttonVarient="light"
+                    />
+
+                    <SingleMemberPicker
+                      members={members}
+                      value={members.find(
+                        (m: any) => m.id === values.assignee_id,
+                      )}
+                      onChange={(member) =>
+                        setFieldValue("assignee_id", member?.id)
+                      }
+                      buttonVarient="light"
+                    />
+
+                    <ProjectPicker
+                      projects={projects}
+                      value={projects.find(
+                        (p: any) => p.id === values.project_id,
+                      )}
+                      onChange={(project) =>
+                        setFieldValue("project_id", project?.id)
+                      }
+                    />
+
+                    <ProjectFormLabels
+                      labels={labels}
+                      value={labels.filter((l: any) =>
+                        values.labels?.includes(l.id),
+                      )}
+                      onChange={(selectedLabels) =>
+                        setFieldValue(
+                          "labels",
+                          selectedLabels.map((l) => l.id),
+                        )
+                      }
+                    />
+                    <CyclePicker
+                      cycles={cycleData || []}
+                      value={selectedCycle}
+                      onChange={(cycle) => setSelectedCycle(cycle)}
+                      variant="default"
+                    />
+                  </div>
                 </div>
-                <div className="flex items-center gap-2">
+
+                {/* Footer */}
+                <div className="flex items-center justify-between p-3 border-t dark:border-zinc-700 bg-muted/20">
                   <Button
                     type="button"
                     variant="ghost"
                     size="sm"
-                    onClick={() => {
-                      resetForm();
-                      onOpenChange(false);
-                    }}
+                    onClick={() => fileInputRef.current?.click()}
                   >
-                    <X className="h-4 w-4" />
+                    <Paperclip className="h-4 w-4" />
                   </Button>
-                </div>
-              </DialogHeader>
 
-              {/* Content */}
-              <div className="flex-1 px-4 py-2 space-y-2 overflow-y-auto">
-                {/* Title Input */}
-                <div>
-                  <Input
-                    placeholder="Issue title"
-                    value={values.name}
-                    onChange={(e) => setFieldValue("name", e.target.value)}
-                    className={`sm:text-lg md:text-lg font-semibold border-0 px-0 shadow-none focus-visible:ring-0 dark:bg-transparent dark:placeholder:text-[#616265]`}
-                  />
-                  {errors.name && touched.name && (
-                    <p className="text-sm text-destructive mt-1">
-                      {errors.name}
-                    </p>
-                  )}
-                </div>
-
-                {/* Description Editor */}
-                <div
-                  className="rounded-md"
-                  onDrop={(e) => {
-                    e.preventDefault();
-                    const files = Array.from(e.dataTransfer.files);
-                    setFieldValue("attachments", [
-                      ...(values.attachments || []),
-                      ...files,
-                    ]);
-                  }}
-                  onDragOver={(e) => e.preventDefault()}
-                >
-                  <Textarea
-                    placeholder="Add description..."
-                    value={values.description}
-                    onChange={(e) =>
-                      setFieldValue("description", e.target.value)
-                    }
-                    onPaste={(e) => {
-                      const files = Array.from(e.clipboardData.files);
-                      if (files.length) {
-                        setFieldValue("attachments", [
-                          ...(values.attachments || []),
-                          ...files,
-                        ]);
-                      }
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    multiple
+                    accept="image/*,.pdf,.doc,.docx,.xls,.xlsx"
+                    className="hidden"
+                    onChange={(e) => {
+                      if (!e.target.files) return;
+                      const files = Array.from(e.target.files);
+                      setFieldValue("attachments", [
+                        ...(values.attachments || []),
+                        ...files,
+                      ]);
+                      e.target.value = "";
                     }}
-                    className="min-h-[80px] dark:placeholder:text-[#616265] placeholder:text-[20px] resize-none border-0 shadow-none focus-visible:ring-0 dark:bg-transparent"
                   />
 
-                  {/* Attachments */}
-                  {values.attachments && values.attachments.length > 0 && (
-                    <div className="mt-3 space-y-3">
-                      {values.attachments.map((file, index) => {
-                        const isImage = file.type.startsWith("image/");
-                        const isSelected = selectedIndex === index;
-
-                        return (
-                          <div
-                            key={index}
-                            onClick={() => setSelectedIndex(index)}
-                            className={`relative cursor-pointer rounded-md transition ${
-                              isSelected ? "ring-2 ring-blue-500" : ""
-                            }`}
-                          >
-                            {isImage ? (
-                              <div className="relative">
-                                <img
-                                  src={URL.createObjectURL(file)}
-                                  className="max-h-[420px] w-full rounded-md object-contain"
-                                  alt="attachment"
-                                />
-                                {isSelected && (
-                                  <button
-                                    type="button"
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      setFieldValue(
-                                        "attachments",
-                                        values.attachments?.filter(
-                                          (_, i) => i !== index,
-                                        ),
-                                      );
-                                      setSelectedIndex(null);
-                                    }}
-                                    className="absolute right-2 top-2 rounded bg-background p-1 shadow"
-                                  >
-                                    🗑️
-                                  </button>
-                                )}
-                              </div>
-                            ) : (
-                              <div
-                                className={`flex items-center gap-3 rounded-md border p-2 ${
-                                  isSelected ? "border-blue-500" : ""
-                                }`}
-                              >
-                                <div className="flex h-10 w-10 items-center justify-center rounded bg-muted">
-                                  📎
-                                </div>
-                                <div className="flex-1 truncate">
-                                  <p className="truncate text-sm">
-                                    {file.name}
-                                  </p>
-                                  <p className="text-xs text-muted-foreground">
-                                    {(file.size / 1024).toFixed(1)} KB
-                                  </p>
-                                </div>
-                                {isSelected && (
-                                  <button
-                                    type="button"
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      setFieldValue(
-                                        "attachments",
-                                        values.attachments?.filter(
-                                          (_, i) => i !== index,
-                                        ),
-                                      );
-                                      setSelectedIndex(null);
-                                    }}
-                                    className="text-sm"
-                                  >
-                                    🗑️
-                                  </button>
-                                )}
-                              </div>
-                            )}
-                          </div>
-                        );
-                      })}
-                    </div>
-                  )}
+                  <div className="flex items-center gap-4">
+                    <Button
+                      type="submit"
+                      variant="custom"
+                      size="custom"
+                      disabled={createIssue.isPending}
+                      className="cursor-pointer hover:bg-gray-400"
+                    >
+                      {createIssue.isPending ? "Creating..." : "Create issue"}
+                    </Button>
+                  </div>
                 </div>
-
-                {/* Property Buttons */}
-                <div className="flex flex-wrap gap-1.5">
-                  <PriorityPicker
-                    value={values.priority_id}
-                    onChange={(priorityId) =>
-                      setFieldValue("priority_id", priorityId)
-                    }
-                  />
-
-                  <ProjectDatePicker
-                    label="Date"
-                    value={
-                      values.due_date ? new Date(values.due_date) : undefined
-                    }
-                    onChange={(date) => setFieldValue("due_date", date)}
-                  />
-
-                  <IssuesStatusPicker
-                    statuses={statusList}
-                    value={
-                      statusList.find((s: any) => s.id === values.status_id) ||
-                      null
-                    }
-                    onChange={(status) => setFieldValue("status_id", status.id)}
-                    buttonVarient="light"
-                  />
-
-                  <SingleMemberPicker
-                    members={members}
-                    value={members.find(
-                      (m: any) => m.id === values.assignee_id,
-                    )}
-                    onChange={(member) =>
-                      setFieldValue("assignee_id", member?.id)
-                    }
-                    buttonVarient="light"
-                  />
-
-                  <ProjectPicker
-                    projects={projects}
-                    value={projects.find(
-                      (p: any) => p.id === values.project_id,
-                    )}
-                    onChange={(project) =>
-                      setFieldValue("project_id", project?.id)
-                    }
-                  />
-
-                  <ProjectFormLabels
-                    labels={labels}
-                    value={labels.filter((l: any) =>
-                      values.labels?.includes(l.id),
-                    )}
-                    onChange={(selectedLabels) =>
-                      setFieldValue(
-                        "labels",
-                        selectedLabels.map((l) => l.id),
-                      )
-                    }
-                  />
-                  <CyclePicker
-                    cycles={cycleData || []}
-                    value={selectedCycle}
-                    onChange={(cycle) => setSelectedCycle(cycle)}
-                    variant="default"
-                  />
-                </div>
-              </div>
-
-              {/* Footer */}
-              <div className="flex items-center justify-between p-3 border-t dark:border-zinc-700 bg-muted/20">
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => fileInputRef.current?.click()}
-                >
-                  <Paperclip className="h-4 w-4" />
-                </Button>
-
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  multiple
-                  accept="image/*,.pdf,.doc,.docx,.xls,.xlsx"
-                  className="hidden"
-                  onChange={(e) => {
-                    if (!e.target.files) return;
-                    const files = Array.from(e.target.files);
-                    setFieldValue("attachments", [
-                      ...(values.attachments || []),
-                      ...files,
-                    ]);
-                    e.target.value = "";
-                  }}
-                />
-
-                <div className="flex items-center gap-4">
-                  <Button
-                    type="submit"
-                    variant="custom"
-                    size="custom"
-                    disabled={createIssue.isPending}
-                    className="cursor-pointer hover:bg-gray-400"
-                  >
-                    {createIssue.isPending ? "Creating..." : "Create issue"}
-                  </Button>
-                </div>
-              </div>
-            </Form>
-          )}
+              </Form>
+            );
+          }}
         </Formik>
       </DialogContent>
+
+      {/* Discard Confirmation Dialog */}
+      <Dialog open={showDiscardDialog} onOpenChange={setShowDiscardDialog}>
+        <DialogContent
+          className="max-w-sm dark:bg-[#1c1d1f]"
+          showCloseButton={false}
+        >
+          <DialogHeader>
+            <DialogTitle className="text-base font-semibold dark:text-white">
+              Want to discard?
+            </DialogTitle>
+          </DialogHeader>
+          <p className="text-sm text-muted-foreground">
+            If you discard, details will be lost.
+          </p>
+          <div className="flex items-center justify-end gap-3">
+            <Button
+              variant="customDark"
+              onClick={() => setShowDiscardDialog(false)}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="custom"
+              onClick={() => {
+                setShowDiscardDialog(false);
+                onOpenChange(false);
+              }}
+            >
+              Discard
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </Dialog>
   );
 }
