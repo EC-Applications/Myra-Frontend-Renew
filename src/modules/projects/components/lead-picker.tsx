@@ -17,7 +17,7 @@ interface LeadProps {
   value?: iMember;
   onChange: (member: iMember | undefined) => void;
   className?: string;
-   buttonVarient?: "light" | "dark"  ;
+  buttonVarient?: "light" | "dark";
 }
 
 export const LeadPicker = ({
@@ -25,7 +25,7 @@ export const LeadPicker = ({
   value,
   onChange,
   className,
-  buttonVarient="light"
+  buttonVarient = "light",
 }: LeadProps) => {
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
@@ -35,7 +35,7 @@ export const LeadPicker = ({
 
     return (
       (member.name ?? "").toLowerCase().includes(searchValue) ||
-      (member.email ?? "").toLowerCase().includes(searchValue) 
+      (member.email ?? "").toLowerCase().includes(searchValue)
     );
   });
 
@@ -51,8 +51,8 @@ export const LeadPicker = ({
         <Button
           variant="outline"
           className={cn(
-            ` h-7.5 justify-start  text-sm  text-muted-foreground dark:text-muted-foreground hover:font-semibold font-semibold dark:hover:text-white border  dark:hover:bg-[#32333a] ${buttonVarient == "light" ? "dark:bg-[#32333a]" : "dark:bg-transparent"}`,
-            className
+            ` h-7.5 justify-start  text-sm px-2  text-muted-foreground dark:text-muted-foreground hover:font-semibold font-semibold dark:hover:text-white border  dark:hover:bg-[#32333a] ${buttonVarient == "light" ? "dark:bg-[#32333a]" : "dark:bg-transparent"}`,
+            className,
           )}
         >
           {value ? (
@@ -62,20 +62,21 @@ export const LeadPicker = ({
                   {(value?.name ?? "?").slice(0, 2).toUpperCase()}
                 </AvatarFallback>
               </Avatar> */}
-               <Avatar className="h-5 w-5">
-                      <AvatarImage
-                        src={value?.image || value?.avatar || "/placeholder.svg"}
-                      />
-                      <AvatarFallback className="text-[10px] bg-primary/10 ">
-                        {(value?.name || value?.email)
-                          .slice(0, 2)
-                          .toUpperCase()}
-                      </AvatarFallback>
-                    </Avatar>
-              <span className="text-[14px]">{value.name}</span>
+              <Avatar className="h-5 w-5">
+                <AvatarImage
+                  src={value?.image || value?.avatar || "/placeholder.svg"}
+                />
+                <AvatarFallback className="text-[10px] bg-primary/10 ">
+                  {(value?.name || value?.email).slice(0, 2).toUpperCase()}
+                </AvatarFallback>
+              </Avatar>
+              <span className="text-[14px]">{value.name || value.email}</span>
             </div>
           ) : (
-            <span className="text-[14px] ">Lead</span>
+            <span className="text-[14px] flex items-center gap-2 ">
+              <User />
+              Lead
+            </span>
           )}
         </Button>
       </DropdownMenuTrigger>
@@ -122,7 +123,9 @@ export const LeadPicker = ({
                   <div className="flex items-center gap-2">
                     <Avatar className="h-5 w-5">
                       <AvatarImage
-                        src={member.image || member.avatar || "/placeholder.svg"}
+                        src={
+                          member.image || member.avatar || "/placeholder.svg"
+                        }
                       />
                       <AvatarFallback className="text-[10px] bg-primary/10 ">
                         {(member.name || member.email)

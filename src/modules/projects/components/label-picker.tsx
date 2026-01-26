@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Check, StepBackIcon } from "lucide-react";
+import { Check, StepBackIcon, Tag } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
   DropdownMenu,
@@ -84,9 +84,9 @@ export const ProjectFormLabels = ({
               )}
             </div>
           ) : (
-            <div className="flex items-center gap-0.5 ">
-              <StepBackIcon className="" />
-              <span className="text-[14px]">labels</span>
+            <div className="flex items-center gap-1.5 ">
+              <Tag className="" />
+              <span className="text-[14px]">Labels</span>
             </div>
           )}
         </Button>

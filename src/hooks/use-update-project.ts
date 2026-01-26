@@ -2,11 +2,11 @@ import type { iResponse } from "@/interfaces/common.interface";
 import type { iProject } from "@/interfaces/project.interface";
 import { updateProjectUri } from "@/services/project.service";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 
 interface UpdateProjectParams {
   projectId: number;
   body: Partial<iProject>;
-  /** Data to optimistically update UI - should match what UI reads */
   optimisticData?: Partial<iProject>;
   iconFile?: File;
   documentFiles?: File[];
@@ -29,53 +29,41 @@ export const useUpdateProjectHook = () => {
         projectId,
         body,
         iconFile,
-        documentFiles
+        documentFiles,
       );
-      console.log(req);
       return req;
     },
 
-    // Optimistic update - instant UI change
     onMutate: async (variables) => {
-      // Cancel any outgoing refetches to prevent overwriting optimistic update
       await queryClient.cancelQueries({
         queryKey: ["project-detail", variables.projectId],
       });
 
-      // Snapshot the previous value for rollback
       const previousProject = queryClient.getQueryData<iProject>([
         "project-detail",
         variables.projectId,
       ]);
 
-      // Only do optimistic update for non-file updates
-      // File uploads need server response for URLs
-      const hasFileUpload = variables.iconFile || variables.documentFiles?.length;
+      // File uploads need server response
+      const hasFileUpload =
+        variables.iconFile || variables.documentFiles?.length;
 
-      if (previousProject && !hasFileUpload) {
-        // Use optimisticData if provided, otherwise fall back to body
-        // optimisticData should contain full objects (priority, status, lead)
-        // body contains IDs for API (priority_id, status_id, lead_id)
-        const dataToMerge = variables.optimisticData || variables.body;
-
-        // Optimistically update the cache
+      if (previousProject && !hasFileUpload && variables.optimisticData) {
         queryClient.setQueryData<iProject>(
           ["project-detail", variables.projectId],
           (old) => {
             if (!old) return old;
             return {
               ...old,
-              ...dataToMerge,
+              ...variables.optimisticData,
             };
-          }
+          },
         );
       }
 
-      // Return context with previous value for rollback
       return { previousProject };
     },
 
-    // On success - merge server response with existing cache
     onSuccess: (response, variables) => {
       if (response?.data) {
         queryClient.setQueryData<iProject>(
@@ -85,54 +73,74 @@ export const useUpdateProjectHook = () => {
 
             const serverData = response.data;
 
-            // Smart merge: use server data but preserve full objects
-            // if server only returned IDs/partial data
+            // NEW SIMPLIFIED LOGIC:
+            // If optimisticData was provided, trust it for nested objects
+            // Only use server data for simple fields or when no optimistic update
+            const hasOptimisticLabels =
+              variables.optimisticData?.labels !== undefined;
+            const hasOptimisticPriority =
+              variables.optimisticData?.priority !== undefined;
+            const hasOptimisticStatus =
+              variables.optimisticData?.status !== undefined;
+            const hasOptimisticLead =
+              variables.optimisticData?.lead !== undefined;
+
             return {
+              ...old,
               ...serverData,
-              // Preserve labels if server didn't return full objects
-              labels:
-                serverData.labels?.[0] &&
-                typeof serverData.labels[0] === "object" &&
-                "name" in serverData.labels[0]
+              // Use optimistic data if provided, otherwise try server data
+              labels: hasOptimisticLabels
+                ? variables.optimisticData!.labels
+                : serverData.labels?.[0] &&
+                    typeof serverData.labels[0] === "object" &&
+                    "name" in serverData.labels[0]
                   ? serverData.labels
                   : old.labels,
-              // Preserve priority if server didn't return full object
-              priority:
-                serverData.priority && "name" in serverData.priority
+
+              priority: hasOptimisticPriority
+                ? variables.optimisticData!.priority
+                : serverData.priority && "name" in serverData.priority
                   ? serverData.priority
                   : old.priority,
-              // Preserve status if server didn't return full object
-              status:
-                serverData.status && "name" in serverData.status
+
+              status: hasOptimisticStatus
+                ? variables.optimisticData!.status
+                : serverData.status && "name" in serverData.status
                   ? serverData.status
                   : old.status,
-              // Preserve lead if server didn't return full object
-              lead:
-                serverData.lead && "first_name" in serverData.lead
+
+              lead: hasOptimisticLead
+                ? variables.optimisticData!.lead
+                : serverData.lead && "first_name" in serverData.lead
                   ? serverData.lead
                   : old.lead,
             };
-          }
+          },
         );
       }
 
-      // Invalidate related queries (not project-detail to avoid flash)
+      // Invalidate without refetching project-detail
       queryClient.invalidateQueries({
         queryKey: ["project-teamId"],
+        refetchType: "none",
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["all-project"],
+        refetchType: "none",
       });
       queryClient.invalidateQueries({
         queryKey: ["activity", variables.projectId],
       });
     },
 
-    // Rollback on error
     onError: (_error, variables, context) => {
       if (context?.previousProject) {
         queryClient.setQueryData(
           ["project-detail", variables.projectId],
-          context.previousProject
+          context.previousProject,
         );
       }
+      toast.error("Failed to update project");
     },
   });
 };

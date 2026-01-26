@@ -86,7 +86,7 @@ export default function IssueDetailView() {
 
   const updateIssueStatus = useUpdateIssueHook();
 
-  console.log("IssueID", id);
+  // console.log("IssueID", id);
   const { currentWorkspace } = useUser();
   const navigate = useNavigate();
   const dispatch = useDispatch();
@@ -149,7 +149,7 @@ export default function IssueDetailView() {
     Number(id),
   );
 
-  console.log(activityData, "ACTIVITY DATA");
+  // console.log(activityData, "ACTIVITY DATA");
 
   // useEffect(() => {
   //   setLoading(true);
@@ -194,7 +194,7 @@ export default function IssueDetailView() {
     }
   }, [data?.name, data?.description]);
 
-  console.log("ISSUES", issues);
+  // console.log("ISSUES", issues);
 
   const [subIssuesExpanded, setSubIssuesExpanded] = useState(true);
   const [showAddSubIssue, setShowAddSubIssue] = useState(false);
@@ -304,7 +304,7 @@ export default function IssueDetailView() {
     updateIssueStatus.mutate({
       issueId: Number(id),
       body: {
-        labels: newLabels?.map((l) => l.id),
+        labels: newLabels?.length > 0 ? newLabels.map((l) => l.id) : null,
         workspace_id: currentWorkspace?.id,
         team_id: Number(data?.team_id),
       },
@@ -399,15 +399,15 @@ export default function IssueDetailView() {
   // };
 
   const handleDocumentUpload = async (files: FileList | null) => {
-    console.log("handleDocumentUpload called with:", files);
+    // console.log("handleDocumentUpload called with:", files);
 
     if (!files || files.length === 0) {
-      console.log("No files provided");
+      // console.log("No files provided");
       return;
     }
 
     if (!data) {
-      console.log("No Issue Found");
+      // console.log("No Issue Found");
       return;
     }
 
@@ -461,10 +461,9 @@ export default function IssueDetailView() {
     );
 
     try {
-      // Payload hamesha array format mein bhejo
       await deleteSubIssuesUri({
         issue_id: Number(id),
-        sub_issue_ids: selectedSubIssues, // Yahan directly array pass karo
+        sub_issue_ids: selectedSubIssues, 
       });
 
       toast.dismiss(loadingToast);
@@ -888,6 +887,7 @@ dark:bg-[#101012]"
                       navigate(`/issues/${subIssue.id}/sub-issue`);
                     }}
                     onSubIssueUpdate={(updatedSubIssue) => {
+                      data?.sub_issues
                       // setData((prev: any) => {
                       //   if (!prev) return prev;
                       //   return {

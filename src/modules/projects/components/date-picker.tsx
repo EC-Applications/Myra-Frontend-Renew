@@ -132,7 +132,7 @@ export const ProjectDatePicker = ({
               isCurrentMonth && "text-foreground hover:bg-accent",
               isSelected &&
                 "bg-primary text-primary-foreground hover:bg-primary",
-              isToday && !isSelected && "bg-accent/50 font-medium",
+              isToday && !isSelected && "dark:bg-[#5e6ad2]  bg-accent/50 font-medium",
               "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             )}
           >

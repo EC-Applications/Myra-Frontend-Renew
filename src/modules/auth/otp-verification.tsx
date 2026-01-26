@@ -47,9 +47,9 @@ const OtpVerification = ({
       await verifyCode(payload);
       const res = tempStorage.getItem("temp");
       dispatch(addAccount(res));
-    } catch (error) {
+    } catch (error:any) {
       console.warn(error);
-      toast.error("Something went wrong");
+      toast.error(error);
     } finally {
       setLoading(false);
     }

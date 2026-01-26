@@ -65,13 +65,15 @@ export const MemberPicker = ({
         <Button
           variant="ghost"
           className={cn(
-            `h-7.5 justify-start gap-2  text-sm text-muted-foreground dark:text-muted-foreground hover:font-semibold font-semibold dark:hover:text-white border  dark:hover:bg-[#32333a] ${buttunVarient == "light" ? "dark:bg-[#2a2c33]" : "bg-transparent dark:bg-transparent"}`,
+            `h-7.5 justify-start gap-2 px-2 text-sm text-muted-foreground dark:text-muted-foreground hover:font-semibold font-semibold dark:hover:text-white border  dark:hover:bg-[#32333a] ${buttunVarient == "light" ? "dark:bg-[#2a2c33]" : "bg-transparent dark:bg-transparent"}`,
             className,
           )}
         >
           {/* <Users className="h-3.5 w-3.5" /> */}
           {value.length === 0 ? (
-            <span className="text-[14px]">Members</span>
+            <span className="text-[14px] flex items-center gap-2">
+                <Users/>
+              Members</span>
           ) : (
             <div className="flex items-center gap-1 flex-wrap">
               {value.map((member) => (

@@ -14,7 +14,7 @@ export interface iIssuePayload {
   priority_id?: number;
   project_id?: number;
   assignee_id?: number;
-  labels?: number[];
+  labels?: number[] | null;
   due_date?: string | null;
   external_link?: string;
   attachments?: File[];

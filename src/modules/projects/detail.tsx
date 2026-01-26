@@ -111,7 +111,7 @@ export default function Detail() {
 
   const handleUpdateName = useCallback(() => {
     if (!project) return;
-    if (formik.values.name === project.name) return; // No change, skip API call
+    if (formik.values.name === project.name) return; 
 
     setSaving(true);
 
@@ -133,30 +133,29 @@ export default function Detail() {
   }, [project, formik.values.name, id, workpsace.currentWorkspace?.id, updateProjectMutation]);
 
   const handleUpdateLabel = useCallback((newLabels: Label[]) => {
-    if (!project) return;
+  if (!project) return;
 
-    setSaving(true);
+  setSaving(true);
 
-    updateProjectMutation.mutate(
-      {
-        projectId: Number(id),
-        body: {
-          workspace_id: workpsace.currentWorkspace?.id,
-          labels: newLabels.map((x) => x.id as number) as any,
-          team_id: project.teams?.map((x) => x.id as number) || [],
-        },
-        // Full objects for instant UI update
-        optimisticData: {
-          labels: newLabels,
-        },
+  updateProjectMutation.mutate(
+    {
+      projectId: Number(id),
+      body: {
+        workspace_id: workpsace.currentWorkspace?.id,
+        labels_id: newLabels.length > 0 ? newLabels.map((x) => x.id as number) : null,
+        team_id: project.teams?.map((x) => x.id as number) || [],
       },
-      {
-        onSettled: () => {
-          setSaving(false);
-        },
+      optimisticData: {
+        labels: newLabels,  // ← Yeh instantly UI update karega
       },
-    );
-  }, [project, id, workpsace.currentWorkspace?.id, updateProjectMutation]);
+    },
+    {
+      onSettled: () => {
+        setSaving(false);
+      },
+    },
+  );
+}, [project, id, workpsace.currentWorkspace?.id, updateProjectMutation]);
 
   const handleUpdateSummary = useCallback(() => {
     if (!project) return;
@@ -538,7 +537,7 @@ export default function Detail() {
           <div className="flex items-center gap-2">
             <ProjectFormLabels
               labels={labels}
-              value={project?.labels || []}
+              value={project?.labels || [] }
               onChange={handleUpdateLabel}
               className="rounded-full"
               buttonVarient="dark"

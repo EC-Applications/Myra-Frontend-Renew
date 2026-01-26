@@ -81,13 +81,15 @@ export const useUpdateIssueHook = () => {
               ...serverData,
               // Keep old due_date format (Date object)
               due_date: old.due_date,
-              // Preserve labels if server didn't return full objects
+              // Handle labels: empty array = cleared, full objects = use server, IDs only = preserve old
               labels:
-                serverData.labels?.[0] &&
-                typeof serverData.labels[0] === "object" &&
-                "name" in serverData.labels[0]
-                  ? serverData.labels
-                  : old.labels,
+                Array.isArray(serverData.labels) && serverData.labels.length === 0
+                  ? [] // User cleared all labels
+                  : serverData.labels?.[0] &&
+                      typeof serverData.labels[0] === "object" &&
+                      "name" in serverData.labels[0]
+                    ? serverData.labels // Server returned full objects
+                    : old.labels, // Server returned IDs only, keep full objects
               // Preserve status if server didn't return full object
               status:
                 serverData.status && "name" in serverData.status

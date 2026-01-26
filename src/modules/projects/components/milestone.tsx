@@ -242,9 +242,9 @@ export default function MilestoneSection({
   };
 
   return (
-    <div className="">
+    <div className="mb-5">
       <div className={`space-y-3  border dark:bg-card rounded-lg`}>
-        <div className="flex items-center justify-between p-2 border-b">
+        <div className={`flex items-center justify-between p-2 ${isAddingNew ? "border-b" : "border-b-0"}`}>
           <div className="flex items-center gap-2">
             <span className="text-sm font-medium  text-white">
               {isAddingNew ? "Create Milestones" : "Milestones"}
@@ -276,7 +276,7 @@ export default function MilestoneSection({
                   <div className="p-4" onClick={(e) => e.stopPropagation()}>
                     <div className="flex items-start justify-between gap-4 mb-4">
                       <div className="flex items-start gap-3 flex-1 min-w-0">
-                        <Diamond className="h-5 w-5 text-muted-foreground flex-shrink-0 mt-0.5" />
+                        <Diamond className="h-4 w-4 text-muted-foreground flex-shrink-0 mt-1" />
                         <Input
                           value={editName}
                           onChange={(e) => setEditName(e.target.value)}
@@ -286,6 +286,7 @@ export default function MilestoneSection({
                       </div>
                       <div onClick={(e) => e.stopPropagation()}>
                         <DatePicker
+                        placeholder=""
                           value={editDueDate}
                           onChange={setEditDueDate}
                         />
@@ -364,7 +365,7 @@ export default function MilestoneSection({
 
               <div className="flex items-start justify-between gap-4 mb-2">
                 <div className="flex items-start gap-3 flex-1 min-w-0">
-                  <Diamond className="h-5 w-5 text-muted-foreground flex-shrink-0 mt-0.5" />
+                  <Diamond className="h-4 w-4 text-muted-foreground flex-shrink-0 mt-1" />
                   <Input
                     placeholder="Milestone name"
                     value={milestoneName}
@@ -373,7 +374,7 @@ export default function MilestoneSection({
                     autoFocus
                   />
                 </div>
-                <DatePicker value={dueDate} onChange={setDueDate} />
+                <DatePicker value={dueDate} onChange={setDueDate} placeholder=""/>
               </div>
 
               <div className="ml-8 mb-4">

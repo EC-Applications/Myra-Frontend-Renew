@@ -32,6 +32,7 @@ export interface iTeams {
   members?: iMember[];
   identifier?: number;
   icon?: iIcon;
+  cyclesPeriod? : boolean ;
 }
 
 export interface iIcon {

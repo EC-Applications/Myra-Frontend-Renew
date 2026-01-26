@@ -97,8 +97,8 @@ export default function Issues() {
 
   // const rawIssues = useSelector((state: any) => state.issues);
   const statusList = useSelector((state: any) => state.issuesStatus) ?? [];
-  console.log("ROW ISSUES", rawIssues);
-  console.log("STATUS LIST", statusList);
+  // console.log("ROW ISSUES", rawIssues);
+  // console.log("STATUS LIST", statusList);
 
   const mappedIssues = Object.entries(rawIssues ?? []).reduce(
     (acc: Record<string, any[]>, [status, issues]: any) => {
