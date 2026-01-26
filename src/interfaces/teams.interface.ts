@@ -61,6 +61,7 @@ export interface iMember {
   image?: string;
   avatar? : string;
   role?: string;
+  is_accept? :boolean;
   pivot?: {
     role: string;
   };

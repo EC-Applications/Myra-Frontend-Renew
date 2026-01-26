@@ -103,7 +103,7 @@ export function PriorityPicker({
             // No selection placeholder
             <div className="flex items-center gap-1">
               <MoreHorizontal />
-              <span className="text-[14px]">Priority</span>
+              {/* <span className="text-[14px]">Priority</span> */}
             </div>
           )}
         </Button>

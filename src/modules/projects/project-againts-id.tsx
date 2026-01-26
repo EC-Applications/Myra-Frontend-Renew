@@ -315,7 +315,7 @@ const ProjectAgainstTeamId = () => {
 
   return (
     <>
-      <div className="border rounded dark:border-zinc-800 min-h-screen dark:bg-[#101011]">
+      <div className="border rounded dark:border-zinc-800 min-h-screen dark:bg-[#17181b]">
         <div className="space-y-4 ">
           {/* Header */}
           <header className="flex justify-between h-12 shrink-0 border-b px-4 items-center gap-2 transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12">

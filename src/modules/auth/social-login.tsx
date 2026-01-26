@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams } from "react-router";
 import Axios from "axios";
 import { useDispatch } from "react-redux";
 import { addAccount } from "@/store/slices/auth.slice";
+import { baseUrl } from "@/constants";
 
 const SocialLogin = () => {
   const [searchParams] = useSearchParams();
@@ -102,7 +103,7 @@ const SocialLogin = () => {
       console.log("Making API call to /api/auth/me");
 
       // Fetch user data with token
-      const response = await Axios.get("https://api.myracloud.io/api/auth/me", {
+      const response = await Axios.get(`${baseUrl}/api/auth/me`, {
         headers: {
           Authorization: `Bearer ${token}`,
           Accept: "application/json",
