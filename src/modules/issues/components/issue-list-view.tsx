@@ -51,6 +51,8 @@ import { fetchProjectIssueUri } from "@/services/project.service";
 import { useTheme } from "@/components/theme-provider";
 import { useUpdateIssueHook } from "@/hooks/use-issue-update";
 import { useDeleteIssueHook } from "@/hooks/use-delete-issue";
+import { useUpdateSubIssueHook } from "@/hooks/use-update-subissue";
+import { useDeleteSubIssue } from "@/hooks/use-delete-subissues";
 
 const IssueListView: FC<{
   issuesData: Record<string, iIssues[]>;
@@ -60,20 +62,23 @@ const IssueListView: FC<{
   const { "team-id": teamId, id: projectId } = useParams();
   const teamset = useSelector((state: RootState) => state.useTeamId);
 
-  console.log("TEAM ID", teamId);
-  console.log("ProjectID", projectId);
+  // console.log("TEAM ID", teamId);
+  // console.log("ProjectID", projectId);
   const { currentWorkspace } = useUser();
   console.log("ISSUES DATA IN LIST VIEW", issuesData);
   const [expandedSections, setExpandedSections] = useState<string[]>(
     Object.keys(issuesData),
   );
   const updateIssueStatus = useUpdateIssueHook();
+  const updateSubIssue = useUpdateSubIssueHook();
   const deleteIssue = useDeleteIssueHook();
+
+  const deleteSubIssue = useDeleteSubIssue();
 
   const [defStatus, setDefaultStatus] = useState<number>();
   const [defProject, setDefProject] = useState<number>();
 
-  console.log("SET TEAM ID", teamset);
+  // console.log("SET TEAM ID", teamset);
 
   const [cycleData, setCycleData] = useState<iCycleListResponse[]>();
   useEffect(() => {
@@ -81,7 +86,7 @@ const IssueListView: FC<{
       fetchCycleListUri(currentWorkspace?.slug ?? "", Number(teamId)).then(
         (res) => {
           setCycleData(res.data);
-          console.log("CYCLE DATA IN LIST", cycleData);
+          // console.log("CYCLE DATA IN LIST", cycleData);
         },
       );
     } catch (error) {
@@ -104,9 +109,7 @@ const IssueListView: FC<{
   const status = useSelector((state: RootState) => state.issuesStatus);
   const statusList = status ?? [];
 
-  console.log("DYNMAIC STATUS", statusList);
-
-  const [priorityId, setPriorityId] = useState<number | undefined>();
+  // console.log("DYNMAIC STATUS", statusList);
   const [activeTab, setActiveTab] = useState("all");
 
   const dispatch = useDispatch();
@@ -125,17 +128,33 @@ const IssueListView: FC<{
     );
   };
 
-  const handleIssueDelete = async (issueId: number, teamid: number) => {
+  const handleIssueDelete = async (
+    issueId: number,
+    teamid: number,
+    type: string,
+    parent_issue_id: number,
+  ) => {
     const loadingToast = toast.loading("Deleting issue...");
 
-    console.log(issueId);
+    // console.log(issueId);
 
     try {
-      deleteIssue.mutate({
-        issueId: Number(issueId),
-        teamId: teamid,
-        workspaceId: Number(currentWorkspace?.id),
-      });
+      const mutate =
+        type === "issue"
+          ? deleteIssue.mutate({
+              issueId: Number(issueId),
+              teamId: teamid,
+              workspaceId: Number(currentWorkspace?.id),
+            })
+          : deleteSubIssue.mutate({
+              body: {
+                issue_id: Number(parent_issue_id),
+                sub_issue_ids: [Number(issueId)],  // Must be array
+              },
+              teamId: Number(teamid),
+              workspaceId: Number(currentWorkspace?.id),
+            });
+
       // const res = await deleteIssueUri(issueId);
       // toast.success(res.data.message);
       const method = teamId
@@ -155,18 +174,33 @@ const IssueListView: FC<{
     issuid: number,
     priorityId: number,
     tId: number,
+    type: string,
+    parent_issue_id?: number,
   ) => {
     try {
-      updateIssueStatus.mutate({
-        issueId: Number(issuid),
-        body: {
-          priority_id: priorityId,
-          workspace_id: currentWorkspace?.id,
-          team_id: Number(tId),
-        },
-        teamId: Number(tId),
-        workspaceId: Number(currentWorkspace?.id),
-      });
+      const mutate =
+        type === "issue"
+          ? updateIssueStatus.mutate({
+              issueId: Number(issuid),
+              body: {
+                priority_id: priorityId,
+                workspace_id: currentWorkspace?.id,
+                team_id: Number(tId),
+              },
+              teamId: Number(tId),
+              workspaceId: Number(currentWorkspace?.id),
+            })
+          : updateSubIssue.mutate({
+              issueId: Number(issuid),
+              body: {
+                issue_id: parent_issue_id,
+                priority_id: priorityId,
+                workspace_id: currentWorkspace?.id,
+                team_id: Number(tId),
+              },
+              teamId: Number(tId),
+              workspaceId: Number(currentWorkspace?.id),
+            });
       // const payload = {
       //   priority_id: priorityId,
       //   workspace_id: currentWorkspace?.id,
@@ -192,18 +226,33 @@ const IssueListView: FC<{
     issueId: number,
     date: Date | null,
     tId: number,
+    type: string,
+    parent_issue_id?: number,
   ) => {
     try {
-      updateIssueStatus.mutate({
-        issueId: Number(issueId),
-        body: {
-          due_date: date ? format(date, "yyyy-MM-dd") : undefined,
-          workspace_id: currentWorkspace?.id,
-          team_id: Number(tId),
-        },
-        teamId: Number(tId),
-        workspaceId: Number(currentWorkspace?.id),
-      });
+      const mutate =
+        type === "issue"
+          ? updateIssueStatus.mutate({
+              issueId: Number(issueId),
+              body: {
+                due_date: date ? format(date, "yyyy-MM-dd") : undefined,
+                workspace_id: currentWorkspace?.id,
+                team_id: Number(tId),
+              },
+              teamId: Number(tId),
+              workspaceId: Number(currentWorkspace?.id),
+            })
+          : updateSubIssue.mutate({
+              issueId: Number(issueId),
+              body: {
+                issue_id: parent_issue_id,
+                due_date: date ? format(date, "yyyy-MM-dd") : undefined,
+                workspace_id: currentWorkspace?.id,
+                team_id: Number(tId),
+              },
+              teamId: Number(tId),
+              workspaceId: Number(currentWorkspace?.id),
+            });
       // const payload = {
       //   due_date: date ? format(date, "yyyy-MM-dd") : undefined,
       //   workspace_id: currentWorkspace?.id,
@@ -227,18 +276,33 @@ const IssueListView: FC<{
     issueId: number,
     member: iMember | undefined,
     tId: number,
+    type: string,
+    parent_issue_id: number,
   ) => {
     try {
-      updateIssueStatus.mutate({
-        issueId: Number(issueId),
-        body: {
-          assignee_id: member?.id,
-          workspace_id: currentWorkspace?.id,
-          team_id: Number(tId),
-        },
-        teamId: Number(tId),
-        workspaceId: Number(currentWorkspace?.id),
-      });
+      const mutate =
+        type === "issue"
+          ? updateIssueStatus.mutate({
+              issueId: Number(issueId),
+              body: {
+                assignee_id: member?.id,
+                workspace_id: currentWorkspace?.id,
+                team_id: Number(tId),
+              },
+              teamId: Number(tId),
+              workspaceId: Number(currentWorkspace?.id),
+            })
+          : updateSubIssue.mutate({
+              issueId: Number(issueId),
+              body: {
+                issue_id: Number(parent_issue_id),
+                assignee_id: member?.id,
+                workspace_id: currentWorkspace?.id,
+                team_id: Number(tId),
+              },
+              teamId: Number(tId),
+              workspaceId: Number(currentWorkspace?.id),
+            });
       // const payload = {
       //   assignee_id: member?.id,
       //   workspace_id: currentWorkspace?.id,
@@ -262,18 +326,33 @@ const IssueListView: FC<{
     issueId: number,
     status: iIssueStatus,
     tId: number,
+    type: string,
+    parent_issue_id: number,
   ) => {
     try {
-      updateIssueStatus.mutate({
-        issueId: Number(issueId),
-        body: {
-          status_id: status.id,
-          workspace_id: currentWorkspace?.id,
-          team_id: Number(tId),
-        },
-        teamId: Number(tId),
-        workspaceId: Number(currentWorkspace?.id),
-      });
+      const mutate =
+        type === "issue"
+          ? updateIssueStatus.mutate({
+              issueId: Number(issueId),
+              body: {
+                status_id: status.id,
+                workspace_id: currentWorkspace?.id,
+                team_id: Number(tId),
+              },
+              teamId: Number(tId),
+              workspaceId: Number(currentWorkspace?.id),
+            })
+          : updateSubIssue.mutate({
+              issueId: Number(issueId),
+              body: {
+                issue_id: parent_issue_id,
+                status_id: status.id,
+                workspace_id: currentWorkspace?.id,
+                team_id: Number(tId),
+              },
+              teamId: Number(tId),
+              workspaceId: Number(currentWorkspace?.id),
+            });
       // const payload = {
       //   status_id: status.id,
       //   workspace_id: currentWorkspace?.id,
@@ -320,7 +399,7 @@ const IssueListView: FC<{
         Duplicate: { from: "#f5f5f6", to: "#f5f6f5" },
       };
 
-  console.log("def status", defStatus);
+  // console.log("def status", defStatus);
   return (
     <>
       <div className="flex-1  overflow-auto dark:bg-[#17181b]">
@@ -347,7 +426,7 @@ const IssueListView: FC<{
           // Regular issue list
           <div className="">
             {Object.keys(issuesData).map((status) => {
-              console.log(issuesData);
+              // console.log(issuesData);
               const issues = issuesData[status] || [];
               const isExpanded = expandedSections.includes(status);
               const config = statusConfig[
@@ -361,7 +440,7 @@ const IssueListView: FC<{
               };
 
               if (issues.length === 0) return null;
-              console.log("DYANAMIC COFIG", config);
+              // console.log("DYANAMIC COFIG", config);
               const gradientColors = statusColors[config.name] || {
                 from: "#191b22",
                 to: "#191b22",
@@ -407,7 +486,7 @@ const IssueListView: FC<{
                   {isExpanded && issues.length > 0 && (
                     <div className="">
                       {issues.map((issue) => {
-                        console.log("issuedadtada", issue);
+                        // console.log("issuedadtada", issue);
                         return (
                           <div
                             key={issue.id}
@@ -423,12 +502,14 @@ const IssueListView: FC<{
                                   issue.id,
                                   newPriorityId,
                                   issue.team_id,
+                                  issue.type || "",
+                                  issue.issue_id,
                                 );
-                                console.log(
-                                  "Update priority:",
-                                  issue.id,
-                                  newPriorityId,
-                                );
+                                // console.log(
+                                //   "Update priority:",
+                                //   issue.id,
+                                //   newPriorityId,
+                                // );
                               }}
                             />
 
@@ -445,12 +526,14 @@ const IssueListView: FC<{
                                   issue.id,
                                   newStatus,
                                   issue.team_id,
+                                  issue.type || "",
+                                  issue.issue_id || 0,
                                 );
                               }}
                             />
 
                             <Link
-                              to={`/issues/${issue.id}`}
+                              to={`${issue.type === "issue" ? `/issues/${issue.id}` : `/issues/${issue.id}/sub-issue`}`}
                               className="flex items-center gap-2 min-w-0 flex-1"
                             >
                               <Badge
@@ -499,12 +582,14 @@ const IssueListView: FC<{
                                     issue.id,
                                     newDate,
                                     issue.team_id,
+                                    issue.type || "",
+                                    issue.issue_id,
                                   );
-                                  console.log(
-                                    "Update due date:",
-                                    issue.id,
-                                    newDate,
-                                  );
+                                  // console.log(
+                                  //   "Update due date:",
+                                  //   issue.id,
+                                  //   newDate,
+                                  // );
                                 }}
                               />
 
@@ -517,12 +602,14 @@ const IssueListView: FC<{
                                     issue.id,
                                     newMember,
                                     issue.team_id,
+                                    issue.type || "",
+                                    issue.issue_id || 0,
                                   );
-                                  console.log(
-                                    "Update assignee:",
-                                    issue.id,
-                                    newMember,
-                                  );
+                                  // console.log(
+                                  //   "Update assignee:",
+                                  //   issue.id,
+                                  //   newMember,
+                                  // );
                                 }}
                               />
 
@@ -539,10 +626,19 @@ const IssueListView: FC<{
                                 </button>
                               </DropdownMenuTrigger>
 
-                              <DropdownMenuContent align="end">
+                              <DropdownMenuContent
+                                align="end"
+                                className="dark:bg-[#1c1d1f]"
+                              >
                                 <DropdownMenuItem
+                                  className=" font-semibold"
                                   onClick={() =>
-                                    handleIssueDelete(issue.id, issue.team_id)
+                                    handleIssueDelete(
+                                      issue.id,
+                                      issue.team_id,
+                                      issue.type || "",
+                                      issue.issue_id || 0,
+                                    )
                                   }
                                 >
                                   Delete Issue

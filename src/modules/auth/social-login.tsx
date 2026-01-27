@@ -3,7 +3,10 @@ import { addAccount } from "@/store/slices/auth.slice";
 import Axios from "axios";
 import { useEffect, useState } from "react";
 import { useDispatch } from "react-redux";
+import { addAccount } from "@/store/slices/auth.slice";
+import { baseUrl } from "@/constants";
 import { useNavigate, useSearchParams } from "react-router";
+
 
 const SocialLogin = () => {
   const [searchParams] = useSearchParams();

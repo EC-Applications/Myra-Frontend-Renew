@@ -24,8 +24,8 @@ import { IconPicker } from "@/modules/projects/components/icon-picker";
 
 interface SingleProjectProps {
   projects: iProject[];
-  value?: iProject;
-  onChange: (project: iProject | undefined) => void;
+  value?: iProject | null;
+  onChange: (project: iProject | null) => void;
   className?: string;
   buttonVarient?: "light" | "dark";
 }
@@ -53,7 +53,7 @@ export const ProjectPicker = ({
 
   const handleRemoveProject = (e: React.MouseEvent) => {
     e.stopPropagation();
-    onChange(undefined);
+    onChange(null);
   };
 
   const getAvatarText = (name: string | null | undefined) => {

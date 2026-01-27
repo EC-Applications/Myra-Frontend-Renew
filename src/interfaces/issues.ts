@@ -90,7 +90,7 @@ export interface iIussesDetail {
   documents: DocumentItem[];
   priority_detail: IPriority;
   status: iIssueStatus;
-  projects: iProject;
+  projects: iProject | null;
   milestones: iMilestone;
   labels: Label[];
   assignee: iMember;

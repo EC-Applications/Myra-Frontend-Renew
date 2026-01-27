@@ -97,8 +97,8 @@ export default function Issues() {
 
   // const rawIssues = useSelector((state: any) => state.issues);
   const statusList = useSelector((state: any) => state.issuesStatus) ?? [];
-  console.log("ROW ISSUES", rawIssues);
-  console.log("STATUS LIST", statusList);
+  // console.log("ROW ISSUES", rawIssues);
+  // console.log("STATUS LIST", statusList);
 
   const mappedIssues = Object.entries(rawIssues ?? []).reduce(
     (acc: Record<string, any[]>, [status, issues]: any) => {
@@ -239,7 +239,7 @@ export default function Issues() {
                 <Box />
                 All Issues
               </Button>
-
+{/* 
               <Button
                 variant="outline"
                 size="sm"
@@ -247,7 +247,7 @@ export default function Issues() {
               >
                 <PlusIcon className="h-4 w-4" />
                 Add Issue
-              </Button>
+              </Button> */}
 
               {/* <Button
                 variant="ghost"

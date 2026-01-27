@@ -5,6 +5,7 @@ import { Check, Plus, Users } from "lucide-react";
 import { Link } from "react-router";
 import { useSelector } from "react-redux";
 import { useUser } from "@/hooks/use-user";
+import { IconPicker } from "@/modules/projects/components/icon-picker";
 
 const AdministrationTeams = () => {
   const teamsData = useSelector((state: any) => state.teams) || [];
@@ -20,7 +21,7 @@ const AdministrationTeams = () => {
             <h1 className="text-xl font-semibold text-foreground">Teams</h1>
             <Badge
               variant="secondary"
-              className="bg-muted text-black"
+              className="bg-muted text-muted-foreground dark:text-white"
             >
               {teamsData?.length}
             </Badge>
@@ -52,12 +53,10 @@ const AdministrationTeams = () => {
             >
               {/* Name */}
               <div className="col-span-3 flex items-center gap-3">
-                <div className="w-6 h-6 bg-blue-600 rounded flex items-center justify-center">
-                  <Users className="w-3 h-3 text-white" />
-                </div>
+                 <IconPicker value={team.icon} onChange={() => {}} />
                 <div className="flex items-center gap-2">
                   <Link
-                    to={`./${team.id}/issues`}
+                    to={`/teams/${team.id}/issues`}
                     className="font-medium text-foreground"
                   >
                     {team.name}
@@ -85,7 +84,7 @@ const AdministrationTeams = () => {
                       className="w-6 h-6 border-2 border-background"
                     >
                       <AvatarImage src={member.avatar || "/placeholder.svg"} />
-                      <AvatarFallback className="text-xs bg-orange-500 text-white">
+                      <AvatarFallback className="text-xs bg-orange-500 dark:bg-[#5e6ad2] text-white">
                         {String.fromCharCode(65 + index)}
                       </AvatarFallback>
                     </Avatar>

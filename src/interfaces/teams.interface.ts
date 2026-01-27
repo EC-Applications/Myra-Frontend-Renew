@@ -32,6 +32,7 @@ export interface iTeams {
   members?: iMember[];
   identifier?: number;
   icon?: iIcon;
+  cyclesPeriod? : boolean ;
 }
 
 export interface iIcon {
@@ -61,6 +62,7 @@ export interface iMember {
   image?: string;
   avatar? : string;
   role?: string;
+  is_accept? :boolean;
   pivot?: {
     role: string;
   };

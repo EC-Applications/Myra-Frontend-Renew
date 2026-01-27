@@ -12,9 +12,9 @@ export interface iIssuePayload {
   workspace_id: number;
   status_id: number;
   priority_id?: number;
-  project_id?: number;
+  project_id?: number | null;
   assignee_id?: number;
-  labels?: number[];
+  labels?: number[] | null;
   due_date?: string | null;
   external_link?: string;
   attachments?: File[];

@@ -76,16 +76,29 @@ export const updateIssuesUri = async (
   if (body.workspace_id)
     formData.append("workspace_id", body.workspace_id.toString());
   if (body.status_id) formData.append("status_id", body.status_id.toString());
-  if (body.priority_id)
-    formData.append("priority_id", body.priority_id.toString());
-  if (body.project_id)
-    formData.append("project_id", body.project_id.toString());
+  // if (body.priority_id)
+  //   formData.append("priority_id", body.priority_id.toString());
+  if(body.priority_id !== undefined){
+    formData.append(
+      "priority_id", body.priority_id === null ? "" : body.priority_id.toString()
+    )
+  }
+  if (body.project_id !== undefined) {
+    formData.append(
+      "project_id",
+      body.project_id === null ? "" : body.project_id.toString(),
+    );
+  }
+
   if (body.assignee_id)
     formData.append("assignee_id", body.assignee_id.toString());
   if (body.due_date) formData.append("due_date", body.due_date);
   if (body.external_link) formData.append("external_link", body.external_link);
 
-  if (body.labels) {
+  // Handle labels - send empty string to clear, or array of IDs
+  if (body.labels === null) {
+    formData.append("label_id[]", "");
+  } else if (body.labels && body.labels.length > 0) {
     body.labels.forEach((x) =>
       formData.append("label_id[]", JSON.stringify(x)),
     );
@@ -172,4 +185,3 @@ export const updateIssueLabelUri = async (
     responseType: "json",
   });
 };
-

@@ -176,12 +176,15 @@ export const updateProjectUri = async (
 
   if(body.members_id && Array.isArray(body.members_id)){
     body.members_id.forEach((id)=>{
-      formData.append("members[]", id.toString())
+      formData.append("members_id[]", id.toString())
     })
   }
 
-  if (body.labels && Array.isArray(body.labels)) {
-    body.labels.forEach((labelId) => {
+  // Handle labels - send empty string to clear, or array of IDs
+  if (body.labels_id === null) {
+    formData.append("label_id[]", "");
+  } else if (body.labels_id && Array.isArray(body.labels_id) && body.labels_id.length > 0) {
+    body.labels_id.forEach((labelId) => {
       formData.append("label_id[]", labelId.toString());
     });
   }

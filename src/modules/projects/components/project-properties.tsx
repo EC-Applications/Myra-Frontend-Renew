@@ -18,7 +18,7 @@ import {
   Plus,
   Users,
 } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useParams } from "react-router";
 import { toast } from "sonner";
@@ -148,36 +148,35 @@ const ProjectProperties = () => {
   //   isDataLoaded,
   // ]);
 
-  const handleUpdateStatus = async (newStatus: any) => {
-    setSelectedStatus(newStatus);
+  const handleUpdateStatus = useCallback(
+    (newStatus: any) => {
+      if (!project) return;
 
-    if (!project) return;
+      setSaving(true);
 
-    setSaving(true);
-
-    dispatch(
-      updateProject({
-        projectId: Number(id),
-        data: { status: newStatus.name.toLowerCase() },
-      }),
-    );
-
-    updateProjectMutation.mutate(
-      {
-        projectId: Number(id),
-        body: {
-          status_id: newStatus.id,
-          workspace_id: workpsace.currentWorkspace?.id,
-          team_id: project.teams?.map((x) => x.id as number) || [],
+      updateProjectMutation.mutate(
+        {
+          projectId: Number(id),
+          body: {
+            status_id: newStatus.id,
+            workspace_id: workpsace.currentWorkspace?.id,
+            team_id: project.teams?.map((x) => x.id as number) || [],
+          },
+          // Full object for instant UI update
+          optimisticData: {
+            status: newStatus,
+            status_id: newStatus.id,
+          },
         },
-      },
-      {
-        onSettled: () => {
-          setSaving(false);
+        {
+          onSettled: () => {
+            setSaving(false);
+          },
         },
-      },
-    );
-  };
+      );
+    },
+    [project, id, workpsace.currentWorkspace?.id, updateProjectMutation],
+  );
 
   const handleUpdatePriority = async (newPriority: number) => {
     setPriority(newPriority);
@@ -220,138 +219,116 @@ const ProjectProperties = () => {
     );
   };
 
-  const handleUpdateLead = async (newLead: iMember | undefined) => {
-    setSelectedLead(newLead);
+  const handleUpdateLead = useCallback(
+    (newLead: iMember | undefined) => {
+      if (!project || !newLead) return;
 
-    if (!project || !newLead) return;
+      setSaving(true);
 
-    setSaving(true);
-
-    dispatch(
-      updateProject({
-        projectId: Number(id),
-        data: { lead_id: newLead.id },
-      }),
-    );
-
-    updateProjectMutation.mutate(
-      {
-        projectId: Number(id),
-        body: {
-          lead_id: newLead.id,
-          workspace_id: workpsace.currentWorkspace?.id,
-          team_id: project.teams?.map((x) => x.id as number) || [],
+      updateProjectMutation.mutate(
+        {
+          projectId: Number(id),
+          body: {
+            lead_id: newLead.id,
+            workspace_id: workpsace.currentWorkspace?.id,
+            team_id: project.teams?.map((x) => x.id as number) || [],
+          },
+          // Full object for instant UI update
+          optimisticData: {
+            lead: newLead,
+            lead_id: newLead.id,
+          },
         },
-      },
-      {
-        onSettled: () => {
-          setSaving(false);
+        {
+          onSettled: () => {
+            setSaving(false);
+          },
         },
-      },
-    );
-  };
+      );
+    },
+    [project, id, workpsace.currentWorkspace?.id, updateProjectMutation],
+  );
 
-  const handleUpdateStartDate = async (newDate: Date | null) => {
-    setStartDate(newDate);
+  const handleUpdateStartDate = useCallback(
+    (newDate: Date | null) => {
+      if (!project || !newDate) return;
 
-    if (!project || !newDate) return;
+      setSaving(true);
 
-    setSaving(true);
-
-    dispatch(
-      updateProject({
-        projectId: Number(id),
-        data: { start_date: newDate.toISOString().split("T")[0] },
-      }),
-    );
-
-    updateProjectMutation.mutate(
-      {
-        projectId: Number(id),
-        body: {
-          start_date: newDate.toISOString().split("T")[0],
-          workspace_id: workpsace.currentWorkspace?.id,
-          team_id: project.teams?.map((x) => x.id as number) || [],
+      updateProjectMutation.mutate(
+        {
+          projectId: Number(id),
+          body: {
+            start_date: newDate.toISOString().split("T")[0],
+            workspace_id: workpsace.currentWorkspace?.id,
+            team_id: project.teams?.map((x) => x.id as number) || [],
+          },
         },
-      },
-      {
-        onSettled: () => {
-          setSaving(false);
+        {
+          onSettled: () => {
+            setSaving(false);
+          },
         },
-      },
-    );
-  };
+      );
+    },
+    [project, id, workpsace.currentWorkspace?.id, updateProjectMutation],
+  );
 
-  const handleUpdateEndDate = async (newDate: Date | null) => {
-    setEndDate(newDate);
+  const handleUpdateEndDate = useCallback(
+    (newDate: Date | null) => {
+      if (!project || !newDate) return;
 
-    if (!project || !newDate) return;
+      setSaving(true);
 
-    setSaving(true);
-
-    dispatch(
-      updateProject({
-        projectId: Number(id),
-        data: { target_date: newDate.toISOString().split("T")[0] },
-      }),
-    );
-
-    updateProjectMutation.mutate(
-      {
-        projectId: Number(id),
-        body: {
-          target_date: newDate.toISOString().split("T")[0],
-          workspace_id: workpsace.currentWorkspace?.id,
-          team_id: project.teams?.map((x) => x.id as number) || [],
+      updateProjectMutation.mutate(
+        {
+          projectId: Number(id),
+          body: {
+            target_date: newDate.toISOString().split("T")[0],
+            workspace_id: workpsace.currentWorkspace?.id,
+            team_id: project.teams?.map((x) => x.id as number) || [],
+          },
         },
-      },
-      {
-        onSettled: () => {
-          setSaving(false);
+        {
+          onSettled: () => {
+            setSaving(false);
+          },
         },
-      },
-    );
-  };
+      );
+    },
+    [project, id, workpsace.currentWorkspace?.id, updateProjectMutation],
+  );
 
-  const handleUpdateLabel = async (labels: Label[]) => {
-    if (!project) return;
+  const handleUpdateLabel = useCallback(
+    (newLabels: Label[]) => {
+      if (!project) return;
 
-    const previousLabels = selectedLabels;
-    setSelectedLabels(labels);
-    setSaving(true);
+      setSaving(true);
 
-    // dispatch(
-    //   updateProject({
-    //     projectId: Number(id),
-    //     data: { labels: labels.map((x) => x.id) },
-    //   })
-    // );
-
-    updateProjectMutation.mutate(
-      {
-        projectId: Number(id),
-        body: {
-          workspace_id: workpsace.currentWorkspace?.id,
-          labels: labels.map((x) => x.id as number) as any,
-          team_id: project.teams?.map((x) => x.id as number) || [],
+      updateProjectMutation.mutate(
+        {
+          projectId: Number(id),
+          body: {
+            workspace_id: workpsace.currentWorkspace?.id,
+            labels_id:
+              newLabels.length > 0
+                ? newLabels.map((x) => x.id as number)
+                : null,
+            team_id: project.teams?.map((x) => x.id as number) || [],
+          },
+          optimisticData: {
+            labels: newLabels, // ← Yeh instantly UI update karega
+          },
         },
-      },
-      {
-        onError: () => {
-          setSelectedLabels(previousLabels);
-          dispatch(
-            updateProject({
-              projectId: Number(id),
-              data: { labels: previousLabels.map((x) => x.id) },
-            }),
-          );
+        {
+          onSettled: () => {
+            setSaving(false);
+          },
         },
-        onSettled: () => {
-          setSaving(false);
-        },
-      },
-    );
-  };
+      );
+    },
+    [project, id, workpsace.currentWorkspace?.id, updateProjectMutation],
+  );
 
   const handleMemberUpdate = async (members: iMember[]) => {
     if (!project) return;
@@ -360,14 +337,6 @@ const ProjectProperties = () => {
     // /(members);
     setSelectedMembers(members);
     setSaving(true);
-
-    // dispatch(
-    //   updateProject({
-    //     projectId: Number(id),
-    //     data: { labels: labels.map((x) => x.id) },
-    //   })
-    // );
-
     updateProjectMutation.mutate(
       {
         projectId: Number(id),
@@ -691,9 +660,13 @@ const ProjectProperties = () => {
           <button
             type="button"
             onClick={() => setShowActivity(!showActivity)}
-            className={`flex items-center gap-1 font-semibold text-[14px] mb-2 dark:hover:text-white text-muted-foreground ${showActivity ? "dark:text-white" : "text-muted-foreground"}`} 
+            className={`flex items-center gap-1 font-semibold text-[14px] mb-2 dark:hover:text-white text-muted-foreground ${showActivity ? "dark:text-white" : "text-muted-foreground"}`}
           >
-            <span className={`text-[16px] font-semibold dark:hover:text-white ${showActivity ? "dark:text-white" : "text-muted-foreground"}`}>Activity</span>
+            <span
+              className={`text-[16px] font-semibold dark:hover:text-white ${showActivity ? "dark:text-white" : "text-muted-foreground"}`}
+            >
+              Activity
+            </span>
             {showActivity ? (
               <ChevronDown className="h-4 w-4" />
             ) : (

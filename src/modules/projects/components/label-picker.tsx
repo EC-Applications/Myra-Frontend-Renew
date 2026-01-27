@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Check, StepBackIcon } from "lucide-react";
+import { Tag } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
   DropdownMenu,
@@ -37,7 +37,7 @@ export const ProjectFormLabels = ({
 
   console.log("Labels", labels);
   const filteredLabels = labels.filter((label) =>
-    label.name.toLowerCase().includes(search.toLowerCase())
+    label.name.toLowerCase().includes(search.toLowerCase()),
   );
 
   const toggleLabel = (label: Label) => {
@@ -50,43 +50,54 @@ export const ProjectFormLabels = ({
     }
   };
 
+  const renderMergedColors = () => (
+    <div className="flex items-center -space-x-1.5">
+      {value.slice(0, 3).map((label) => (
+        <span
+          key={label.id}
+          className="h-3 w-3 rounded-full border border-zinc-900"
+          style={{ backgroundColor: label.color }}
+        />
+      ))}
+    </div>
+  );
+
   return (
     <DropdownMenu open={open} onOpenChange={setOpen}>
       <DropdownMenuTrigger asChild>
         <Button
           variant="outline"
           className={cn(
-            `h-7.5 justify-start gap-2 px-2 text-sm   font-semibold text-muted-foreground dark:hover:text-white dark:hover:bg-[#32333a]  ${
-              buttonVarient == "light" ? "dark:bg-[#2a2c33]" : "dark:bg-transparent"
-            }`,
-            className
+            `h-7.5 justify-start gap-2 px-2 text-sm font-semibold
+     text-muted-foreground dark:hover:text-white dark:hover:bg-[#32333a]
+     ${buttonVarient === "light" ? "dark:bg-[#2a2c33]" : "dark:bg-transparent"}`,
+            className,
           )}
         >
-          {value.length ? (
-            <div className="flex items-center gap-2 truncate">
-              {value.slice(0, 2).map((label) => (
-                <div
-                  key={label.id}
-                  className="flex items-center gap-1 rounded px-1.5 py-0.5 text-xs"
-                >
-                  <span
-                    className="h-2.5 w-2.5 rounded-full"
-                    style={{ backgroundColor: label.color }}
-                  />
-                  <span className="max-w-[80px] truncate">{label.name}</span>
-                </div>
-              ))}
-
-              {value.length > 2 && (
-                <span className="text-xs text-muted-foreground">
-                  +{value.length - 2} more
-                </span>
-              )}
+          {/* No labels */}
+          {!value.length && (
+            <div className="flex items-center gap-1.5">
+              <Tag />
+              <span className="text-[14px]">Labels</span>
             </div>
-          ) : (
-            <div className="flex items-center gap-0.5 ">
-              <StepBackIcon className="" />
-              <span className="text-[14px]">labels</span>
+          )}
+
+          {/* Single label */}
+          {value.length === 1 && (
+            <div className="flex items-center gap-2 truncate">
+              <span
+                className="h-3 w-3 rounded-full"
+                style={{ backgroundColor: value[0].color }}
+              />
+              <span className="max-w-[100px] truncate">{value[0].name}</span>
+            </div>
+          )}
+
+          {/* Multiple labels */}
+          {value.length > 1 && (
+            <div className="flex items-center gap-2">
+              {renderMergedColors()}
+              <span className="text-[14px]">Labels</span>
             </div>
           )}
         </Button>
@@ -114,7 +125,7 @@ export const ProjectFormLabels = ({
         <hr className="dark:border-zinc-700" />
 
         {/* List */}
-        <div className="py-1 overflow-y-3">
+        <div className="py-1 px-1 overflow-y-3">
           {filteredLabels.length ? (
             filteredLabels.map((label) => {
               const isSelected = value.some((l) => l.id === label.id);
@@ -122,19 +133,35 @@ export const ProjectFormLabels = ({
               return (
                 <DropdownMenuItem
                   key={label.id}
-                  className="flex h-8 items-center gap-2 rounded-sm px-2 text-[14px] font-semibold"
+                  className="group  flex h-8 items-center gap-2 rounded-sm px-2 text-[14px] font-semibold dark:hover:bg-[#292b30] "
                   onSelect={(e) => {
                     e.preventDefault();
                   }}
                   onClick={() => toggleLabel(label)}
                 >
                   {/* Checkbox */}
-                  <input
-                    type="checkbox"
-                    checked={isSelected}
-                    readOnly
-                    className="h-4 w-4 border border-zinc-600"
-                  />
+                  <div
+                    className={`h-4 w-4 rounded border flex items-center justify-center
+          transition-colors
+          ${
+            isSelected
+              ? "bg-indigo-500 border-indigo-500 opacity-100"
+              : "bg-transparent border-zinc-700 opacity-0 group-hover:opacity-100"
+          }
+        `}
+                  >
+                    {isSelected && (
+                      <svg
+                        className="h-3 w-3 text-white"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="3"
+                        viewBox="0 0 24 24"
+                      >
+                        <path d="M5 13l4 4L19 7" />
+                      </svg>
+                    )}
+                  </div>
 
                   {/* Label content */}
                   <div className="flex items-center gap-2">
