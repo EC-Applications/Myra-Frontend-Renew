@@ -38,6 +38,7 @@ import { ProjectFormStatus } from "./status-picker";
 import { TeamPicker } from "./team-picker";
 import { setTeams } from "@/store/slices/team.slice";
 import * as yup from "yup";
+import { useCreateProjectHook } from "@/hooks/use-create-project";
 interface NewProjectModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -178,6 +179,8 @@ export function NewProject({
     onOpenChange(false);
   };
 
+  const createProject = useCreateProjectHook();
+
   const handleCreateProject = async () => {
     if (!projectName.trim()) {
       toast.error("Project name is required");
@@ -188,6 +191,7 @@ export function NewProject({
       toast.error("Please select at least one team");
       return;
     }
+
     const loadingToast = toast.loading("Creating project...");
 
     try {
@@ -205,25 +209,25 @@ export function NewProject({
         target_date: endDate ? format(endDate, "yyyy-MM-dd") : undefined,
         member: selectedMembers,
         lead_id: selectedLead?.id,
-        team_id: selectedTeams?.map((t) => t.id),
+        team_id: selectedTeams.map((t) => t.id),
         label: selectedLabels.map((l) => l.id),
         milestones,
       };
-      const iconFile = projectIcon?.file;
-      console.log(payload, "PAYLOAD");
 
-      const res = await createProjectUri(payload, iconFile, attachments);
-      fetchProjectUri(currentWorkspace?.slug).then((res) =>
-        dispatch(setProject(res.data)),
-      );
+      await createProject.mutateAsync({
+        body: payload,
+        iconFile: projectIcon?.file,
+        documentFiles: attachments,
+        workspaceSlug: currentWorkspace?.slug,
+        teamId: selectedTeams[0]?.id,
+      });
+
       toast.success("Project created successfully");
-
       resetForm();
       onOpenChange(false);
     } catch (error: any) {
       console.error("=== API ERROR ===", error);
-
-      toast.error(error.response?.data?.message || "Failed to create project");
+      toast.error(error?.message || "Failed to create project");
     } finally {
       toast.dismiss(loadingToast);
     }
