@@ -5,10 +5,9 @@ import { addAccount } from "@/store/slices/auth.slice";
 import { baseUrl } from "@/constants";
 import { useNavigate, useSearchParams } from "react-router";
 
-
 const SocialLogin = () => {
   const [searchParams] = useSearchParams();
-  
+
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const [error, setError] = useState("");
@@ -64,7 +63,7 @@ const SocialLogin = () => {
     // if (detectedPlatform === "mobile") {
     //   handleMobileLogin(token);
     // } else {
-      handleWebLogin(token);
+    handleWebLogin(token);
     // }
   }, [searchParams, navigate, dispatch]);
 
