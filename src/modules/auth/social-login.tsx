@@ -7,7 +7,7 @@ import { useNavigate, useSearchParams } from "react-router";
 
 const SocialLogin = () => {
   const [searchParams] = useSearchParams();
-
+  console.log("okkkk");
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const [error, setError] = useState("");
@@ -61,11 +61,11 @@ const SocialLogin = () => {
     }
 
     // Handle based on platform
-    // if (detectedPlatform === "mobile") {
-    //   handleMobileLogin(token);
-    // } else {
-    handleWebLogin(token);
-    // }
+    if (detectedPlatform === "mobile") {
+      handleMobileLogin(token);
+    } else {
+      handleWebLogin(token);
+    }
   }, [searchParams, navigate, dispatch]);
 
   /**
