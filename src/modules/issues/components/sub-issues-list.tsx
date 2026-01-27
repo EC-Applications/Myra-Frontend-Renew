@@ -114,7 +114,7 @@ export default function SubIssuesList({
 
       // Update parent state
       onSubIssueUpdate?.({ ...issue, status, status_id: status.id });
-      toast.success("Status updated");
+      // toast.success("Status updated");
     } catch (error: any) {
       toast.error(error.message || "Failed to update status");
     }
@@ -142,7 +142,7 @@ export default function SubIssuesList({
       // Update parent state
       const updatedDueDate = date ? format(date, "yyyy-MM-dd") : null;
       onSubIssueUpdate?.({ ...issue, due_date: updatedDueDate });
-      toast.success("Date updated");
+      // toast.success("Date updated");
     } catch (error: any) {
       toast.error(error.message || "Failed to update date");
     }

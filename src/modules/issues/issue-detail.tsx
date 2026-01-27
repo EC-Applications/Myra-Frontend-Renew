@@ -75,8 +75,10 @@ import { useGetIssuesHook } from "@/hooks/use-get-issues";
 import { useGetIssuesDetailHook } from "@/hooks/use-get-issues-detail.hook";
 import { useGetSubIssuesHook } from "@/hooks/use-get-subissues.hook";
 import { useUpdateIssueHook } from "@/hooks/use-issue-update";
+import { useQueryClient } from "@tanstack/react-query";
 
 export default function IssueDetailView() {
+  const queryClient = useQueryClient();
   const issues = useSelector((state: any) => state.issues);
   const { id } = useParams();
   const currentUser = useUser();
@@ -267,18 +269,18 @@ export default function IssueDetailView() {
     });
   };
 
-  const handleProjectUpdate = async (project: iProject | undefined) => {
+  const handleProjectUpdate = async (project: iProject | null) => {
     updateIssueStatus.mutate({
       issueId: Number(id),
       body: {
-        project_id: project?.id,
+        project_id: project?.id ?? null,
         workspace_id: currentWorkspace?.id,
         team_id: Number(data?.team_id),
       },
       // Full object for instant UI update
       optimisticData: {
-        projects: project,
-        project_id: project?.id,
+        projects: project ?? null,
+        project_id: project?.id ?? null,
       },
       teamId: Number(data?.team_id),
       workspaceId: Number(currentWorkspace?.id),
@@ -463,7 +465,7 @@ export default function IssueDetailView() {
     try {
       await deleteSubIssuesUri({
         issue_id: Number(id),
-        sub_issue_ids: selectedSubIssues, 
+        sub_issue_ids: selectedSubIssues,
       });
 
       toast.dismiss(loadingToast);
@@ -887,18 +889,21 @@ dark:bg-[#101012]"
                       navigate(`/issues/${subIssue.id}/sub-issue`);
                     }}
                     onSubIssueUpdate={(updatedSubIssue) => {
-                      data?.sub_issues
-                      // setData((prev: any) => {
-                      //   if (!prev) return prev;
-                      //   return {
-                      //     ...prev,
-                      //     sub_issues: prev.sub_issues?.map((sub: any) =>
-                      //       sub.id === updatedSubIssue.id
-                      //         ? updatedSubIssue
-                      //         : sub,
-                      //     ),
-                      //   };
-                      // });
+                      queryClient.setQueryData<any>(
+                        ["issue-detail", Number(id)],
+                        (old: any) => {
+                          if (!old) return old;
+
+                          return {
+                            ...old,
+                            sub_issues: old.sub_issues?.map((sub: any) =>
+                              sub.id === updatedSubIssue.id
+                                ? updatedSubIssue
+                                : sub,
+                            ),
+                          };
+                        },
+                      );
                     }}
                   />
                 ) : (
@@ -1683,7 +1688,7 @@ dark:bg-[#101012]"
                 value={data?.assignee}
                 members={members}
                 onChange={handleMemberUpdate}
-                className="border-0"
+                className="border-0 px-1"
                 variant="full"
                 buttonVarient="dark"
               />

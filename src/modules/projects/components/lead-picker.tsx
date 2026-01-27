@@ -133,10 +133,15 @@ export const LeadPicker = ({
                           .toUpperCase()}
                       </AvatarFallback>
                     </Avatar>
-                    <div className="flex flex-col">
+                    <div className="flex gap-2">
                       <span className="font-medium text-[14px]">
                         {member.name || member.email}
                       </span>
+                      {member.is_accept == false ? (
+                        <span className="font-medium ">(Invited)</span>
+                      ) : (
+                        <div className=""></div>
+                      )}
                       {/* <span className="text-[11px] text-muted-foreground">
                         {member.email}
                       </span> */}

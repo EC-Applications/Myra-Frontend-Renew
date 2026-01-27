@@ -7,6 +7,7 @@ export interface iMilestone {
 }
 
 export interface iMilestoneCreatePayload {
+  project_id : number;
   name?: string;
   description?: string;
   target_date?: string;

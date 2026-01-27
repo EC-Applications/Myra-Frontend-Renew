@@ -239,7 +239,7 @@ export default function Issues() {
                 <Box />
                 All Issues
               </Button>
-
+{/* 
               <Button
                 variant="outline"
                 size="sm"
@@ -247,7 +247,7 @@ export default function Issues() {
               >
                 <PlusIcon className="h-4 w-4" />
                 Add Issue
-              </Button>
+              </Button> */}
 
               {/* <Button
                 variant="ghost"

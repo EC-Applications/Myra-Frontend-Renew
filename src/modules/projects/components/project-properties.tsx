@@ -337,14 +337,6 @@ const ProjectProperties = () => {
     // /(members);
     setSelectedMembers(members);
     setSaving(true);
-
-    // dispatch(
-    //   updateProject({
-    //     projectId: Number(id),
-    //     data: { labels: labels.map((x) => x.id) },
-    //   })
-    // );
-
     updateProjectMutation.mutate(
       {
         projectId: Number(id),

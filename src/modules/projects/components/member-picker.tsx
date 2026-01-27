@@ -58,56 +58,85 @@ export const MemberPicker = ({
     if (!name) return "??";
     return name.slice(0, 2).toUpperCase();
   };
-
+  const renderMergedColors = () => (
+    <div className="flex items-center -space-x-1.5">
+      {value.slice(0, 3).map((member) => (
+        <span
+          key={member.id}
+          className="h-3 w-3 rounded-full border border-zinc-900"
+          style={{ backgroundColor: member.avatar }}
+        />
+      ))}
+    </div>
+  );
   return (
     <DropdownMenu open={open} onOpenChange={setOpen}>
       <DropdownMenuTrigger asChild>
         <Button
           variant="ghost"
           className={cn(
-            `h-7.5 justify-start gap-2 px-2 text-sm text-muted-foreground dark:text-muted-foreground hover:font-semibold font-semibold dark:hover:text-white border  dark:hover:bg-[#32333a] ${buttunVarient == "light" ? "dark:bg-[#2a2c33]" : "bg-transparent dark:bg-transparent"}`,
+            `h-7.5 justify-start gap-2 px-2 text-sm text-muted-foreground dark:text-muted-foreground hover:font-semibold font-semibold dark:hover:text-white border dark:hover:bg-[#32333a] ${
+              buttunVarient === "light"
+                ? "dark:bg-[#2a2c33]"
+                : "bg-transparent dark:bg-transparent"
+            }`,
             className,
           )}
         >
-          {/* <Users className="h-3.5 w-3.5" /> */}
           {value.length === 0 ? (
             <span className="text-[14px] flex items-center gap-2">
-                <Users/>
-              Members</span>
+              <Users />
+              Members
+            </span>
+          ) : value.length === 1 ? (
+            // Agar sirf 1 member
+            <div className="flex items-center gap-1">
+              <Avatar className="h-5 w-5">
+                <AvatarImage
+                  src={
+                    value[0]?.avatar || value[0]?.image || "/placeholder.svg"
+                  }
+                />
+                <AvatarFallback className="text-[10px]">
+                  {getAvatarText(value[0].name)}
+                </AvatarFallback>
+              </Avatar>
+              <span className="text-[14px]">
+                {value[0].name || value[0].email}
+              </span>
+            </div>
           ) : (
-            <div className="flex items-center gap-1 flex-wrap">
-              {value.map((member) => (
-                <div
-                  key={member.id}
-                  className="flex items-center gap-1 rounded py-0.5"
-                >
-                  <Avatar className="h-5 w-5">
+            <div className="flex items-center gap-2">
+              <div className="flex -space-x-1.5">
+                {value.slice(0, 3).map((member) => (
+                  <Avatar
+                    key={member.id}
+                    className="h-5 w-5 border border-zinc-900"
+                  >
                     <AvatarImage
-                      src={
-                        member?.avatar || member?.image || "/placeholder.svg"
-                      }
+                      src={member.avatar || member.image || "/placeholder.svg"}
                     />
                     <AvatarFallback className="text-[10px]">
                       {getAvatarText(member.name)}
                     </AvatarFallback>
                   </Avatar>
-                  <span className="text-[14px]">
-                    {member.name || member.email}
+                ))}
+                {value.length > 3 && (
+                  <span className="h-5 w-5 flex items-center justify-center text-[10px] rounded-full border border-zinc-900 bg-gray-400 text-white">
+                    +{value.length - 3}
                   </span>
-                  {/* <button
-                    onClick={(e) => handleRemoveMember(member.id, e)}
-                    className="hover:bg-background rounded-full p-0.5"
-                  >
-                    <X className="h-2.5 w-2.5" />
-                  </button> */}
-                </div>
-              ))}
+                )}
+              </div>
+              <span className="text-[14px]">Members</span>
             </div>
           )}
         </Button>
       </DropdownMenuTrigger>
 
-      <DropdownMenuContent align="start" className="w-[280px] dark:bg-[#1c1d1f] p-0 dark:border-zinc-700">
+      <DropdownMenuContent
+        align="start"
+        className="w-[280px] dark:bg-[#1c1d1f] p-0 dark:border-zinc-700"
+      >
         <div className="relative mb-1">
           <Input
             placeholder="Search members..."
@@ -118,7 +147,7 @@ export const MemberPicker = ({
           />
         </div>
 
-         <hr className="dark:border-zinc-700" />
+        <hr className="dark:border-zinc-700" />
 
         <div className="p-1 max-h-[300px] overflow-y-auto">
           {filteredMembers.length > 0 ? (
@@ -128,9 +157,37 @@ export const MemberPicker = ({
               return (
                 <DropdownMenuItem
                   key={member.id}
-                  className="flex items-center justify-between rounded-sm px-2.5 py-1.5 text-[14px]  cursor-pointer dark:hover:bg-[#292b30] "
-                  onSelect={() => handleToggleMember(member)}
+                  className="group  flex h-8 items-center gap-2 rounded-sm px-2 text-[14px] font-semibold dark:hover:bg-[#292b30] "
+                  onSelect={(e) => {
+                    e.preventDefault();
+                  }}
+                  onClick={() => handleToggleMember(member)}
                 >
+                  {/* Checkbox */}
+                  <div
+                    className={`h-4 w-4 rounded border flex items-center justify-center
+          transition-colors
+          ${
+            isSelected
+              ? "bg-indigo-500 border-indigo-500 opacity-100"
+              : "bg-transparent border-zinc-700 opacity-0 group-hover:opacity-100"
+          }
+        `}
+                  >
+                    {isSelected && (
+                      <svg
+                        className="h-3 w-3 text-white"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="3"
+                        viewBox="0 0 24 24"
+                      >
+                        <path d="M5 13l4 4L19 7" />
+                      </svg>
+                    )}
+                  </div>
+
+                  {/* Label content */}
                   <div className="flex items-center gap-2">
                     <Avatar className="h-5 w-5">
                       <AvatarImage
@@ -142,18 +199,20 @@ export const MemberPicker = ({
                         {getAvatarText(member.name)}
                       </AvatarFallback>
                     </Avatar>
-                    <div className="flex flex-col">
+                    <div className="flex gap-2">
                       <span className="font-medium">
                         {member.name || member.email}
                       </span>
+                      {member.is_accept == false ? (
+                        <span className="font-medium ">(Invited)</span>
+                      ) : (
+                        <div className=""></div>
+                      )}
                       {/* <span className="text-[11px] text-muted-foreground">
                         {member.email}
                       </span> */}
                     </div>
                   </div>
-                  {isSelected && (
-                    <Check className="h-3.5 w-3.5 text-muted-foreground" />
-                  )}
                 </DropdownMenuItem>
               );
             })
