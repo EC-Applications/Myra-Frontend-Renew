@@ -100,7 +100,7 @@ export default function SubIssueDetailView() {
 
   const projects = useSelector((state: any) => state.project.projects);
   const [selectedProjects, setSelectedProjects] = useState<
-    iProject | undefined
+    iProject | null
   >();
 
   const labels = useSelector((state: any) => state.issuesLabel);
@@ -290,13 +290,13 @@ export default function SubIssueDetailView() {
     }
   };
 
-  const handleProjectUpdate = async (project: iProject | undefined) => {
+  const handleProjectUpdate = async (project: iProject | null) => {
     try {
       updateSubIssue.mutate({
         issueId: Number(id),
         body: {
           issue_id: data?.issue_id,
-          project_id: project?.id,
+          project_id: project?.id ?? null,
           workspace_id: currentWorkspace?.id,
           team_id: Number(data?.team_id),
         },
@@ -355,7 +355,7 @@ export default function SubIssueDetailView() {
         issueId: Number(id),
         body: {
           issue_id: data?.issue_id,
-          labels: labels?.map((l) => l.id),
+          labels: labels?.length > 0 ? labels.map((l) => l.id) : null,
           workspace_id: currentWorkspace?.id,
           team_id: Number(data?.team_id),
         },
@@ -1697,7 +1697,7 @@ export default function SubIssueDetailView() {
                 value={selectedMember}
                 members={members}
                 onChange={handleMemberUpdate}
-                className="border-0"
+                className="border-0 px-1"
                 buttonVarient="dark"
               />
             </div>

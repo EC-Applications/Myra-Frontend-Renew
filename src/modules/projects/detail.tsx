@@ -25,6 +25,10 @@ import { cn } from "@/lib/utils";
 import { useUpdateProjectHook } from "@/hooks/use-update-project";
 import { useProjectDetail } from "@/hooks/use-project-detail";
 import { useFormik } from "formik";
+import {
+  detectIconType,
+  parseEmojiFromUnicode,
+} from "@/components/parse-emoji";
 
 export default function Detail() {
   const { id } = useParams();
@@ -111,7 +115,7 @@ export default function Detail() {
 
   const handleUpdateName = useCallback(() => {
     if (!project) return;
-    if (formik.values.name === project.name) return; 
+    if (formik.values.name === project.name) return;
 
     setSaving(true);
 
@@ -130,32 +134,44 @@ export default function Detail() {
         },
       },
     );
-  }, [project, formik.values.name, id, workpsace.currentWorkspace?.id, updateProjectMutation]);
+  }, [
+    project,
+    formik.values.name,
+    id,
+    workpsace.currentWorkspace?.id,
+    updateProjectMutation,
+  ]);
 
-  const handleUpdateLabel = useCallback((newLabels: Label[]) => {
-  if (!project) return;
+  const handleUpdateLabel = useCallback(
+    (newLabels: Label[]) => {
+      if (!project) return;
 
-  setSaving(true);
+      setSaving(true);
 
-  updateProjectMutation.mutate(
-    {
-      projectId: Number(id),
-      body: {
-        workspace_id: workpsace.currentWorkspace?.id,
-        labels_id: newLabels.length > 0 ? newLabels.map((x) => x.id as number) : null,
-        team_id: project.teams?.map((x) => x.id as number) || [],
-      },
-      optimisticData: {
-        labels: newLabels,  // ← Yeh instantly UI update karega
-      },
+      updateProjectMutation.mutate(
+        {
+          projectId: Number(id),
+          body: {
+            workspace_id: workpsace.currentWorkspace?.id,
+            labels_id:
+              newLabels.length > 0
+                ? newLabels.map((x) => x.id as number)
+                : null,
+            team_id: project.teams?.map((x) => x.id as number) || [],
+          },
+          optimisticData: {
+            labels: newLabels, // ← Yeh instantly UI update karega
+          },
+        },
+        {
+          onSettled: () => {
+            setSaving(false);
+          },
+        },
+      );
     },
-    {
-      onSettled: () => {
-        setSaving(false);
-      },
-    },
+    [project, id, workpsace.currentWorkspace?.id, updateProjectMutation],
   );
-}, [project, id, workpsace.currentWorkspace?.id, updateProjectMutation]);
 
   const handleUpdateSummary = useCallback(() => {
     if (!project) return;
@@ -178,245 +194,290 @@ export default function Detail() {
         },
       },
     );
-  }, [project, formik.values.short_summary, id, workpsace.currentWorkspace?.id, updateProjectMutation]);
+  }, [
+    project,
+    formik.values.short_summary,
+    id,
+    workpsace.currentWorkspace?.id,
+    updateProjectMutation,
+  ]);
 
-  const handleDescriptionChange = useCallback((value: string) => {
-    formik.setFieldValue("description", value);
+  const handleDescriptionChange = useCallback(
+    (value: string) => {
+      formik.setFieldValue("description", value);
 
-    // Clear previous timeout
-    if (descriptionTimeoutRef.current) {
-      clearTimeout(descriptionTimeoutRef.current);
-    }
+      // Clear previous timeout
+      if (descriptionTimeoutRef.current) {
+        clearTimeout(descriptionTimeoutRef.current);
+      }
 
-    // Debounce API call - 700ms delay
-    descriptionTimeoutRef.current = setTimeout(() => {
+      // Debounce API call - 700ms delay
+      descriptionTimeoutRef.current = setTimeout(() => {
+        if (!project) return;
+        if (value === project.description) return;
+
+        setIsSavingDescription(true);
+
+        updateProjectMutation.mutate(
+          {
+            projectId: Number(id),
+            body: {
+              description: value,
+              workspace_id: workpsace.currentWorkspace?.id,
+              team_id: project.teams?.map((x) => x.id as number) || [],
+            },
+          },
+          {
+            onSettled: () => {
+              setIsSavingDescription(false);
+            },
+          },
+        );
+      }, 700);
+    },
+    [
+      project,
+      id,
+      workpsace.currentWorkspace?.id,
+      updateProjectMutation,
+      formik,
+    ],
+  );
+
+  const handleUpdatePriority = useCallback(
+    (newPriority: number) => {
       if (!project) return;
-      if (value === project.description) return;
 
-      setIsSavingDescription(true);
+      // Find full priority object for optimistic update
+      const priorityObj = priorityData.priority?.find(
+        (p: any) => p.id === newPriority,
+      );
+
+      setSaving(true);
 
       updateProjectMutation.mutate(
         {
           projectId: Number(id),
           body: {
-            description: value,
+            priority_id: newPriority,
+            workspace_id: workpsace.currentWorkspace?.id,
+            team_id: project.teams?.map((x) => x.id as number) || [],
+          },
+          // Full object for instant UI update
+          optimisticData: {
+            priority: priorityObj,
+            priority_id: newPriority,
+          },
+        },
+        {
+          onSettled: () => {
+            setSaving(false);
+          },
+        },
+      );
+    },
+    [
+      project,
+      id,
+      workpsace.currentWorkspace?.id,
+      updateProjectMutation,
+      priorityData.priority,
+    ],
+  );
+
+  const handleUpdateStatus = useCallback(
+    (newStatus: any) => {
+      if (!project) return;
+
+      setSaving(true);
+
+      updateProjectMutation.mutate(
+        {
+          projectId: Number(id),
+          body: {
+            status_id: newStatus.id,
+            workspace_id: workpsace.currentWorkspace?.id,
+            team_id: project.teams?.map((x) => x.id as number) || [],
+          },
+          // Full object for instant UI update
+          optimisticData: {
+            status: newStatus,
+            status_id: newStatus.id,
+          },
+        },
+        {
+          onSettled: () => {
+            setSaving(false);
+          },
+        },
+      );
+    },
+    [project, id, workpsace.currentWorkspace?.id, updateProjectMutation],
+  );
+
+  const handleUpdateLead = useCallback(
+    (newLead: iMember | undefined) => {
+      if (!project || !newLead) return;
+
+      setSaving(true);
+
+      updateProjectMutation.mutate(
+        {
+          projectId: Number(id),
+          body: {
+            lead_id: newLead.id,
+            workspace_id: workpsace.currentWorkspace?.id,
+            team_id: project.teams?.map((x) => x.id as number) || [],
+          },
+          // Full object for instant UI update
+          optimisticData: {
+            lead: newLead,
+            lead_id: newLead.id,
+          },
+        },
+        {
+          onSettled: () => {
+            setSaving(false);
+          },
+        },
+      );
+    },
+    [project, id, workpsace.currentWorkspace?.id, updateProjectMutation],
+  );
+
+  const handleUpdateStartDate = useCallback(
+    (newDate: Date | null) => {
+      if (!project || !newDate) return;
+
+      setSaving(true);
+
+      updateProjectMutation.mutate(
+        {
+          projectId: Number(id),
+          body: {
+            start_date: newDate.toISOString().split("T")[0],
             workspace_id: workpsace.currentWorkspace?.id,
             team_id: project.teams?.map((x) => x.id as number) || [],
           },
         },
         {
           onSettled: () => {
-            setIsSavingDescription(false);
+            setSaving(false);
           },
         },
       );
-    }, 700);
-  }, [project, id, workpsace.currentWorkspace?.id, updateProjectMutation, formik]);
+    },
+    [project, id, workpsace.currentWorkspace?.id, updateProjectMutation],
+  );
 
-  const handleUpdatePriority = useCallback((newPriority: number) => {
-    if (!project) return;
+  const handleUpdateEndDate = useCallback(
+    (newDate: Date | null) => {
+      if (!project || !newDate) return;
 
-    // Find full priority object for optimistic update
-    const priorityObj = priorityData.priority?.find(
-      (p: any) => p.id === newPriority,
-    );
+      setSaving(true);
 
-    setSaving(true);
-
-    updateProjectMutation.mutate(
-      {
-        projectId: Number(id),
-        body: {
-          priority_id: newPriority,
-          workspace_id: workpsace.currentWorkspace?.id,
-          team_id: project.teams?.map((x) => x.id as number) || [],
-        },
-        // Full object for instant UI update
-        optimisticData: {
-          priority: priorityObj,
-          priority_id: newPriority,
-        },
-      },
-      {
-        onSettled: () => {
-          setSaving(false);
-        },
-      },
-    );
-  }, [project, id, workpsace.currentWorkspace?.id, updateProjectMutation, priorityData.priority]);
-
-  const handleUpdateStatus = useCallback((newStatus: any) => {
-    if (!project) return;
-
-    setSaving(true);
-
-    updateProjectMutation.mutate(
-      {
-        projectId: Number(id),
-        body: {
-          status_id: newStatus.id,
-          workspace_id: workpsace.currentWorkspace?.id,
-          team_id: project.teams?.map((x) => x.id as number) || [],
-        },
-        // Full object for instant UI update
-        optimisticData: {
-          status: newStatus,
-          status_id: newStatus.id,
-        },
-      },
-      {
-        onSettled: () => {
-          setSaving(false);
-        },
-      },
-    );
-  }, [project, id, workpsace.currentWorkspace?.id, updateProjectMutation]);
-
-  const handleUpdateLead = useCallback((newLead: iMember | undefined) => {
-    if (!project || !newLead) return;
-
-    setSaving(true);
-
-    updateProjectMutation.mutate(
-      {
-        projectId: Number(id),
-        body: {
-          lead_id: newLead.id,
-          workspace_id: workpsace.currentWorkspace?.id,
-          team_id: project.teams?.map((x) => x.id as number) || [],
-        },
-        // Full object for instant UI update
-        optimisticData: {
-          lead: newLead,
-          lead_id: newLead.id,
-        },
-      },
-      {
-        onSettled: () => {
-          setSaving(false);
-        },
-      },
-    );
-  }, [project, id, workpsace.currentWorkspace?.id, updateProjectMutation]);
-
-  const handleUpdateStartDate = useCallback((newDate: Date | null) => {
-    if (!project || !newDate) return;
-
-    setSaving(true);
-
-    updateProjectMutation.mutate(
-      {
-        projectId: Number(id),
-        body: {
-          start_date: newDate.toISOString().split("T")[0],
-          workspace_id: workpsace.currentWorkspace?.id,
-          team_id: project.teams?.map((x) => x.id as number) || [],
-        },
-      },
-      {
-        onSettled: () => {
-          setSaving(false);
-        },
-      },
-    );
-  }, [project, id, workpsace.currentWorkspace?.id, updateProjectMutation]);
-
-  const handleUpdateEndDate = useCallback((newDate: Date | null) => {
-    if (!project || !newDate) return;
-
-    setSaving(true);
-
-    updateProjectMutation.mutate(
-      {
-        projectId: Number(id),
-        body: {
-          target_date: newDate.toISOString().split("T")[0],
-          workspace_id: workpsace.currentWorkspace?.id,
-          team_id: project.teams?.map((x) => x.id as number) || [],
-        },
-      },
-      {
-        onSettled: () => {
-          setSaving(false);
-        },
-      },
-    );
-  }, [project, id, workpsace.currentWorkspace?.id, updateProjectMutation]);
-
-  const handleDocumentUpload = useCallback((files: FileList | null) => {
-    if (!files || files.length === 0) return;
-    if (!project) return;
-
-    setUploadingDocs(true);
-    const loadingToast = toast.loading("Uploading documents...");
-    const filesArray = Array.from(files);
-
-    updateProjectMutation.mutate(
-      {
-        projectId: Number(id),
-        body: {
-          workspace_id: workpsace.currentWorkspace?.id,
-          team_id: project.teams?.map((x) => x.id as number) || [],
-        },
-        documentFiles: filesArray,
-      },
-      {
-        onSuccess: () => {
-          toast.dismiss(loadingToast);
-        },
-        onError: (error: any) => {
-          console.error("Upload error:", error);
-          toast.dismiss(loadingToast);
-        },
-        onSettled: () => {
-          setUploadingDocs(false);
-        },
-      },
-    );
-  }, [project, id, workpsace.currentWorkspace?.id, updateProjectMutation]);
-
-  const handleIconUpdate = useCallback((icon: any) => {
-    if (!project) return;
-
-    setUploadingIcon(true);
-    const loadingToast = toast.loading("Updating icon...");
-
-    updateProjectMutation.mutate(
-      {
-        projectId: Number(id),
-        body: {
-          workspace_id: workpsace.currentWorkspace?.id,
-          team_id: project.teams?.map((x) => x.id as number) || [],
-          icon: {
-            icon: icon.icon,
-            type: icon.type,
-            color: icon.color,
+      updateProjectMutation.mutate(
+        {
+          projectId: Number(id),
+          body: {
+            target_date: newDate.toISOString().split("T")[0],
+            workspace_id: workpsace.currentWorkspace?.id,
+            team_id: project.teams?.map((x) => x.id as number) || [],
           },
         },
-        iconFile: icon.file,
-      },
-      {
-        onSuccess: () => {
-          toast.dismiss(loadingToast);
+        {
+          onSettled: () => {
+            setSaving(false);
+          },
         },
-        onError: (error: any) => {
-          console.error("Icon update error:", error);
-          toast.dismiss(loadingToast);
-        },
-        onSettled: () => {
-          setUploadingIcon(false);
-        },
-      },
-    );
-  }, [project, id, workpsace.currentWorkspace?.id, updateProjectMutation]);
+      );
+    },
+    [project, id, workpsace.currentWorkspace?.id, updateProjectMutation],
+  );
 
-  const handleDeleteAttachment = useCallback((attachmentId: number) => {
-    deleteAttachmentMutation.mutate({
-      workspaceId: workpsace.currentWorkspace?.id as number,
-      projectId: Number(id),
-      attachmentIds: [attachmentId],
-    });
-  }, [deleteAttachmentMutation, workpsace.currentWorkspace?.id, id]);
+  const handleDocumentUpload = useCallback(
+    (files: FileList | null) => {
+      if (!files || files.length === 0) return;
+      if (!project) return;
+
+      setUploadingDocs(true);
+      const loadingToast = toast.loading("Uploading documents...");
+      const filesArray = Array.from(files);
+
+      updateProjectMutation.mutate(
+        {
+          projectId: Number(id),
+          body: {
+            workspace_id: workpsace.currentWorkspace?.id,
+            team_id: project.teams?.map((x) => x.id as number) || [],
+          },
+          documentFiles: filesArray,
+        },
+        {
+          onSuccess: () => {
+            toast.dismiss(loadingToast);
+          },
+          onError: (error: any) => {
+            console.error("Upload error:", error);
+            toast.dismiss(loadingToast);
+          },
+          onSettled: () => {
+            setUploadingDocs(false);
+          },
+        },
+      );
+    },
+    [project, id, workpsace.currentWorkspace?.id, updateProjectMutation],
+  );
+
+  const handleIconUpdate = useCallback(
+    (icon: any) => {
+      if (!project) return;
+
+      setUploadingIcon(true);
+      const loadingToast = toast.loading("Updating icon...");
+
+      updateProjectMutation.mutate(
+        {
+          projectId: Number(id),
+          body: {
+            workspace_id: workpsace.currentWorkspace?.id,
+            team_id: project.teams?.map((x) => x.id as number) || [],
+            icon: {
+              icon: icon.icon,
+              type: icon.type,
+              color: icon.color,
+            },
+          },
+          iconFile: icon.file,
+        },
+        {
+          onSuccess: () => {
+            toast.dismiss(loadingToast);
+          },
+          onError: (error: any) => {
+            console.error("Icon update error:", error);
+            toast.dismiss(loadingToast);
+          },
+          onSettled: () => {
+            setUploadingIcon(false);
+          },
+        },
+      );
+    },
+    [project, id, workpsace.currentWorkspace?.id, updateProjectMutation],
+  );
+
+  const handleDeleteAttachment = useCallback(
+    (attachmentId: number) => {
+      deleteAttachmentMutation.mutate({
+        workspaceId: workpsace.currentWorkspace?.id as number,
+        projectId: Number(id),
+        attachmentIds: [attachmentId],
+      });
+    },
+    [deleteAttachmentMutation, workpsace.currentWorkspace?.id, id],
+  );
 
   const handleDownloadAttachment = useCallback((doc: any) => {
     const link = document.createElement("a");
@@ -427,7 +488,10 @@ export default function Detail() {
     document.body.removeChild(link);
   }, []);
 
-  // console.log("PROJECT ICON", projectIcon);
+  const backendIcon = "\\ud83d\\ude00"; // Backend se aisa aata hai
+  console.log("Length:", backendIcon.length); // 12 characters
+  console.log("First char:", backendIcon[0]); // "\"
+  console.log("Starts with \\u:", backendIcon.startsWith("\\u")); // true ya false?
 
   if (loading) {
     return (
@@ -446,9 +510,16 @@ export default function Detail() {
             <IconPicker
               value={
                 typeof project?.icon === "object"
-                  ? project.icon
+                  ? {
+                      ...project.icon,
+                      icon: parseEmojiFromUnicode(project.icon.icon), // ← Parse nested icon
+                    }
                   : project?.icon
-                    ? { icon: project.icon, color: "#000000", type: "icon" as const }
+                    ? {
+                        icon: parseEmojiFromUnicode(project.icon),
+                        color: "#000000",
+                        type: detectIconType(project.icon),
+                      }
                     : undefined
               }
               onChange={handleIconUpdate}
@@ -537,7 +608,7 @@ export default function Detail() {
           <div className="flex items-center gap-2">
             <ProjectFormLabels
               labels={labels}
-              value={project?.labels || [] }
+              value={project?.labels || []}
               onChange={handleUpdateLabel}
               className="rounded-full"
               buttonVarient="dark"
@@ -753,11 +824,11 @@ export default function Detail() {
               accept="image/*,.pdf,.doc,.docx,.xls,.xlsx"
               className="hidden"
               onChange={(e) => {
-                console.log("Input onChange triggered");
-                console.log("Files selected:", e.target.files);
-                console.log("Files count:", e.target.files?.length);
+                // console.log("Input onChange triggered");
+                // console.log("Files selected:", e.target.files);
+                // console.log("Files count:", e.target.files?.length);
                 if (e.target.files && e.target.files.length > 0) {
-                  console.log("Calling handleDocumentUpload");
+                  // console.log("Calling handleDocumentUpload");
                   handleDocumentUpload(e.target.files);
                 } else {
                   console.log("No files selected");
