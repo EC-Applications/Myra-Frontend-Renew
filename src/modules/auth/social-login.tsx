@@ -60,11 +60,11 @@ const SocialLogin = () => {
     }
 
     // Handle based on platform
-    // if (detectedPlatform === "mobile") {
-    //   handleMobileLogin(token);
-    // } else {
-    handleWebLogin(token);
-    // }
+    if (detectedPlatform === "mobile") {
+      handleMobileLogin(token);
+    } else {
+      handleWebLogin(token);
+    }
   }, [searchParams, navigate, dispatch]);
 
   /**
