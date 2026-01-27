@@ -138,8 +138,8 @@ const SocialLogin = () => {
     } catch (err: any) {
       console.error("=== WEB LOGIN ERROR ===");
       console.error("Error:", err);
-      console.error("Response:", err.response?.data);
-      console.error("Status:", err.response?.status);
+      // console.error("Response:", err.response?.data);
+      // console.error("Status:", err.response?.status);
 
       const errorMessage =
         err.response?.data?.message || err.message || "Unknown error occurred";
