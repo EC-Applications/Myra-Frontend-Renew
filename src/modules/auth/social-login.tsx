@@ -1,9 +1,12 @@
-import { useEffect, useState } from "react";
-import { useNavigate, useSearchParams } from "react-router";
+import { baseUrl } from "@/constants";
+import { addAccount } from "@/store/slices/auth.slice";
 import Axios from "axios";
+import { useEffect, useState } from "react";
 import { useDispatch } from "react-redux";
 import { addAccount } from "@/store/slices/auth.slice";
 import { baseUrl } from "@/constants";
+import { useNavigate, useSearchParams } from "react-router";
+
 
 const SocialLogin = () => {
   const [searchParams] = useSearchParams();
@@ -59,39 +62,39 @@ const SocialLogin = () => {
     }
 
     // Handle based on platform
-    if (detectedPlatform === "mobile") {
-      handleMobileLogin(token);
-    } else {
+    // if (detectedPlatform === "mobile") {
+    //   handleMobileLogin(token);
+    // } else {
       handleWebLogin(token);
-    }
+    // }
   }, [searchParams, navigate, dispatch]);
 
   /**
    * Handle Mobile (Flutter) Login
    * Redirects to deep link immediately
    */
-  const handleMobileLogin = (token: string) => {
-    try {
-      console.log("📱 Mobile platform - Redirecting to app");
-      // Create deep link with encoded token
-      const deepLink = `myraapp://callback?token=${encodeURIComponent(token)}`;
-      console.log("Deep link:", deepLink);
-      // Immediate redirect
-      window.location.href = deepLink;
+  // const handleMobileLogin = (token: string) => {
+  //   try {
+  //     console.log("📱 Mobile platform - Redirecting to app");
+  //     // Create deep link with encoded token
+  //     const deepLink = `myraapp://callback?token=${encodeURIComponent(token)}`;
+  //     console.log("Deep link:", deepLink);
+  //     // Immediate redirect
+  //     window.location.href = deepLink;
 
-      // Fallback message (if deep link fails to open)
-      setTimeout(() => {
-        setError("If the app doesn't open, please ensure it's installed.");
-      }, 2000);
-    } catch (err: any) {
-      console.error("Mobile redirect error:", err);
-      setError("Failed to redirect to app. Please try again.");
-      // Fallback: try to redirect to app with error
-      setTimeout(() => {
-        window.location.href = `myraapp://callback?error=redirect_failed`;
-      }, 3000);
-    }
-  };
+  //     // Fallback message (if deep link fails to open)
+  //     setTimeout(() => {
+  //       setError("If the app doesn't open, please ensure it's installed.");
+  //     }, 2000);
+  //   } catch (err: any) {
+  //     console.error("Mobile redirect error:", err);
+  //     setError("Failed to redirect to app. Please try again.");
+  //     // Fallback: try to redirect to app with error
+  //     setTimeout(() => {
+  //       window.location.href = `myraapp://callback?error=redirect_failed`;
+  //     }, 3000);
+  //   }
+  // };
 
   /**
    * Handle Web (React) Login
