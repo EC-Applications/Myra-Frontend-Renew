@@ -56,6 +56,7 @@ const SocialLogin = () => {
           navigate("/sign-in");
         }
       }, 3000);
+
       return;
     }
 
