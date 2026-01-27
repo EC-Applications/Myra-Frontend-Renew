@@ -72,28 +72,28 @@ const SocialLogin = () => {
    * Handle Mobile (Flutter) Login
    * Redirects to deep link immediately
    */
-  const handleMobileLogin = (token: string) => {
-    try {
-      console.log("📱 Mobile platform - Redirecting to app");
-      // Create deep link with encoded token
-      const deepLink = `myraapp://callback?token=${encodeURIComponent(token)}`;
-      console.log("Deep link:", deepLink);
-      // Immediate redirect
-      window.location.href = deepLink;
+  // const handleMobileLogin = (token: string) => {
+  //   try {
+  //     console.log("📱 Mobile platform - Redirecting to app");
+  //     // Create deep link with encoded token
+  //     const deepLink = `myraapp://callback?token=${encodeURIComponent(token)}`;
+  //     console.log("Deep link:", deepLink);
+  //     // Immediate redirect
+  //     window.location.href = deepLink;
 
-      // Fallback message (if deep link fails to open)
-      setTimeout(() => {
-        setError("If the app doesn't open, please ensure it's installed.");
-      }, 2000);
-    } catch (err: any) {
-      console.error("Mobile redirect error:", err);
-      setError("Failed to redirect to app. Please try again.");
-      // Fallback: try to redirect to app with error
-      setTimeout(() => {
-        window.location.href = `myraapp://callback?error=redirect_failed`;
-      }, 3000);
-    }
-  };
+  //     // Fallback message (if deep link fails to open)
+  //     setTimeout(() => {
+  //       setError("If the app doesn't open, please ensure it's installed.");
+  //     }, 2000);
+  //   } catch (err: any) {
+  //     console.error("Mobile redirect error:", err);
+  //     setError("Failed to redirect to app. Please try again.");
+  //     // Fallback: try to redirect to app with error
+  //     setTimeout(() => {
+  //       window.location.href = `myraapp://callback?error=redirect_failed`;
+  //     }, 3000);
+  //   }
+  // };
 
   /**
    * Handle Web (React) Login

@@ -123,7 +123,7 @@ const NavTeams = () => {
                           </SidebarMenuButton>
                         </SidebarMenuSubItem>
 
-                        {t.cycles_period.enable_cycle ? (
+                        {t.cyclesPeriod ? (
                           <SidebarMenuSubItem>
                             <SidebarMenuButton
                               asChild

@@ -24,9 +24,6 @@ import { Link, useParams } from "react-router";
 import { toast } from "sonner";
 import { ProjectDatePicker } from "./date-picker";
 import { baseUrl } from "@/constants";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { useDeleteProjectHook } from "@/hooks/use-delete-project";
 
 interface props {
   projects: any;
@@ -45,10 +42,6 @@ const ProjectList: FC<props> = ({ projects }) => {
   const [deletingId, setDeletingId] = useState<number | null>(null);
   const [startDate, setStartDate] = useState<Date | null>(null);
   const [endDate, setEndDate] = useState<Date | null>(null);
-
-  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
-  const [projectToDelete, setProjectToDelete] = useState<number | null>(null);
-  const [openDropdownId, setOpenDropdownId] = useState<number | null>(null);
 
   // useEffect mein load karo
   useEffect(() => {
@@ -80,28 +73,25 @@ const ProjectList: FC<props> = ({ projects }) => {
       toast.error("Failed to update date");
     }
   };
-  const deleteProject = useDeleteProjectHook();
   const handleDelete = async (projectId: number) => {
     setDeletingId(projectId);
     console.log("projectId in deeklete", projectId);
+    const toastId = toast.loading("Deleting project...");
+
     try {
-      deleteProject.mutate({
-        workspaceSlug:currentWorkspace?.slug ?? "",
-        projectId : projectId,
-        teamId: Number(id)
+      const response = await deleteProjectUri(projectId);
 
-      })
-      // const response = await deleteProjectUri(projectId);
-
-      // fetchProjectUri(currentWorkspace!.slug).then((res) => {
-      //   dispatch(setProject(res.data));
-      //   console.log("project data", res.data);
-      // });
-      // toast.success(response.data.message || "Project deleted", {
-      //   id: toastId,
-      // });
+      fetchProjectUri(currentWorkspace!.slug).then((res) => {
+        dispatch(setProject(res.data));
+        console.log("project data", res.data);
+      });
+      toast.success(response.data.message || "Project deleted", {
+        id: toastId,
+      });
     } catch (e: any) {
-  
+      toast.error(e?.message || "Failed to delete project", {
+        id: toastId,
+      });
     } finally {
       setDeletingId(null);
     }
@@ -138,7 +128,7 @@ const ProjectList: FC<props> = ({ projects }) => {
                     to={"/projects/detail/" + project.id}
                     className="font-medium"
                   >
-                    <div>{project.name || "daw"}</div>
+                    <div >{project.name || "daw"}</div>
                   </Link>
                   {project.description && (
                     <div className="text-sm text-muted-foreground flex items-center">
@@ -215,12 +205,7 @@ const ProjectList: FC<props> = ({ projects }) => {
               </div> */}
 
               <div className="col-span-2 flex items-center justify-end">
-                <DropdownMenu
-                  open={openDropdownId === project.id}
-                  onOpenChange={(open) => {
-                    setOpenDropdownId(open ? project.id : null);
-                  }}
-                >
+                <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <button className="p-1 rounded hover:bg-muted transition">
                       <MoreHorizontal className="w-4 h-4 text-muted-foreground" />
@@ -228,13 +213,7 @@ const ProjectList: FC<props> = ({ projects }) => {
                   </DropdownMenuTrigger>
 
                   <DropdownMenuContent align="end">
-                    <DropdownMenuItem
-                      onClick={() => {
-                        setOpenDropdownId(null);
-                        setProjectToDelete(project.id);
-                        setShowDeleteDialog(true);
-                      }}
-                    >
+                    <DropdownMenuItem onClick={() => handleDelete(project.id)}>
                       Delete project
                     </DropdownMenuItem>
                   </DropdownMenuContent>
@@ -244,42 +223,6 @@ const ProjectList: FC<props> = ({ projects }) => {
           );
         })}
       </div>
-      <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
-        <DialogContent className="max-w-sm bg-card" showCloseButton={false}>
-          <DialogHeader>
-            <DialogTitle className="text-base font-semibold">
-              Delete Issue?
-            </DialogTitle>
-          </DialogHeader>
-          <p className="text-sm text-muted-foreground">
-            Are you sure you want to delete this issue? This action cannot be
-            undone.
-          </p>
-          <div className="flex items-center justify-end gap-3">
-            <Button
-              variant="customDark"
-              onClick={() => {
-                setShowDeleteDialog(false);
-                setOpenDropdownId(null);
-              }}
-            >
-              Cancel
-            </Button>
-            <Button
-              variant="destructive"
-              onClick={() => {
-                setShowDeleteDialog(false);
-                if (projectToDelete) {
-                  handleDelete(projectToDelete);
-                }
-                setOpenDropdownId(null);
-              }}
-            >
-              Delete
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
     </>
   );
 };

@@ -173,19 +173,12 @@ export const updateProjectUri = async (
       formData.append("team_id[]", id.toString());
     });
   }
-  if(body.members_id === null) {
-    formData.append("members[]", "");
-  }else if(body.members_id && body.members_id?.length > 0 ){
-    body.members_id.forEach((x) =>
-      formData.append("members[]", JSON.stringify(x)),
-    );
-  }
 
-  // if(body.members_id && Array.isArray(body.members_id)){
-  //   body.members_id.forEach((id)=>{
-  //     formData.append("members[]", id.toString())
-  //   })
-  // }
+  if(body.members_id && Array.isArray(body.members_id)){
+    body.members_id.forEach((id)=>{
+      formData.append("members_id[]", id.toString())
+    })
+  }
 
   // Handle labels - send empty string to clear, or array of IDs
   if (body.labels_id === null) {

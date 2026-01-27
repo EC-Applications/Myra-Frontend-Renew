@@ -342,15 +342,20 @@ const ProjectProperties = () => {
         projectId: Number(id),
         body: {
           workspace_id: workpsace.currentWorkspace?.id,
-          // members_id: (members.map((x) => x.id as number) as any) ?? null,
-          members_id: members.length > 0 ? members.map((m) => m.id) : null,
+          members_id: members.map((x) => x.id as number) as any,
           team_id: project.teams?.map((x) => x.id as number) || [],
-        },
-        optimisticData: {
-          members: members,
         },
       },
       {
+        onError: () => {
+          setSelectedMembers(members);
+          dispatch(
+            updateProject({
+              projectId: Number(id),
+              data: { members: previousMembers },
+            }),
+          );
+        },
         onSettled: () => {
           setSaving(false);
         },

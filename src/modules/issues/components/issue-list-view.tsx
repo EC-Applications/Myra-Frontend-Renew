@@ -53,12 +53,6 @@ import { useUpdateIssueHook } from "@/hooks/use-issue-update";
 import { useDeleteIssueHook } from "@/hooks/use-delete-issue";
 import { useUpdateSubIssueHook } from "@/hooks/use-update-subissue";
 import { useDeleteSubIssue } from "@/hooks/use-delete-subissues";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
 
 const IssueListView: FC<{
   issuesData: Record<string, iIssues[]>;
@@ -82,15 +76,7 @@ const IssueListView: FC<{
   const deleteSubIssue = useDeleteSubIssue();
 
   const [defStatus, setDefaultStatus] = useState<number>();
-
-  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
-  const [issueToDelete, setIssueToDelete] = useState<{
-    id: number;
-    team_id: number;
-    type: string;
-    issue_id: number;
-  } | null>(null);
-  const [openDropdownId, setOpenDropdownId] = useState<number | null>(null);
+  const [defProject, setDefProject] = useState<number>();
 
   // console.log("SET TEAM ID", teamset);
 
@@ -163,7 +149,7 @@ const IssueListView: FC<{
           : deleteSubIssue.mutate({
               body: {
                 issue_id: Number(parent_issue_id),
-                sub_issue_ids: [Number(issueId)], // Must be array
+                sub_issue_ids: [Number(issueId)],  // Must be array
               },
               teamId: Number(teamid),
               workspaceId: Number(currentWorkspace?.id),
@@ -633,12 +619,7 @@ const IssueListView: FC<{
                                 </AvatarFallback>
                               </Avatar> */}
                             </div>
-                            <DropdownMenu
-                              open={openDropdownId === issue.id}
-                              onOpenChange={(open) => {
-                                setOpenDropdownId(open ? issue.id : null);
-                              }}
-                            >
+                            <DropdownMenu>
                               <DropdownMenuTrigger asChild>
                                 <button className="p-1 rounded hover:bg-muted transition">
                                   <MoreHorizontal className="w-4 h-4 text-muted-foreground" />
@@ -651,16 +632,14 @@ const IssueListView: FC<{
                               >
                                 <DropdownMenuItem
                                   className=" font-semibold"
-                                  onClick={() => {
-                                    setOpenDropdownId(null);
-                                    setIssueToDelete({
-                                      id: issue.id,
-                                      team_id: issue.team_id,
-                                      type: issue.type || "",
-                                      issue_id: issue.issue_id || 0,
-                                    });
-                                    setShowDeleteDialog(true);
-                                  }}
+                                  onClick={() =>
+                                    handleIssueDelete(
+                                      issue.id,
+                                      issue.team_id,
+                                      issue.type || "",
+                                      issue.issue_id || 0,
+                                    )
+                                  }
                                 >
                                   Delete Issue
                                 </DropdownMenuItem>
@@ -685,50 +664,6 @@ const IssueListView: FC<{
         defStatus={defStatus}
         defProject={Number(projectId)}
       />
-
-      <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
-        <DialogContent className="max-w-sm bg-card" showCloseButton={false}>
-          <DialogHeader>
-            <DialogTitle className="text-base font-semibold">
-              Delete Issue?
-            </DialogTitle>
-          </DialogHeader>
-          <p className="text-sm text-muted-foreground">
-            Are you sure you want to delete this issue? This action cannot be
-            undone.
-          </p>
-          <div className="flex items-center justify-end gap-3">
-            <Button
-              variant="customDark"
-              onClick={() => {
-                setShowDeleteDialog(false);
-                setIssueToDelete(null);
-                setOpenDropdownId(null);
-              }}
-            >
-              Cancel
-            </Button>
-            <Button
-              variant="destructive"
-              onClick={() => {
-                if (issueToDelete) {
-                  handleIssueDelete(
-                    issueToDelete.id,
-                    issueToDelete.team_id,
-                    issueToDelete.type,
-                    issueToDelete.issue_id,
-                  );
-                }
-                setShowDeleteDialog(false);
-                setIssueToDelete(null);
-                setOpenDropdownId(null);
-              }}
-            >
-              Delete
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
     </>
   );
 };

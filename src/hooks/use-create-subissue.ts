@@ -25,13 +25,10 @@ export const useCreateSubIssueHook = (parentIssueId: number) => {
       queryClient.invalidateQueries({
         queryKey: ["issue-detail", parentIssueId],
       });
-      queryClient.invalidateQueries({
-          queryKey: ["issues"],
-      });
     },
     onError: (error: any) => {
       // Loading toast dismiss aur error show karo
-     
+      toast.dismiss('create-sub-issue');
       toast.error(error.response?.data?.message || "Failed to create sub-issue");
     },
   });
