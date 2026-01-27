@@ -7,6 +7,7 @@ import { baseUrl } from "@/constants";
 
 const SocialLogin = () => {
   const [searchParams] = useSearchParams();
+  
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const [error, setError] = useState("");
