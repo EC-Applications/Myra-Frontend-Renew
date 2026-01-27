@@ -67,7 +67,7 @@ export default function NewIssueDialog({
   const createIssue = useCreateIssueHook();
 
   const fiterTeam = teams.find((f: any) => f.id == teamId);
-  console.log("FILTER TEAM", fiterTeam);
+  // console.log("FILTER TEAM", fiterTeam);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   // Find current cycle by default
@@ -82,14 +82,14 @@ export default function NewIssueDialog({
     iCycleListResponse | undefined
   >(currentCycle);
 
-  console.log("TEAM ID", teamId);
+  // console.log("TEAM ID", teamId);
   useEffect(() => {
     if (open && currentCycle) {
       setSelectedCycle(currentCycle);
     }
   }, [open, currentCycle]);
 
-  console.log("LOAD DATA IN NEW ISSUE", cycleData);
+  console.log("LOAD DATA IN NEW ISSUE", currentCycle?.id);
   console.log("SELECTED TEAM ID", selectedTeams?.id);
 
   console.log("SET TEAM ID", teamset);
@@ -148,6 +148,7 @@ export default function NewIssueDialog({
       <Formik
         initialValues={initialValues}
         validationSchema={issueSchema}
+        enableReinitialize
         onSubmit={handleSubmit}
       >
         {({ values, errors, touched, setFieldValue, resetForm }) => {

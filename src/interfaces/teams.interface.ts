@@ -1,3 +1,5 @@
+import type { iCycleResponse } from "./cycle.interface";
+
 export interface iTeamsRequest {
   icon?:
     | {
@@ -33,6 +35,7 @@ export interface iTeams {
   identifier?: number;
   icon?: iIcon;
   cyclesPeriod? : boolean ;
+  cycles_period : iCycleResponse;
 }
 
 export interface iIcon {

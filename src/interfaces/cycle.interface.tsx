@@ -128,6 +128,7 @@ export interface Issue extends BaseTimestamps {
   milestone_id: number | null;
 
   cycle: null;
+  type?: "issue" | "sub_issue" 
   due_date: string | null;
 
   is_recurring: boolean;
