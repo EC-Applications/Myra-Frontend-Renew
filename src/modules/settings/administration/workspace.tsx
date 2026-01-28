@@ -28,6 +28,7 @@ export function Workspace() {
     url: currentWorkspace?.url || "",
   };
 
+  console.log("current workspace", currentWorkspace);
   const handleNameBlur = (
     currentValue: string,
     initialValue: string | undefined,
@@ -88,6 +89,7 @@ export function Workspace() {
                             className="hidden"
                             accept="image/*"
                             onChange={(e) => handleLogoChange(e, setFieldValue)}
+                            disabled={isPending || !currentWorkspace?.is_owner}
                           />
                           <Avatar
                             className="h-10 w-12 dark:bg-[#c5c8e1] rounded cursor-pointer hover:opacity-80 transition-opacity"
@@ -122,7 +124,7 @@ export function Workspace() {
                           onBlur={() =>
                             handleNameBlur(values.name, initalValues.name)
                           }
-                          disabled={isPending}
+                          disabled={isPending || !currentWorkspace?.is_owner}
                           className="w-48 bg-background border-border text-foreground"
                         />
                       </div>

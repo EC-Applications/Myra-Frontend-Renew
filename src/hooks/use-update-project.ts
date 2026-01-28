@@ -1,7 +1,9 @@
 import type { iResponse } from "@/interfaces/common.interface";
 import type { iProject } from "@/interfaces/project.interface";
 import { updateProjectUri } from "@/services/project.service";
+import { updateProject } from "@/store/slices/project.slice";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useDispatch } from "react-redux";
 import { toast } from "sonner";
 
 interface UpdateProjectParams {
@@ -18,6 +20,7 @@ interface MutationContext {
 
 export const useUpdateProjectHook = () => {
   const queryClient = useQueryClient();
+  const dispatch = useDispatch();
   return useMutation<
     iResponse<iProject>,
     Error,
@@ -66,6 +69,14 @@ export const useUpdateProjectHook = () => {
 
     onSuccess: (response, variables) => {
       if (response?.data) {
+        
+        dispatch(
+          updateProject({
+            projectId: variables.projectId,
+            data: response.data,
+          })
+        );
+
         queryClient.setQueryData<iProject>(
           ["project-detail", variables.projectId],
           (old) => {
@@ -121,7 +132,7 @@ export const useUpdateProjectHook = () => {
 
       // Invalidate without refetching project-detail
       queryClient.invalidateQueries({
-        queryKey: ["project-teamId"],
+        queryKey: ["project-teamId" , variables.body.team_id],
         refetchType: "none",
       });
       queryClient.invalidateQueries({
