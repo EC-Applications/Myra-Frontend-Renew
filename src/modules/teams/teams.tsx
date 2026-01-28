@@ -53,7 +53,7 @@ const Teams = () => {
                 {/* <div className="w-6 h-6 bg-blue-600 rounded flex items-center justify-center">
                   <Users className="w-3 h-3 text-white" />
                 </div> */}
-                <IconPicker value={team.icon} onChange={() => {}} />
+                <IconPicker variant="inline" value={team.icon}   />
                 <div className="flex items-center gap-2">
                   <Link
                     to={`./${team.id}/issues`}

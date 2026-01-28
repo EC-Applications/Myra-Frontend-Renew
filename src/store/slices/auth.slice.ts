@@ -44,6 +44,21 @@ const authSlice = createSlice({
       state.users[state.currentUser].owned_workspaces.push(action.payload);
       updateStorage(state);
     },
+    updateWorkspace: (
+      state,
+      action: PayloadAction<{ workspaceId: number; updates: Partial<iWorkspace> }>
+    ) => {
+      const { workspaceId, updates } = action.payload;
+      const workspaces = state.users[state.currentUser].owned_workspaces;
+      const index = workspaces.findIndex((w) => w.id === workspaceId);
+      if (index !== -1) {
+        workspaces[index] = { ...workspaces[index], ...updates };
+        if (updates.name && state.currentWorkspace === workspaceId) {
+          state.currentWorkspaceName = updates.name;
+        }
+      }
+      updateStorage(state);
+    },
     changeWorkspace: (state, action: PayloadAction<iSwitchWorkspace>) => {
       if (action.payload.userId) state.currentUser = action.payload.userId;
       state.currentWorkspace = action.payload.workspaceId;
@@ -92,6 +107,7 @@ const authSlice = createSlice({
 export const {
   addAccount,
   addWorkspace,
+  updateWorkspace,
   changeWorkspace,
   changeAccount,
   removeInvite,

@@ -35,18 +35,20 @@ import {
   type ProjectFilters,
 } from "@/components/filter-dropdown";
 import type { RootState } from "@/store/store";
+import { useGetAllProject } from "@/hooks/use-get-all-project";
 
 const Projects = () => {
   const { "team-id": teamId } = useParams();
-  const { currentUser } = useUser();
-  const projectState = useSelector((state: any) => state.project);
+  const { currentUser, currentWorkspace } = useUser();
+  const { data} = useGetAllProject(currentWorkspace?.slug || "" );
+  // const projectState = useSelector((state: any) => state.project);
   const status = useSelector((state: RootState) => state.status);
   console.log("STATAUS", status);
 
-  const data = useMemo(
-    () => projectState?.projects || [],
-    [projectState?.projects]
-  );
+  // const data = useMemo(
+  //   () => projectState?. projects || [],
+  //   [projectState?.projects]
+  // );
   console.log("extracted data", data);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [view, setView] = useState(0);
@@ -65,17 +67,9 @@ const Projects = () => {
 
   // Apply filters to project data
   const filteredData = useMemo(() => {
-    console.log("🔍 Filtering with:", activeFilters);
+    if (!data) return [];
 
-    // Debug: Log first project's team structure
-    if (data.length > 0) {
-      console.log("📊 Sample Project Data:", {
-        name: data[0].name,
-        team_id: data[0].team_id,
-        teams: data[0].teams,
-        members: data[0].members,
-      });
-    }
+    console.log("🔍 Filtering with:", activeFilters);
 
     return data.filter((project: any) => {
       // Check status filter

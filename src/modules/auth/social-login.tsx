@@ -1,11 +1,13 @@
-import { useEffect, useState } from "react";
-import { useNavigate, useSearchParams } from "react-router";
 import Axios from "axios";
+import { useEffect, useState } from "react";
 import { useDispatch } from "react-redux";
 import { addAccount } from "@/store/slices/auth.slice";
+import { baseUrl } from "@/constants";
+import { useNavigate, useSearchParams } from "react-router";
 
 const SocialLogin = () => {
   const [searchParams] = useSearchParams();
+  console.log("okkkk");
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const [error, setError] = useState("");
@@ -54,6 +56,7 @@ const SocialLogin = () => {
           navigate("/sign-in");
         }
       }, 3000);
+
       return;
     }
 
@@ -102,7 +105,7 @@ const SocialLogin = () => {
       console.log("Making API call to /api/auth/me");
 
       // Fetch user data with token
-      const response = await Axios.get("https://api.myracloud.io/api/auth/me", {
+      const response = await Axios.get(`${baseUrl}/api/auth/me`, {
         headers: {
           Authorization: `Bearer ${token}`,
           Accept: "application/json",
@@ -135,8 +138,8 @@ const SocialLogin = () => {
     } catch (err: any) {
       console.error("=== WEB LOGIN ERROR ===");
       console.error("Error:", err);
-      console.error("Response:", err.response?.data);
-      console.error("Status:", err.response?.status);
+      // console.error("Response:", err.response?.data);
+      // console.error("Status:", err.response?.status);
 
       const errorMessage =
         err.response?.data?.message || err.message || "Unknown error occurred";

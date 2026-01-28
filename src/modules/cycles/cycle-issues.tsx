@@ -250,7 +250,7 @@ export default function Issues() {
   const [showNewIssueDialog, setShowNewIssueDialog] = useState(false);
   const [chartData, setChartData] = useState<iCycleListResponse>();
   const { currentWorkspace } = useUser();
-  const [loading, setLoading] = useState(false);
+  // const [loading, setLoading] = useState(false);
   const { cycleId: id } = useParams();
   const { "team-id": teamid } = useParams();
   console.log("cycle id", id);
@@ -260,45 +260,49 @@ export default function Issues() {
   const dispatch = useDispatch();
   // const issueData = useSelector((state: RootState) => state.cycleIssues);
 
-  const issueData = useCycleDetailHook(
+  const { data: issueData, isLoading } = useCycleDetailHook(
     currentWorkspace?.slug ?? "",
     Number(teamid),
     Number(id),
   );
+  console.log("ISSUE DATA IN CYCLE", issueData);
+  console.log("SLUG IN CYCLE", currentWorkspace?.slug);
+  console.log("ID IN CYCLE", Number(id));
+  console.log("TEAM ID IN CYCLE", Number(teamid));
 
-  useEffect(() => {
-    const fetchCycleDetail = async () => {
-      setLoading(true);
-      try {
-        const res = await cycleDetailUri(
-          currentWorkspace?.slug ?? "",
-          Number(teamid),
-          Number(id),
-        );
-        dispatch(setCycleIssues(res.data));
-        console.log("cycle detail data", res.data);
+  // useEffect(() => {
+  //   const fetchCycleDetail = async () => {
+  //     setLoading(true);
+  //     try {
+  //       const res = await cycleDetailUri(
+  //         currentWorkspace?.slug ?? "",
+  //         Number(teamid),
+  //         Number(id),
+  //       );
+  //       dispatch(setCycleIssues(res.data));
+  //       console.log("cycle detail data", res.data);
 
-        const res2 = await cycleChartUri(
-          currentWorkspace?.slug ?? "",
-          Number(teamid),
-          Number(id),
-        );
+  //       const res2 = await cycleChartUri(
+  //         currentWorkspace?.slug ?? "",
+  //         Number(teamid),
+  //         Number(id),
+  //       );
 
-        console.log("CHART DATA", res2);
-        setChartData(res2.data);
-      } catch (e: any) {
-        console.log(e.message);
-      } finally {
-        setLoading(false);
-      }
-    };
+  //       // console.log("CHART DATA", res2);
+  //       setChartData(res2.data);
+  //     } catch (e: any) {
+  //       console.log(e.message);
+  //     } finally {
+  //       setLoading(false);
+  //     }
+  //   };
 
-    fetchCycleDetail();
-  }, [currentWorkspace?.slug, teamid, id, dispatch]);
+  //   fetchCycleDetail();
+  // }, [currentWorkspace?.slug, teamid, id, dispatch]);
 
-  console.log(issueData, "CYCLE DETAIL");
+  // console.log(issueData, "CYCLE DETAIL");
   const groupedIssues: Record<string, iIssues[]> = Object.entries(
-    issueData?.data?.issues || {},
+    issueData?.issues || {},
   ).reduce(
     (acc, [statusName, issues]) => {
       // Type guard: ensure issues is an array
@@ -337,6 +341,7 @@ export default function Issues() {
         projects: null,
         milestones: null,
         labels: [] as any,
+        type: issue.type ?? undefined,
         assignee: issue.assignee
           ? {
               ...issue.assignee,
@@ -351,7 +356,7 @@ export default function Issues() {
 
   console.log("setIssues called with:", groupedIssues);
 
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="flex items-center justify-center h-full min-h-[300px]">
         <div className="h-6 w-6 animate-spin rounded-full border-2 border-muted-foreground border-t-transparent" />
@@ -370,8 +375,8 @@ export default function Issues() {
             orientation="vertical"
             className="mr-2 data-[orientation=vertical]:h-4"
           />
-          <h1 className="text-foreground text-sm">
-            {issueData?.data?.name || "Cycle"}
+          <h1 className="text-foreground text-sm font-semibold">
+            {issueData?.name || "Cycle"}
           </h1>
         </div>
         <div className="flex items-center gap-2 px-4">

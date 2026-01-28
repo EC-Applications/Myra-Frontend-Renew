@@ -46,7 +46,7 @@ const getFilterCategories = (
   statusData: iPojectStatus[],
   priorityData: any[],
   teamsData: any[],
-  membersData: any[]
+  membersData: any[],
 ): FilterCategory[] => [
   {
     id: "status",
@@ -117,11 +117,13 @@ const getFilterCategories = (
     id: "members",
     label: "Members",
     icon: <User className="w-4 h-4" />,
-    options: membersData.map((member) => ({
-      id: member.id.toString(),
-      label: member.name || member.email,
-      type: "checkbox" as const,
-    })),
+    options: (membersData || [])
+      .filter((member) => member?.id != null)
+      .map((member) => ({
+        id: String(member.id), 
+        label: member.name || member.email || "Unknown Member",
+        type: "checkbox" as const,
+      })),
   },
 ];
 
@@ -252,7 +254,7 @@ function FilterCategoryButton({
       <PopoverTrigger asChild>
         <button
           className={cn(
-            "w-full px-4 py-2.5 flex items-center gap-3 text-sm text-left transition-colors border-b border-zinc-800/50 last:border-b-0 text-zinc-300 hover:bg-zinc-800/50 hover:text-white"
+            "w-full px-4 py-2.5 flex items-center gap-3 text-sm text-left transition-colors border-b border-zinc-800/50 last:border-b-0 text-zinc-300 hover:bg-zinc-800/50 hover:text-white",
           )}
         >
           <span className="text-zinc-400 flex-shrink-0">{category.icon}</span>
@@ -330,7 +332,7 @@ export function FilterDropdown({ onFilterChange }: FilterDropdownProps = {}) {
     statusArray,
     priorityArray,
     teamsArray,
-    membersArray
+    membersArray,
   );
 
   // Toggle filter selection
@@ -386,11 +388,11 @@ export function FilterDropdown({ onFilterChange }: FilterDropdownProps = {}) {
   // Count active filters
   const activeFilterCount = Object.values(selectedFilters).reduce(
     (sum, arr) => sum + arr.length,
-    0
+    0,
   );
 
   const filteredCategories = FILTER_CATEGORIES.filter((cat) =>
-    cat.label.toLowerCase().includes(searchQuery.toLowerCase())
+    cat.label.toLowerCase().includes(searchQuery.toLowerCase()),
   );
 
   return (

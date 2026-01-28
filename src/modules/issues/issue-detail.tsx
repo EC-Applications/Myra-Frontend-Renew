@@ -73,53 +73,55 @@ import { useActivityHook } from "@/hooks/use-activity-hook";
 import Activity from "./components/issues-activity";
 import { useGetIssuesHook } from "@/hooks/use-get-issues";
 import { useGetIssuesDetailHook } from "@/hooks/use-get-issues-detail.hook";
-import { useGetSubIssuesHook } from "@/hooks/use-get-subissues.hook";
+
 import { useUpdateIssueHook } from "@/hooks/use-issue-update";
+import { useQueryClient } from "@tanstack/react-query";
+import { CyclePicker } from "../cycles/components/cycle-picker";
+import { useGetCyclesHook } from "@/hooks/use-get-cycle";
+import type { iCycleListResponse } from "@/interfaces/cycle.interface";
+import { Editor } from "@/components/blocks/editor-00/editor";
+import { sanitizeHtml } from "@/lib/helpers/sanitize-html";
 
 export default function IssueDetailView() {
+  const queryClient = useQueryClient();
   const issues = useSelector((state: any) => state.issues);
   const { id } = useParams();
   const currentUser = useUser();
 
-  const { data } = useGetIssuesDetailHook(Number(id));
-  const {} = useGetSubIssuesHook(Number(id));
+  const { data, isLoading: loading } = useGetIssuesDetailHook(Number(id));
+  // const {} = useGetSubIssuesHook(Number(id));
 
   const updateIssueStatus = useUpdateIssueHook();
 
-  console.log("IssueID", id);
+  // console.log("IssueID", id);
   const { currentWorkspace } = useUser();
+  console.log("SLUG", currentWorkspace?.slug);
   const navigate = useNavigate();
-  const dispatch = useDispatch();
 
-  const [loading, setLoading] = useState(false);
+  // const [loading, setLoading] = useState(false);
   // const [data, setData] = useState<iIussesDetail | undefined>();
+
+  const { data: cycleData } = useGetCyclesHook(
+    currentWorkspace?.slug ?? "",
+    Number(data?.team_id),
+  );
+
+
+  console.log("cycle data", cycleData);
 
   const status = useSelector((state: RootState) => state.issuesStatus);
   const statusList = status ?? [];
-  const [selectedStatus, setSelectedStatus] = useState<iIssueStatus | null>(
-    null,
-  );
-  const [priorityId, setPriorityId] = useState<number | undefined>();
-  const [issueName, setIssueName] = useState("");
 
+  const [issueName, setIssueName] = useState("");
   const [description, setDescription] = useState("");
   const [isSaving, setIsSaving] = useState(false);
   const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const workspaceMember = useSelector((state: any) => state.workspace);
   const members = Array.isArray(workspaceMember) ? workspaceMember : [];
-  const [selectedMember, setSelectedMember] = useState<iMember | undefined>(
-    data?.assignee,
-  );
-  const [startDate, setStartDate] = useState<Date | null>(null);
 
   const projects = useSelector((state: any) => state.project.projects);
-  const [selectedProjects, setSelectedProjects] = useState<
-    iProject | undefined
-  >();
-
   const labels = useSelector((state: any) => state.issuesLabel);
-  const [selectedLabels, setSelectedLabels] = useState<Label[]>([]);
 
   const subIssueData = useSelector((state: any) => state.issuesDetail);
 
@@ -162,7 +164,7 @@ export default function IssueDetailView() {
     Number(id),
   );
 
-  console.log(activityData, "ACTIVITY DATA");
+  // console.log(activityData, "ACTIVITY DATA");
 
   // useEffect(() => {
   //   setLoading(true);
@@ -197,43 +199,17 @@ export default function IssueDetailView() {
   //   }
   // }, [data?.assignee, data?.labels, data?.projects]);
 
+  // Sync only text fields that need local editing state
   useEffect(() => {
     if (data?.name) {
-      setIssueName(data?.name);
+      setIssueName(data.name);
     }
-
     if (data?.description) {
-      setDescription(data?.description);
+      setDescription(data.description);
     }
-    if (data?.labels && data?.labels.length > 0) {
-      setSelectedLabels(data?.labels);
-    }
-    if (data?.status) {
-      setSelectedStatus(data.status);
-    }
-    if (data?.priority_id) {
-      setPriorityId(data?.priority_detail.id);
-    }
-    if (data?.assignee_id) {
-      setSelectedMember(data.assignee);
-    }
-    if (data?.project_id) {
-      setSelectedProjects(data?.projects);
-    }
-    if (data?.labels) {
-      console.log("Setting labels:", data.labels);
-      setSelectedLabels(data.labels);
-    }
+  }, [data?.name, data?.description]);
 
-    if (data?.due_date) {
-      setStartDate(data.due_date);
-    }
-    if (data?.documents && Array.isArray(data?.documents)) {
-      setDocuments(data?.documents);
-    }
-  }, [data, data?.labels]);
-
-  console.log("ISSUES", issues);
+  // console.log("ISSUES", issues);
 
   const [subIssuesExpanded, setSubIssuesExpanded] = useState(true);
   const [showAddSubIssue, setShowAddSubIssue] = useState(false);
@@ -243,96 +219,85 @@ export default function IssueDetailView() {
 
   const [isDeleting, setIsDeleting] = useState(false);
 
+  const priorityData = useSelector((state: any) => state.priority);
+
   const handlePriorityUpdate = async (prioirityId: number) => {
-    try {
-      updateIssueStatus.mutate({
-        issueId: Number(id),
-        body: {
-          priority_id: prioirityId,
-          workspace_id: currentWorkspace?.id,
-          team_id: Number(data?.team_id),
-        },
-        teamId: Number(data?.team_id),
-        workspaceId: Number(currentWorkspace?.id),
-      });
-    } catch (error: any) {
-      toast.error(error.message || "Failed to update priority");
-    }
+    // Find full priority object for optimistic update
+    const priorityObj = priorityData?.priority?.find(
+      (p: any) => p.id === prioirityId,
+    );
+
+    updateIssueStatus.mutate({
+      issueId: Number(id),
+      body: {
+        priority_id: prioirityId,
+        workspace_id: currentWorkspace?.id,
+        team_id: Number(data?.team_id),
+      },
+      // Full object for instant UI update
+      optimisticData: {
+        priority_detail: priorityObj,
+        priority_id: prioirityId,
+      },
+      teamId: Number(data?.team_id),
+      workspaceId: Number(currentWorkspace?.id),
+    });
   };
 
-  const handleStatusUpdate = async (status: iIssueStatus) => {
-    try {
-      updateIssueStatus.mutate({
-        issueId: Number(id),
-        body: {
-          status_id: status.id,
-          workspace_id: currentWorkspace?.id,
-          team_id: Number(data?.team_id),
-        },
-        teamId: Number(data?.team_id),
-        workspaceId: Number(currentWorkspace?.id),
-      });
-      // const payload = {
-      //   status_id: status.id,
-      //   workspace_id: currentWorkspace?.id,
-      //   team_id: data?.team_id,
-      // };
-      // await updateIssuesUri(Number(id), payload);
-      setSelectedStatus(status);
-      // toast.success("Status updated");
-    } catch (error: any) {
-      toast.error(error.message || "Failed to update status");
-    }
+  const handleStatusUpdate = async (newStatus: iIssueStatus) => {
+    updateIssueStatus.mutate({
+      issueId: Number(id),
+      body: {
+        status_id: newStatus.id,
+        workspace_id: currentWorkspace?.id,
+        team_id: Number(data?.team_id),
+      },
+      // Full object for instant UI update
+      optimisticData: {
+        status: newStatus,
+        status_id: newStatus.id,
+      },
+      teamId: Number(data?.team_id),
+      workspaceId: Number(currentWorkspace?.id),
+    });
   };
 
   const handleMemberUpdate = async (member: iMember | undefined) => {
-    try {
-      //   const payload = {
-      //     assignee_id: selectedMember?.id,
-      //     workspace_id: currentWorkspace?.id,
-      //     team_id: data?.team_id,
-      //   };
-      updateIssueStatus.mutate({
-        issueId: Number(id),
-        body: {
-          assignee_id: member?.id,
-          workspace_id: currentWorkspace?.id,
-          team_id: Number(data?.team_id),
-        },
-        teamId: Number(data?.team_id),
-        workspaceId: Number(currentWorkspace?.id),
-      });
-      // await updateIssuesUri(Number(id), payload);
-      setSelectedMember(member);
-      // toast.success("Assigne updated");
-    } catch (error: any) {
-      toast.error(error.message || "Failed to update status");
-    }
+    if (!member) return;
+
+    updateIssueStatus.mutate({
+      issueId: Number(id),
+      body: {
+        assignee_id: member.id,
+        workspace_id: currentWorkspace?.id,
+        team_id: Number(data?.team_id),
+      },
+      // Full object for instant UI update
+      optimisticData: {
+        assignee: member,
+        assignee_id: member.id,
+      },
+      teamId: Number(data?.team_id),
+      workspaceId: Number(currentWorkspace?.id),
+    });
   };
 
-  const handleProjectUpdate = async (project: iProject | undefined) => {
-    try {
-      updateIssueStatus.mutate({
-        issueId: Number(id),
-        body: {
-          project_id: project?.id,
-          workspace_id: currentWorkspace?.id,
-          team_id: Number(data?.team_id),
-        },
-        teamId: Number(data?.team_id),
-        workspaceId: Number(currentWorkspace?.id),
-      });
-      setSelectedProjects(project);
-      //   const payload = {
-      //     project_id: project?.id,
-      //     workspace_id: currentWorkspace?.id,
-      //     team_id: data?.team_id,
-      //   };
-      //   await updateIssuesUri(Number(id), payload);
-      // toast.success("Project updated");
-    } catch (error: any) {
-      toast.error(error.message || "Failed to update status");
-    }
+  const handleProjectUpdate = async (project: iProject | null) => {
+    updateIssueStatus.mutate({
+      issueId: Number(id),
+      body: {
+        project_id: project?.id ?? null,
+        workspace_id: currentWorkspace?.id,
+        team_id: Number(data?.team_id),
+      },
+      // Full object for instant UI update
+      optimisticData: {
+        projects: project ?? null,
+        project_id: project?.id ?? null,
+      },
+      teamId: Number(data?.team_id),
+      workspaceId: Number(currentWorkspace?.id),
+    });
   };
 
   const handleIssueName = async () => {
@@ -350,66 +315,54 @@ export default function IssueDetailView() {
     }
   };
 
-  const handleUpdateLabel = async (labels: Label[]) => {
-    console.log("n");
+  const handleUpdateLabel = async (newLabels: Label[]) => {
+    updateIssueStatus.mutate({
+      issueId: Number(id),
+      body: {
+        labels: newLabels?.length > 0 ? newLabels.map((l) => l.id) : null,
+        workspace_id: currentWorkspace?.id,
+        team_id: Number(data?.team_id),
+      },
+      // Full objects for instant UI update
+      optimisticData: {
+        labels: newLabels,
+      },
+      teamId: Number(data?.team_id),
+      workspaceId: Number(currentWorkspace?.id),
+    });
+  };
 
-    setSelectedLabels(labels); // Pehle state update karo
-    // setSaving(true);
-
-    try {
-      updateIssueStatus.mutate({
-        issueId: Number(id),
-        body: {
-          labels: labels?.map((l) => l.id),
-          workspace_id: currentWorkspace?.id,
-          team_id: Number(data?.team_id),
-        },
-        teamId: Number(data?.team_id),
-        workspaceId: Number(currentWorkspace?.id),
-      });
-      // await updateIssuesUri(Number(id), {
-      //   workspace_id: currentWorkspace?.id,
-      //   labels: labels.map((x) => x.id), // Updated labels use karo
-      //   team_id: data?.team_id,
-      // });
-
-      // dispatch(
-      //   updateProject({
-      //     projectId: Number(id),
-      //     data: { labels: labels.map((x) => x.id) },
-      //   })
-      // );
-
-      // toast.success("Issue Label updated");
-    } catch (error) {
-      setSelectedLabels(selectedLabels); // Error pe purani state revert karo
-      toast.error("Failed to update issue labels");
-    }
+  const handleCycleUpdate = async (cycleId: iCycleListResponse | null) => {
+    updateIssueStatus.mutate({
+      issueId: Number(id),
+      body: {
+        cycle_id: cycleId?.id  ?? null ,
+        workspace_id: currentWorkspace?.id,
+        team_id: Number(data?.team_id),
+      },
+      teamId: Number(data?.team_id),
+      workspaceId: Number(currentWorkspace?.id),
+      optimisticData: {
+        cycle_id: cycleId?.id
+      }
+    });
   };
 
   const handleTargetDate = async (date: Date | null) => {
-    try {
-      updateIssueStatus.mutate({
-        issueId: Number(id),
-        body: {
-          due_date: date ? format(date, "yyyy-MM-dd") : undefined,
-          workspace_id: currentWorkspace?.id,
-          team_id: Number(data?.team_id),
-        },
-        teamId: Number(data?.team_id),
-        workspaceId: Number(currentWorkspace?.id),
-      });
-      // const payload = {
-      //   due_date: date ? format(date, "yyyy-MM-dd") : undefined,
-      //   workspace_id: currentWorkspace?.id,
-      //   team_id: data?.team_id,
-      // };
-      // await updateIssuesUri(Number(id), payload);
-      // setStartDate(date);
-      // toast.success("Date updated");
-    } catch (error: any) {
-      toast.error(error.message || "Failed to update status");
-    }
+    updateIssueStatus.mutate({
+      issueId: Number(id),
+      body: {
+        due_date: date ? format(date, "yyyy-MM-dd") : undefined,
+        workspace_id: currentWorkspace?.id,
+        team_id: Number(data?.team_id),
+      },
+      // For instant UI update
+      optimisticData: {
+        due_date: date,
+      },
+      teamId: Number(data?.team_id),
+      workspaceId: Number(currentWorkspace?.id),
+    });
   };
 
   const handleDescriptionChange = (value: string) => {
@@ -477,15 +430,15 @@ export default function IssueDetailView() {
   // };
 
   const handleDocumentUpload = async (files: FileList | null) => {
-    console.log("handleDocumentUpload called with:", files);
+    // console.log("handleDocumentUpload called with:", files);
 
     if (!files || files.length === 0) {
-      console.log("No files provided");
+      // console.log("No files provided");
       return;
     }
 
     if (!data) {
-      console.log("No Issue Found");
+      // console.log("No Issue Found");
       return;
     }
 
@@ -539,10 +492,9 @@ export default function IssueDetailView() {
     );
 
     try {
-      // Payload hamesha array format mein bhejo
       await deleteSubIssuesUri({
         issue_id: Number(id),
-        sub_issue_ids: selectedSubIssues, // Yahan directly array pass karo
+        sub_issue_ids: selectedSubIssues,
       });
 
       toast.dismiss(loadingToast);
@@ -731,6 +683,8 @@ export default function IssueDetailView() {
     );
   }
 
+  if (!data) return <>Something went wrong!</>
+
   return (
     <div
       className="flex h-[calc(100vh-1rem)] bg-background dark:border-zinc-800
@@ -789,7 +743,11 @@ dark:bg-[#101012]"
           />
           {/* Description */}
           <div className="mb-8">
-            <Textarea
+            <Editor
+              editorHtmlState={data?.description || description}
+              onHtmlChange={(e) => handleDescriptionChange(e)}
+            />
+            {/* <Textarea
               placeholder="Write a description, a project brief, or collect ideas..."
               value={description}
               onChange={(e) => handleDescriptionChange(e.target.value)}
@@ -802,7 +760,7 @@ dark:bg-[#101012]"
 
     text-[18px] leading-7
     placeholder:text-[18px]"
-            />
+            /> */}
             {data?.documents && data.documents.length > 0 ? (
               <div className="pt-2 space-y-2">
                 {data?.documents.map((doc) => {
@@ -966,17 +924,21 @@ dark:bg-[#101012]"
                       navigate(`/issues/${subIssue.id}/sub-issue`);
                     }}
                     onSubIssueUpdate={(updatedSubIssue) => {
-                      // setData((prev: any) => {
-                      //   if (!prev) return prev;
-                      //   return {
-                      //     ...prev,
-                      //     sub_issues: prev.sub_issues?.map((sub: any) =>
-                      //       sub.id === updatedSubIssue.id
-                      //         ? updatedSubIssue
-                      //         : sub,
-                      //     ),
-                      //   };
-                      // });
+                      queryClient.setQueryData<any>(
+                        ["issue-detail", Number(id)],
+                        (old: any) => {
+                          if (!old) return old;
+
+                          return {
+                            ...old,
+                            sub_issues: old.sub_issues?.map((sub: any) =>
+                              sub.id === updatedSubIssue.id
+                                ? updatedSubIssue
+                                : sub,
+                            ),
+                          };
+                        },
+                      );
                     }}
                   />
                 ) : (
@@ -1141,13 +1103,17 @@ dark:bg-[#101012]"
                       {/* Comment Text */}
                       {editingCommentId === comment.id ? (
                         <div className="space-y-2">
-                          <Textarea
+                          <Editor
+                            editorHtmlState={editCommentText}
+                            onHtmlChange={(e) => setEditCommentText(e)}
+                          />
+                          {/* <Textarea
                             ref={editTextareaRef}
                             value={editCommentText}
                             onChange={(e) => setEditCommentText(e.target.value)}
                             className="border-0 resize-none focus-visible:ring-0 dark:bg-transparent p-3 dark:placeholder:font-semibold font-semibold"
                             placeholder="Edit your comment..."
-                          />
+                          /> */}
                           {editCommentAttachments.length > 0 && (
                             <div className="space-y-2 mt-3">
                               {editCommentAttachments.map((file, index) => (
@@ -1246,9 +1212,12 @@ dark:bg-[#101012]"
                         </div>
                       ) : (
                         <div className="">
-                          <p className="text-[15px] font-semibold dark:text-white whitespace-pre-line leading-relaxed">
-                            {comment.body}
-                          </p>
+                          <p
+                            className="text-[15px] "
+                            dangerouslySetInnerHTML={{
+                              __html: sanitizeHtml(comment.body),
+                            }}
+                          ></p>
                           {comment.attachments.length > 0 ? (
                             <div className="pt-2 space-y-2">
                               {comment.attachments.map((doc) => {
@@ -1318,8 +1287,14 @@ dark:bg-[#101012]"
                                   </span>
                                 </div>
                                 {editingCommentId === reply.id ? (
-                                  <div className="space-y-2 mt-1">
-                                    <Textarea
+                                  <div className="mt-1">
+                                    <Editor
+                                      editorHtmlState={editCommentText}
+                                      onHtmlChange={(e) =>
+                                        setEditCommentText(e)
+                                      }
+                                    />
+                                    {/* <Textarea
                                       ref={editTextareaRef}
                                       value={editCommentText}
                                       onChange={(e) =>
@@ -1327,7 +1302,7 @@ dark:bg-[#101012]"
                                       }
                                       className="border-0 resize-none focus-visible:ring-0 dark:bg-transparent p-3 dark:placeholder:font-semibold font-semibold"
                                       placeholder="Edit your reply..."
-                                    />
+                                    /> */}
 
                                     {editCommentAttachments.length > 0 && (
                                       <div className="space-y-2 mt-3">
@@ -1432,9 +1407,12 @@ dark:bg-[#101012]"
                                   </div>
                                 ) : (
                                   <>
-                                    <p className="text-sm font-semibold dark:text-white/90 mt-0.5">
-                                      {reply.body}
-                                    </p>
+                                    <p
+                                      className="text-sm"
+                                      dangerouslySetInnerHTML={{
+                                        __html: sanitizeHtml(reply.body),
+                                      }}
+                                    ></p>
                                     {reply.attachments.length > 0 ? (
                                       <div className="pt-2 space-y-2">
                                         {reply.attachments.map((doc) => {
@@ -1540,7 +1518,17 @@ dark:bg-[#101012]"
                         </Avatar>
 
                         <div className="flex-1 flex items-start gap-2">
-                          <Textarea
+                          <Editor
+                            className="flex-1 min-h-[20px]"
+                            editorHtmlState={replyText[comment.id]}
+                            onHtmlChange={(e) =>
+                              setReplyText((prev) => ({
+                                ...prev,
+                                [comment.id]: e,
+                              }))
+                            }
+                          />
+                          {/* <Textarea
                             placeholder="Leave a reply..."
                             className="flex-1 border-0 resize-none focus:outline-none focus-visible:ring-0 text-sm text-white placeholder:text-muted-foreground min-h-[20px] dark:bg-transparent dark:placeholder:font-semibold font-semibold"
                             value={replyText[comment.id] || ""}
@@ -1550,7 +1538,7 @@ dark:bg-[#101012]"
                                 [comment.id]: e.target.value,
                               }))
                             }
-                          />
+                          /> */}
                           <Button
                             size="icon"
                             type="button"
@@ -1574,7 +1562,12 @@ dark:bg-[#101012]"
             {({ values, setFieldValue, isSubmitting }) => (
               <Form className="pt-5">
                 <div className="border dark:border-zinc-800 dark:bg-[#17181b] rounded-lg">
-                  <Textarea
+                  <Editor
+                    className="p-3"
+                    editorHtmlState={values.comment_body}
+                    onHtmlChange={(e) => setFieldValue("comment_body", e)}
+                  />
+                  {/* <Textarea
                     placeholder="Leave a comment..."
                     value={values.comment_body}
                     onChange={(e) =>
@@ -1591,7 +1584,7 @@ dark:bg-[#101012]"
                         ]);
                       }
                     }}
-                  />
+                  /> */}
                   {values.attachments && values.attachments.length > 0 && (
                     <div className="mt-3 space-y-3 px-2 dark:bg-">
                       {values.attachments.map((file, index) => {
@@ -1758,10 +1751,10 @@ dark:bg-[#101012]"
           <div>
             <div className="flex items-center gap-2 mb-2">
               <SingleMemberPicker
-                value={selectedMember}
+                value={data?.assignee}
                 members={members}
                 onChange={handleMemberUpdate}
-                className="border-0"
+                className="border-0 px-1"
                 variant="full"
                 buttonVarient="dark"
               />
@@ -1775,7 +1768,7 @@ dark:bg-[#101012]"
           <div className="gap-2">
             <ProjectFormLabels
               labels={labels}
-              value={selectedLabels}
+              value={data?.labels || []}
               onChange={handleUpdateLabel}
               className="border-0"
               buttonVarient="dark"
@@ -1795,6 +1788,21 @@ dark:bg-[#101012]"
             </div>
           </div> */}
 
+          {/* cycle */}
+
+          <div className="text-md dark:text-[#7e7f82] font-semibold">Cycle</div>
+          <div>
+            <CyclePicker
+              cycles={cycleData || []}
+              value={data?.cycles || null}
+              onChange={handleCycleUpdate}
+              buttnVarient="dark"
+              className="border-0"
+              // buttonVarient="dark"
+              // className="border-0"
+            />
+          </div>
+
           {/* Project */}
           <div className="text-md dark:text-[#7e7f82] font-semibold">
             Project
@@ -1802,7 +1810,7 @@ dark:bg-[#101012]"
           <div>
             <ProjectPicker
               projects={projects}
-              value={selectedProjects}
+              value={data?.projects}
               onChange={handleProjectUpdate}
               buttonVarient="dark"
               className="border-0"

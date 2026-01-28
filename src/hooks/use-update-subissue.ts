@@ -27,9 +27,18 @@ export const useUpdateSubIssueHook = () => {
         exact: false,
       });
 
+      queryClient.invalidateQueries({
+        queryKey: ["issue-detail", variables.issueId],
+        exact: false,
+      });
 
       queryClient.invalidateQueries({
         queryKey: ["sub-issues", variables.issueId],
+        exact: false,
+      });
+
+      queryClient.invalidateQueries({
+        queryKey: ["issues", variables.body.workspace_id, variables.body.team_id],
         exact: false,
       });
     },

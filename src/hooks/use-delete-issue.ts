@@ -29,7 +29,7 @@ export const useDeleteIssueHook = () => {
       queryClient.invalidateQueries({
         queryKey: ["cycle-detail"],
       });
-      toast.success("Issue deleted successfully!");
+      // toast.success("Issue deleted successfully!");
     },
 
     onError: (error) => {

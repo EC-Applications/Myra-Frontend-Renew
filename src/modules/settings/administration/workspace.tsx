@@ -1,115 +1,237 @@
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Avatar, AvatarFallback } from "@/components/ui/avatar"
-import { Separator } from "@/components/ui/separator"
-import { Edit } from "lucide-react"
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Separator } from "@/components/ui/separator";
+import { Edit } from "lucide-react";
+import { useUser } from "@/hooks/use-user";
+import { Form, Formik } from "formik";
+import { AvatarImage } from "@radix-ui/react-avatar";
+import { useRef } from "react";
+import { useWorkpsaceUpdateHook } from "@/hooks/use-update-workpsace";
 
 export function Workspace() {
+  const { currentWorkspace } = useUser();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const { mutate: updateWorkspace, isPending } = useWorkpsaceUpdateHook();
+
+  const initalValues = {
+    name: currentWorkspace?.name || "",
+    description: currentWorkspace?.description || "",
+    logo: currentWorkspace?.logo || "",
+    url: currentWorkspace?.url || "",
+  };
+
+  console.log("current workspace", currentWorkspace);
+  const handleNameBlur = (
+    currentValue: string,
+    initialValue: string | undefined,
+  ) => {
+    if (currentValue && currentValue !== initialValue && currentWorkspace?.id) {
+      updateWorkspace({
+        body: {
+          name: currentValue,
+        },
+        workspaceId: currentWorkspace.id,
+      });
+    }
+  };
+
+  const handleLogoChange = (
+    event: React.ChangeEvent<HTMLInputElement>,
+    setFieldValue: (field: string, value: string) => void,
+  ) => {
+    const file = event.target.files?.[0];
+    if (file && currentWorkspace?.id) {
+      // Preview ke liye local URL set karo
+      const previewUrl = URL.createObjectURL(file);
+      setFieldValue("logo", previewUrl);
+
+      updateWorkspace({
+        body: {
+          logo: file,
+        },
+        workspaceId: currentWorkspace.id,
+      });
+    }
+  };
+
   return (
-    <div className="min-h-screen">
-      <div className="w-full max-w-3xl mx-auto p-8">
-        <h1 className="text-2xl font-semibold mb-8">Workspace</h1>
+    <Formik initialValues={initalValues} onSubmit={() => {}} enableReinitialize>
+      {({ values, handleChange, setFieldValue }) => {
+        return (
+          <Form>
+            <div className="min-h-screen">
+              <div className="w-full max-w-3xl mx-auto p-8">
+                <h1 className="text-2xl font-semibold mb-8">Workspace</h1>
 
-        <div className="space-y-8">
-          <div>
-            <div className="bg-card border border-border rounded-lg">
-              {/* Logo Section */}
-              <div className="p-4 flex items-center justify-between">
-                <div>
-                  <h3 className="font-medium text-foreground">Logo</h3>
-                  <p className="text-sm text-muted-foreground">Recommended size is 256x256px</p>
-                </div>
-                <Avatar className="h-12 w-12 bg-blue-600">
-                  <AvatarFallback className="bg-blue-600 text-white font-semibold text-base">MA</AvatarFallback>
-                </Avatar>
-              </div>
+                <div className="space-y-8">
+                  <div>
+                    <div className="bg-card border border-border rounded-lg">
+                      {/* Logo Section */}
+                      <div className="p-4 flex items-center justify-between">
+                        <div>
+                          <h3 className="font-medium text-foreground">Logo</h3>
+                          <p className="text-sm text-muted-foreground">
+                            Recommended size is 256x256px
+                          </p>
+                        </div>
+                        <div className="relative group">
+                          <input
+                            type="file"
+                            ref={fileInputRef}
+                            className="hidden"
+                            accept="image/*"
+                            onChange={(e) => handleLogoChange(e, setFieldValue)}
+                            disabled={isPending || !currentWorkspace?.is_owner}
+                          />
+                          <Avatar
+                            className="h-10 w-12 dark:bg-[#c5c8e1] rounded cursor-pointer hover:opacity-80 transition-opacity"
+                            onClick={() => fileInputRef.current?.click()}
+                          >
+                            <AvatarImage src={values.logo || ""} />
+                            <AvatarFallback className="!rounded dark:bg-[#5e6ad2] text-white font-semibold text-base">
+                              {currentWorkspace?.name
+                                ?.slice(0, 2)
+                                .toUpperCase()}
+                            </AvatarFallback>
+                          </Avatar>
+                          {isPending && (
+                            <div className="absolute inset-0 flex items-center justify-center bg-black/30 rounded">
+                              <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                            </div>
+                          )}
+                        </div>
+                      </div>
 
-              <Separator />
+                      <Separator />
 
-              {/* Name Section */}
-              <div className="p-4 flex items-center justify-between">
-                <div>
-                  <h3 className="font-medium text-foreground">Name</h3>
-                </div>
-                <Input value="MARS" className="w-48 bg-background border-border text-foreground" readOnly />
-              </div>
+                      {/* Name Section */}
+                      <div className="p-4 flex items-center justify-between">
+                        <div>
+                          <h3 className="font-medium text-foreground">Name</h3>
+                        </div>
+                        <Input
+                          name="name"
+                          value={values.name}
+                          onChange={handleChange}
+                          onBlur={() =>
+                            handleNameBlur(values.name, initalValues.name)
+                          }
+                          disabled={isPending || !currentWorkspace?.is_owner}
+                          className="w-48 bg-background border-border text-foreground"
+                        />
+                      </div>
 
-              <Separator />
+                      <Separator />
 
-              {/* URL Section */}
-              <div className="p-4 flex items-center justify-between">
-                <div>
-                  <h3 className="font-medium text-foreground">URL</h3>
-                </div>
-                <div className="relative">
-                  <div className="flex items-center w-64 bg-background border border-border rounded-md px-3 py-2 pr-10">
-                    <span className="text-muted-foreground">linear.app/</span>
-                    <span className="text-foreground font-medium">mars06</span>
+                      {/* URL Section */}
+                      <div className="p-4 flex items-center justify-between">
+                        <div>
+                          <h3 className="font-medium text-foreground">URL</h3>
+                        </div>
+                        <div className="relative">
+                          <div className="flex items-center w-64 bg-background border border-border rounded-md px-3 py-2 pr-10">
+                            <span className="text-muted-foreground">
+                              myra.cloud/
+                            </span>
+                            <span className="text-foreground font-medium">
+                              {/* {currentWorkspace?.url} */}EC
+                            </span>
+                          </div>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="absolute right-1 top-1/2 -translate-y-1/2 p-1.5 h-7 w-7"
+                          >
+                            <Edit className="h-4 w-4 text-muted-foreground" />
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
                   </div>
-                  <Button variant="ghost" size="sm" className="absolute right-1 top-1/2 -translate-y-1/2 p-1.5 h-7 w-7">
-                    <Edit className="h-4 w-4 text-muted-foreground" />
-                  </Button>
+
+                  <Separator />
+
+                  <div>
+                    <h2 className="text-lg font-medium mb-3 ms-1">
+                      Time & region
+                    </h2>
+                    <div className="bg-card border border-border rounded-lg">
+                      <div className="p-4 flex items-center justify-between">
+                        <div>
+                          <h3 className="font-medium text-foreground">
+                            First month of the fiscal year
+                          </h3>
+                          <p className="text-sm text-muted-foreground">
+                            Used when grouping projects and issues quarterly,
+                            half-yearly, and yearly
+                          </p>
+                        </div>
+                        <Select defaultValue="january">
+                          <SelectTrigger className="w-48">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="january">January</SelectItem>
+                            <SelectItem value="february">February</SelectItem>
+                            <SelectItem value="march">March</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      <Separator />
+
+                      <div className="p-4 flex items-center justify-between">
+                        <div>
+                          <h3 className="font-medium text-foreground">
+                            Region
+                          </h3>
+                          <p className="text-sm text-muted-foreground">
+                            Set when a workspace is created and cannot be
+                            changed.{" "}
+                            <span className="text-blue-500 hover:text-blue-400 cursor-pointer">
+                              Read more →
+                            </span>
+                          </p>
+                        </div>
+                        <div className="text-foreground">European Union</div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <Separator />
+
+                  <div>
+                    <h2 className="text-lg font-medium mb-3 ms-1">
+                      Danger zone
+                    </h2>
+                    <div className="bg-card border border-border rounded-lg">
+                      <div className="p-4 flex items-center justify-between">
+                        <div>
+                          <h3 className="font-medium text-foreground">
+                            Delete workspace
+                          </h3>
+                          <p className="text-sm text-muted-foreground">
+                            Schedule workspace to be permanently deleted
+                          </p>
+                        </div>
+                        <Button variant="destructive">Delete workspace</Button>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
-
-          <Separator />
-
-          <div>
-            <h2 className="text-lg font-medium mb-3 ms-1">Time & region</h2>
-            <div className="bg-card border border-border rounded-lg">
-              <div className="p-4 flex items-center justify-between">
-                <div>
-                  <h3 className="font-medium text-foreground">First month of the fiscal year</h3>
-                  <p className="text-sm text-muted-foreground">
-                    Used when grouping projects and issues quarterly, half-yearly, and yearly
-                  </p>
-                </div>
-                <Select defaultValue="january">
-                  <SelectTrigger className="w-48">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="january">January</SelectItem>
-                    <SelectItem value="february">February</SelectItem>
-                    <SelectItem value="march">March</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <Separator />
-
-              <div className="p-4 flex items-center justify-between">
-                <div>
-                  <h3 className="font-medium text-foreground">Region</h3>
-                  <p className="text-sm text-muted-foreground">
-                    Set when a workspace is created and cannot be changed.{" "}
-                    <span className="text-blue-500 hover:text-blue-400 cursor-pointer">Read more →</span>
-                  </p>
-                </div>
-                <div className="text-foreground">European Union</div>
-              </div>
-            </div>
-          </div>
-
-          <Separator />
-
-          <div>
-            <h2 className="text-lg font-medium mb-3 ms-1">Danger zone</h2>
-            <div className="bg-card border border-border rounded-lg">
-              <div className="p-4 flex items-center justify-between">
-                <div>
-                  <h3 className="font-medium text-foreground">Delete workspace</h3>
-                  <p className="text-sm text-muted-foreground">Schedule workspace to be permanently deleted</p>
-                </div>
-                <Button variant="destructive">Delete workspace</Button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  )
+          </Form>
+        );
+      }}
+    </Formik>
+  );
 }

@@ -43,7 +43,7 @@ const NavTeams = () => {
   const location = useLocation();
   const dispatch = useDispatch();
   const currentPath = location.pathname;
-  console.log("LOG NAV TEAM", teamsData)
+  console.log("LOG NAV TEAM", teamsData);
 
   return (
     <Collapsible defaultOpen className="group/collapsible">
@@ -63,7 +63,9 @@ const NavTeams = () => {
                     <CollapsibleTrigger asChild>
                       <SidebarMenuButton>
                         <IconPicker variant="inline" value={t.icon} size={18} />
-                        <span className="font-semibold dark:text-white">{t.name}</span>
+                        <span className="font-semibold dark:text-white">
+                          {t.name}
+                        </span>
                         <ChevronRight className="transition-transform group-data-[state=open]/sub:rotate-90 cursor-pointer" />
 
                         <DropdownMenu>
@@ -76,7 +78,6 @@ const NavTeams = () => {
                                 navigate(`/settings/teams/${t.id}`)
                               }
                             >
-                              
                               Team settings
                             </DropdownMenuItem>
                             <DropdownMenuItem>Copy link</DropdownMenuItem>
@@ -97,7 +98,7 @@ const NavTeams = () => {
                           <SidebarMenuButton
                             asChild
                             isActive={currentPath.startsWith(
-                              `/teams/${t.id}/projects`
+                              `/teams/${t.id}/projects`,
                             )}
                             onClick={() => dispatch(setTeamId(t.id))}
                           >
@@ -112,7 +113,7 @@ const NavTeams = () => {
                           <SidebarMenuButton
                             asChild
                             isActive={currentPath.startsWith(
-                              `/teams/${t.id}/issues`
+                              `/teams/${t.id}/issues`,
                             )}
                           >
                             <Link to={`/teams/${t.id}/issues`}>
@@ -122,19 +123,23 @@ const NavTeams = () => {
                           </SidebarMenuButton>
                         </SidebarMenuSubItem>
 
-                        <SidebarMenuSubItem>
-                          <SidebarMenuButton
-                            asChild
-                            isActive={currentPath.startsWith(
-                              `/teams/${t.id}/cycles`
-                            )}
-                          >
-                            <Link to={`/teams/${t.id}/cycles`}>
-                              <CirclePlay />
-                              <span className="font-semibold">Cycles</span>
-                            </Link>
-                          </SidebarMenuButton>
-                        </SidebarMenuSubItem>
+                        {t.cycles_period.enable_cycle ? (
+                          <SidebarMenuSubItem>
+                            <SidebarMenuButton
+                              asChild
+                              isActive={currentPath.startsWith(
+                                `/teams/${t.id}/cycles`,
+                              )}
+                            >
+                              <Link to={`/teams/${t.id}/cycles`}>
+                                <CirclePlay />
+                                <span className="font-semibold">Cycles</span>
+                              </Link>
+                            </SidebarMenuButton>
+                          </SidebarMenuSubItem>
+                        ) : (
+                          <div className=""></div>
+                        )}
                       </SidebarMenuSub>
                     </CollapsibleContent>
                   </Collapsible>

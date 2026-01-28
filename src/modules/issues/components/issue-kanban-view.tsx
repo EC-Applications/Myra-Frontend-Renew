@@ -31,6 +31,7 @@ import type { DragStartEvent, DragEndEvent } from "@dnd-kit/core";
 import { useSelector } from "react-redux";
 import type { RootState } from "@/store/store";
 import { useUpdateIssueHook } from "@/hooks/use-issue-update";
+import { useUpdateSubIssueHook } from "@/hooks/use-update-subissue";
 
 const columns = [
   { id: "todo", title: "Todo", count: 32, icon: Circle },
@@ -81,10 +82,12 @@ const getLabelColor = (label: string) => {
 
 const IssueKanbanView: FC<{ issuesData: any }> = ({ issuesData }) => {
   console.log("ISSUE DATA", issuesData);
-  const { "team-id": id  } = useParams();
+  const { "team-id": id } = useParams();
   const { currentWorkspace } = useUser();
   const navigate = useNavigate();
   const updateIssueStatus = useUpdateIssueHook();
+
+  const updateSubIssue = useUpdateSubIssueHook();
 
   const statusList =
     useSelector((state: RootState) => state.issuesStatus) ?? [];
@@ -147,6 +150,7 @@ const IssueKanbanView: FC<{ issuesData: any }> = ({ issuesData }) => {
     name: issue.name || issue.title || "",
     column: issue.status,
     team: issue.id,
+    type: issue.type,
   }));
 
   console.log("ISSUExyz", issues);
@@ -163,7 +167,9 @@ const IssueKanbanView: FC<{ issuesData: any }> = ({ issuesData }) => {
     }
   };
 
-  const handleDragEnd = async (event: DragEndEvent) => {
+  const handleDragEnd = async (
+    event: DragEndEvent,
+  ) => {
     console.log("DRAG END FIRED");
     const { active, over, collisions } = event;
 
@@ -234,16 +240,29 @@ const IssueKanbanView: FC<{ issuesData: any }> = ({ issuesData }) => {
     console.log("Mapped Status ID:", statusId);
 
     try {
-      updateIssueStatus.mutate({
-        issueId: Number(activeIssue.id),
-        body: {
-          status_id: statusId,
-          workspace_id: currentWorkspace?.id,
-          team_id: activeIssue.team_id,
-        },
-        teamId: activeIssue.team_id,
-        workspaceId: Number(currentWorkspace?.id),
-      });
+      const mutate =
+        activeIssue.type === "issue"
+          ? updateIssueStatus.mutate({
+              issueId: Number(activeIssue.id),
+              body: {
+                status_id: statusId,
+                workspace_id: currentWorkspace?.id,
+                team_id: activeIssue.team_id,
+              },
+              teamId: activeIssue.team_id,
+              workspaceId: Number(currentWorkspace?.id),
+            })
+          : updateSubIssue.mutate({
+              issueId: Number(activeIssue.id),
+              body: {
+                issue_id: activeIssue.issue_id,
+                status_id: statusId,
+                workspace_id: currentWorkspace?.id,
+                team_id: Number(activeIssue.team_id),
+              },
+              teamId: Number(activeIssue.team_id),
+              workspaceId: Number(currentWorkspace?.id),
+            });
       // const response = await updateIssuesUri(Number(activeIssue.id), {
       //   status_id: statusId,
       //   workspace_id: currentWorkspace?.id,
@@ -351,7 +370,11 @@ const IssueKanbanView: FC<{ issuesData: any }> = ({ issuesData }) => {
                         e.stopPropagation();
                         if (!isDragging) {
                           console.log("navigation");
-                          navigate(`/issues/${issue.id}`);
+                          {
+                            issue.type === "issue"
+                              ? navigate(`/issues/${issue.id}`)
+                              : navigate(`/issues/${issue.id}/sub-issue`);
+                          }
                         }
                       }}
                     >

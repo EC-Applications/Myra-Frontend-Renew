@@ -33,6 +33,7 @@ import { toast } from "sonner";
 import { Avatar, AvatarFallback } from "./ui/avatar";
 import { useState } from "react";
 import Spinner from "./ui/spinner";
+import { AvatarImage } from "@radix-ui/react-avatar";
 
 export function TeamSwitcher() {
   const [loggingOut, setLoggingOut] = useState(false);
@@ -82,6 +83,7 @@ export function TeamSwitcher() {
             <SidebarMenuButton className="w-full px-1.5">
               {/* <div className="bg-sidebar-primary text-sidebar-primary-foreground flex aspect-square size-5 items-center justify-center rounded-md"> */}
               <Avatar className="h-6 rounded-sm">
+                <AvatarImage src={currentWorkspace?.logo || ""} />
                 <AvatarFallback className="dark:bg-[#2a2c33] dark:text-white font-medium text-xs rounded-sm">
                   {getWorkspaceInitials(currentWorkspace?.name || "")}
                 </AvatarFallback>

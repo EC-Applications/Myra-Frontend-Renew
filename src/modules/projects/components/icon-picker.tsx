@@ -350,16 +350,22 @@ interface IconPickerProps {
   size?: number;
 }
 
-export function IconPicker({ value, onChange, variant = "full", className, size }: IconPickerProps) {
+export function IconPicker({
+  value,
+  onChange,
+  variant = "full",
+  className,
+  size,
+}: IconPickerProps) {
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
   const [selectedColor, setSelectedColor] = useState(
-    value?.color || "text-gray-500"
+    value?.color || "text-gray-500",
   );
   const [activeTab, setActiveTab] = useState<"icons" | "emojis">("icons");
 
   const filteredIcons = ICONS.filter((icon) =>
-    icon.name.toLowerCase().includes(search.toLowerCase())
+    icon.name.toLowerCase().includes(search.toLowerCase()),
   );
 
   const filteredEmojis = EMOJIS.filter((emoji) => emoji.includes(search));
@@ -368,7 +374,7 @@ export function IconPicker({ value, onChange, variant = "full", className, size 
     (iconName: string) => {
       const IconComponent = ICONS.find((i) => i.name === iconName)?.icon || Box;
       const svgString = renderToStaticMarkup(
-        <IconComponent className={cn("h-6 w-6", selectedColor)} />
+        <IconComponent className={cn("h-6 w-6", selectedColor)} />,
       );
       const blob = new Blob([svgString], { type: "image/svg+xml" });
       const file = new File([blob], "icon.svg", {
@@ -378,7 +384,7 @@ export function IconPicker({ value, onChange, variant = "full", className, size 
       onChange?.({ icon: iconName, color: selectedColor, type: "icon", file });
       setOpen(false);
     },
-    [onChange, selectedColor]
+    [onChange, selectedColor],
   );
 
   const handleSelectEmoji = (emoji: string) => {
@@ -404,14 +410,21 @@ export function IconPicker({ value, onChange, variant = "full", className, size 
       return (
         <Box
           className="text-muted-foreground"
-          style={iconSize ? { width: iconSize, height: iconSize } : { width: 24, height: 24 }}
+          style={
+            iconSize
+              ? { width: iconSize, height: iconSize }
+              : { width: 24, height: 24 }
+          }
         />
       );
     }
-
+    console.log("Rendering icon - Type:", value.type, "Icon:", value.icon);
+    
     if (value.type === "emoji") {
       return (
-        <span style={iconSize ? { fontSize: iconSize } : { fontSize: '1.75rem' }}>
+        <span
+          style={iconSize ? { fontSize: iconSize } : { fontSize: "1.75rem" }}
+        >
           {value.icon}
         </span>
       );
@@ -421,7 +434,11 @@ export function IconPicker({ value, onChange, variant = "full", className, size 
     return (
       <IconComponent
         className={value.color}
-        style={iconSize ? { width: iconSize, height: iconSize } : { width: 20, height: 20 }}
+        style={
+          iconSize
+            ? { width: iconSize, height: iconSize }
+            : { width: 20, height: 20 }
+        }
       />
     );
   };
@@ -451,7 +468,7 @@ export function IconPicker({ value, onChange, variant = "full", className, size 
               "h-10 w-10 p-0 rounded-md cursor-pointer",
               variant === "full" && "shadow-sm",
               variant === "compact" && "border-0 shadow-none",
-              className
+              className,
             )}
           >
             {renderSelectedIcon()}
@@ -509,7 +526,7 @@ export function IconPicker({ value, onChange, variant = "full", className, size 
                         ? color.value
                         : `bg-current ${color.value}`,
                       selectedColor === color.value &&
-                        "ring-2 ring-primary ring-offset-2"
+                        "ring-2 ring-primary ring-offset-2",
                     )}
                     title={color.name}
                   />

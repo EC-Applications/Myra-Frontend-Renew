@@ -6,6 +6,7 @@ import type {
   iWorkspaceInviteResponse,
   iWorkspaceMember,
   iWorkspaceRequest,
+  updateWorkspacePayload,
 } from "@/interfaces/workspace.interface";
 import { format } from "date-fns";
 import { Axios } from "./axios.service";
@@ -24,7 +25,7 @@ export const checkExistingSlug = async (slug: string) => {
 export const workspaceInvite = async (
   slug: string,
   workspace: number,
-  payload: iWorkspaceInviteRequest
+  payload: iWorkspaceInviteRequest,
 ) => {
   const formData = new FormData();
   formData.append("role", payload.role);
@@ -36,7 +37,7 @@ export const workspaceInvite = async (
   return await Axios.post<iResponse<iWorkspaceInviteResponse>>(
     `/api/workspaces/${slug}/${workspace}/invite`,
     formData,
-    { headers: { "Content-Type": "multipart/form-data" } }
+    { headers: { "Content-Type": "multipart/form-data" } },
   ).then((res) => res.data);
 };
 
@@ -58,8 +59,43 @@ export const getMembers = async (slug: string, workspace: number) => {
     }));
 };
 
+export const removeWorkspaceMemeber = async (
+  workspaceId: number | undefined,
+  memeberId: number | undefined,
+) => {
+  return Axios.delete(
+    `/api/workspaces/${workspaceId}/members/${memeberId}`,
+  ).then((res) => res.data as iResponse<iWorkspaceMember[]>);
+};
 
-export const removeWorkspaceMemeber = async (workspaceId: number | undefined, memeberId: number | undefined) => {
-  return Axios.delete(`/api/workspaces/${workspaceId}/members/${memeberId}`)
-    .then((res) => res.data as iResponse<iWorkspaceMember[]>)
-}
+// Update workpsace
+
+export const updateWorkspaceUri = async (
+  body: updateWorkspacePayload,
+  workspaceId: number,
+  // iconFile?: File,
+) => {
+  const formData = new FormData();
+
+  if (body.name) {
+    formData.append("name", body.name);
+  }
+
+  if (body.description) {
+    formData.append("description", body.description);
+  }
+
+  if (body.slug) {
+    formData.append("slug", body.slug.toString());
+  }
+
+  if (body.logo) {
+    formData.append("logo", body.logo);
+  }
+
+  return Axios.post(`/api/workspaces/update/${workspaceId}`, formData, {
+    headers: {
+      "Content-Type": "multipart/form-data",
+    }
+  }).then((res)=> res.data as iResponse<iWorkspaceAddResponse>);
+};

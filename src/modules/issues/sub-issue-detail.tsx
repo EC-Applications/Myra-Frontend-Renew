@@ -61,6 +61,7 @@ import { useActivityHook } from "@/hooks/use-activity-hook";
 import Activity from "./components/issues-activity";
 import { useGetSubIssuesDetailHook } from "@/hooks/use-get-subissue-detail";
 import { useUpdateSubIssueHook } from "@/hooks/use-update-subissue";
+import { Editor } from "@/components/blocks/editor-00/editor";
 
 interface ActivityItem {
   id: string;
@@ -77,8 +78,8 @@ export default function SubIssueDetailView() {
   const { currentWorkspace, currentUser } = useUser();
 
   console.log("IssueID", id);
-  const [loading, setLoading] = useState(false);
-  const { data } = useGetSubIssuesDetailHook(Number(id));
+  // const [loading, setLoading] = useState(false);
+  const { data, isLoading: loading } = useGetSubIssuesDetailHook(Number(id));
   // const [data, setData] = useState<iIussesDetail | undefined>();
 
   const status = useSelector((state: any) => state.issuesStatus);
@@ -100,7 +101,7 @@ export default function SubIssueDetailView() {
 
   const projects = useSelector((state: any) => state.project.projects);
   const [selectedProjects, setSelectedProjects] = useState<
-    iProject | undefined
+    iProject | null
   >();
 
   const labels = useSelector((state: any) => state.issuesLabel);
@@ -290,13 +291,13 @@ export default function SubIssueDetailView() {
     }
   };
 
-  const handleProjectUpdate = async (project: iProject | undefined) => {
+  const handleProjectUpdate = async (project: iProject | null) => {
     try {
       updateSubIssue.mutate({
         issueId: Number(id),
         body: {
           issue_id: data?.issue_id,
-          project_id: project?.id,
+          project_id: project?.id ?? null,
           workspace_id: currentWorkspace?.id,
           team_id: Number(data?.team_id),
         },
@@ -355,7 +356,7 @@ export default function SubIssueDetailView() {
         issueId: Number(id),
         body: {
           issue_id: data?.issue_id,
-          labels: labels?.map((l) => l.id),
+          labels: labels?.length > 0 ? labels.map((l) => l.id) : null,
           workspace_id: currentWorkspace?.id,
           team_id: Number(data?.team_id),
         },
@@ -646,6 +647,8 @@ export default function SubIssueDetailView() {
     );
   }
 
+  if (!data) return <>Something went wrong!</>;
+
   return (
     <div className="flex h-[calc(100vh-1rem)] border dark:border-zinc-800 bg-background dark:bg-[#101012]">
       {/* Main Content */}
@@ -763,12 +766,16 @@ export default function SubIssueDetailView() {
 
           {/* Description */}
           <div className="px-3">
-            <Textarea
+            <Editor
+              editorHtmlState={data?.description || description}
+              onHtmlChange={(e) => handleDescriptionChange(e)}
+            />
+            {/* <Textarea
               placeholder="Add description..."
               value={description}
               onChange={(e) => handleDescriptionChange(e.target.value)}
               className=" min-h-[100px]  resize-none border-0 shadow-none focus-visible:ring-0 dark:bg-transparent text-[25px] leading-7 placeholder:text-[18px] dark:placeholder:text-[#57595c]"
-            />
+            /> */}
             {documents.length > 0 ? (
               <div className="space-y-2">
                 {documents.map((doc) => {
@@ -1697,7 +1704,7 @@ export default function SubIssueDetailView() {
                 value={selectedMember}
                 members={members}
                 onChange={handleMemberUpdate}
-                className="border-0"
+                className="border-0 px-1"
                 buttonVarient="dark"
               />
             </div>

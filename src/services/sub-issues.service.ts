@@ -67,7 +67,7 @@ export const deleteSubIssuesUri = async (body: iSubIssueDeletePayload) => {
 // --------------- Fetch Subissues detail ----------
 
 export const fetchSubissuesDetailUri = async (subissueId: number) => {
-return Axios.get(`/api/sub-issues/detail/${subissueId}`, {
+  return Axios.get(`/api/sub-issues/detail/${subissueId}`, {
     responseType: "json",
   }).then((res) => res.data as iResponse<iIussesDetail>);
 };
@@ -77,7 +77,7 @@ return Axios.get(`/api/sub-issues/detail/${subissueId}`, {
 export const updateSubIssuesUri = async (
   issueId: number,
   body: Partial<iIssuePayload>,
-  newAttachments?: File[] // New files add karne ke liye
+  newAttachments?: File[], // New files add karne ke liye
 ) => {
   const formData = new FormData();
 
@@ -92,16 +92,30 @@ export const updateSubIssuesUri = async (
   if (body.status_id) formData.append("status_id", body.status_id.toString());
   if (body.priority_id)
     formData.append("priority_id", body.priority_id.toString());
-  if (body.project_id)
-    formData.append("project_id", body.project_id.toString());
+
+  if (body.project_id !== undefined) {
+    formData.append(
+      "project_id",
+      body.project_id === null ? "" : body.project_id.toString(),
+    );
+  }
+
   if (body.assignee_id)
     formData.append("assignee_id", body.assignee_id.toString());
   if (body.due_date) formData.append("due_date", body.due_date);
   if (body.external_link) formData.append("external_link", body.external_link);
 
-  if (body.labels) {
+  // if (body.labels) {
+  //   body.labels.forEach((x) =>
+  //     formData.append("label_id[]", JSON.stringify(x)),
+  //   );
+  // }
+
+  if (body.labels === null) {
+    formData.append("label_id[]", "");
+  } else if (body.labels && body.labels.length > 0) {
     body.labels.forEach((x) =>
-      formData.append("label_id[]", JSON.stringify(x))
+      formData.append("label_id[]", JSON.stringify(x)),
     );
   }
 
@@ -124,7 +138,7 @@ export const updateSubIssuesUri = async (
 export const deleteSubIssueAttachmentUri = async (
   workspace_id: number,
   subIssueId: number,
-  attachmentIds: number[]
+  attachmentIds: number[],
 ) => {
   const formData = new FormData();
 
@@ -139,6 +153,6 @@ export const deleteSubIssueAttachmentUri = async (
       headers: {
         "Content-Type": "multipart/form-data",
       },
-    }
+    },
   );
 };

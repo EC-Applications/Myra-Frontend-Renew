@@ -4,6 +4,9 @@ import { DatePicker } from "@/components/date-picker";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { useDeleteMilestone } from "@/hooks/use-delete-milestone";
+import { usePostMilestoneHook } from "@/hooks/use-post-milestone";
+import { useUpdateMilestoneHook } from "@/hooks/use-update-milestone";
 import type { iProject } from "@/interfaces/project.interface";
 import {
   deleteMilestoneUri,
@@ -70,6 +73,12 @@ export default function MilestoneSection({
 
   const [saving, setSaving] = useState(false);
 
+  const postMilestone = usePostMilestoneHook();
+
+  const deleteMilestone = useDeleteMilestone();
+
+  const updateMilestone = useUpdateMilestoneHook();
+
   useEffect(() => {
     if (mode === "update" && initialMilestones.length > 0) {
       // API data ko format karo
@@ -121,14 +130,23 @@ export default function MilestoneSection({
     setMilestones(updatedMilestones);
 
     try {
-      const payload = {
-        project_id: Number(id),
-        name: milestoneName,
-        description: milestoneDescription,
-        target_date: dueDate ? dueDate.toISOString().split("T")[0] : "",
-      };
+      postMilestone.mutate({
+        body: {
+          project_id: Number(id),
+          name: milestoneName,
+          description: milestoneDescription,
+          target_date: dueDate ? dueDate.toISOString().split("T")[0] : "",
+        },
+        projectId: Number(id),
+      });
+      // const payload = {
+      //   project_id: Number(id),
+      //   name: milestoneName,
+      //   description: milestoneDescription,
+      //   target_date: dueDate ? dueDate.toISOString().split("T")[0] : "",
+      // };
 
-      await milesoneCreateUri(payload);
+      // await milesoneCreateUri(payload);
       setMilestoneName("");
       setMilestoneDescription("");
       const res = await projectDetailFetchUri(Number(id));
@@ -140,7 +158,7 @@ export default function MilestoneSection({
       setMilestoneDescription("");
       setDueDate(undefined);
       setIsAddingNew(false);
-      toast.success("Milestone added");
+      // toast.success("Milestone added");
     } catch (error: any) {
       // Revert on error
       setMilestones(milestones);
@@ -187,15 +205,27 @@ export default function MilestoneSection({
     setMilestones(updatedMilestones);
 
     try {
-      await mileStoneUpdateUri(milestone?.id, {
+      updateMilestone.mutate({
+        milestoneId: milestone?.id,
+        body: {
+          project_id: project.id,
+          name: editName,
+          description: editDescription || "",
+          target_date: editDueDate
+            ? editDueDate.toISOString().split("T")[0]
+            : "",
+        },
         project_id: project.id,
-        name: editName,
-        description: editDescription || "",
-        target_date: editDueDate ? editDueDate.toISOString().split("T")[0] : "",
       });
-
       setEditingIndex(null);
-      toast.success("Milestone updated");
+      // await mileStoneUpdateUri(milestone?.id, {
+      //   project_id: project.id,
+      //   name: editName,
+      //   description: editDescription || "",
+      //   target_date: editDueDate ? editDueDate.toISOString().split("T")[0] : "",
+      // });
+
+      // toast.success("Milestone updated");
     } catch (error) {
       // Revert
       setMilestones((prev) =>
@@ -210,7 +240,6 @@ export default function MilestoneSection({
   const handleCancelEdit = () => {
     setEditingIndex(null);
   };
-
   const handleRemove = async (index: number) => {
     const milestone = milestones[index];
 
@@ -230,8 +259,12 @@ export default function MilestoneSection({
     setMilestones((prev) => prev.filter((_, idx) => idx !== index));
 
     try {
-      await deleteMilestoneUri(milestone.id);
-      toast.success("Milestone removed");
+      deleteMilestone.mutate({
+        milestoneId: milestone.id,
+        project_id: Number(id),
+      });
+      // await deleteMilestoneUri(milestone.id);
+      // toast.success("Milestone removed");
     } catch (error: any) {
       setMilestones(originalMilestones);
       toast.error(
@@ -242,15 +275,17 @@ export default function MilestoneSection({
   };
 
   return (
-    <div className="">
+    <div className="mb-5">
       <div className={`space-y-3  border dark:bg-card rounded-lg`}>
-        <div className="flex items-center justify-between p-2 border-b">
+        <div
+          className={`flex items-center justify-between p-2 ${isAddingNew ? "border-b" : "border-b-0"}`}
+        >
           <div className="flex items-center gap-2">
             <span className="text-sm font-medium  text-white">
               {isAddingNew ? "Create Milestones" : "Milestones"}
             </span>
             {milestones.length > 0 && (
-              <span className="flex items-center justify-center min-w-[20px] h-5 px-1.5 text-xs font-medium text-muted-foreground bg-muted rounded dark:text-white" >
+              <span className="flex items-center justify-center min-w-[20px] h-5 px-1.5 text-xs font-medium text-muted-foreground bg-muted rounded dark:text-white">
                 {milestones.length}
               </span>
             )}
@@ -276,7 +311,7 @@ export default function MilestoneSection({
                   <div className="p-4" onClick={(e) => e.stopPropagation()}>
                     <div className="flex items-start justify-between gap-4 mb-4">
                       <div className="flex items-start gap-3 flex-1 min-w-0">
-                        <Diamond className="h-5 w-5 text-muted-foreground flex-shrink-0 mt-0.5" />
+                        <Diamond className="h-4 w-4 text-muted-foreground flex-shrink-0 mt-1" />
                         <Input
                           value={editName}
                           onChange={(e) => setEditName(e.target.value)}
@@ -286,6 +321,7 @@ export default function MilestoneSection({
                       </div>
                       <div onClick={(e) => e.stopPropagation()}>
                         <DatePicker
+                          placeholder=""
                           value={editDueDate}
                           onChange={setEditDueDate}
                         />
@@ -364,7 +400,7 @@ export default function MilestoneSection({
 
               <div className="flex items-start justify-between gap-4 mb-2">
                 <div className="flex items-start gap-3 flex-1 min-w-0">
-                  <Diamond className="h-5 w-5 text-muted-foreground flex-shrink-0 mt-0.5" />
+                  <Diamond className="h-4 w-4 text-muted-foreground flex-shrink-0 mt-1" />
                   <Input
                     placeholder="Milestone name"
                     value={milestoneName}
@@ -373,7 +409,11 @@ export default function MilestoneSection({
                     autoFocus
                   />
                 </div>
-                <DatePicker value={dueDate} onChange={setDueDate} />
+                <DatePicker
+                  value={dueDate}
+                  onChange={setDueDate}
+                  placeholder=""
+                />
               </div>
 
               <div className="ml-8 mb-4">

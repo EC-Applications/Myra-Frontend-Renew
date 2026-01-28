@@ -320,8 +320,9 @@ const ProjectKanban: FC<props> = ({ projectsData }) => {
                     <div className="flex items-start justify-between">
                       <div className="flex items-center gap-2">
                         <IconPicker
+                          variant="inline"
                           value={project.icon.icon}
-                          onChange={() => {}}
+                          // onChange={() => {}}
                         />
                         <h4 className="font-medium text-sm">{project.name}</h4>
                       </div>
