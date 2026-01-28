@@ -404,7 +404,7 @@ export default function NewIssueDialog({
                       <CyclePicker
                         cycles={cycleData || []}
                         value={selectedCycle}
-                        onChange={(cycle) => setSelectedCycle(cycle)}
+                        onChange={(cycle) => setSelectedCycle(cycle || undefined)}
                         variant="default"
                       />
                     </div>

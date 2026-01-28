@@ -37,7 +37,7 @@ const ProjectList: FC<props> = ({ projects }) => {
     ? projects
     : projects?.projects || [];
 
-  const { id } = useParams();
+  const { "team-id" : id } = useParams();
   const { currentWorkspace } = useUser();
   const [projectid, setProjectId] = useState<number>();
   const dispatch = useDispatch();
@@ -49,6 +49,8 @@ const ProjectList: FC<props> = ({ projects }) => {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [projectToDelete, setProjectToDelete] = useState<number | null>(null);
   const [openDropdownId, setOpenDropdownId] = useState<number | null>(null);
+
+  console.log("proejct list", id)
 
   // useEffect mein load karo
   useEffect(() => {

@@ -30,11 +30,13 @@ export interface iWorkspaceAddResponse {
   name: string;
   slug: string;
   description: string | null;
+  logo? : string;
   owner_id: number;
   settings: any[];
   created_at: string;
   updated_at: string;
   url: string;
+  // is_owner : boolean
 }
 export interface iWorkspaceInviteRequest {
   emails: string[];
@@ -61,4 +63,14 @@ export interface iWorkspaceMember {
   is_accept: boolean;
   joined_at: string;
   image? : string
+}
+
+
+
+
+export interface  updateWorkspacePayload {
+  name? : string | null;
+  description? : string | null;
+  logo?  : File | null;
+  slug?: string | number | null 
 }

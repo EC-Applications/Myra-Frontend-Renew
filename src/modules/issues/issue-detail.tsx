@@ -73,9 +73,12 @@ import { useActivityHook } from "@/hooks/use-activity-hook";
 import Activity from "./components/issues-activity";
 import { useGetIssuesHook } from "@/hooks/use-get-issues";
 import { useGetIssuesDetailHook } from "@/hooks/use-get-issues-detail.hook";
-import { useGetSubIssuesHook } from "@/hooks/use-get-subissues.hook";
+
 import { useUpdateIssueHook } from "@/hooks/use-issue-update";
 import { useQueryClient } from "@tanstack/react-query";
+import { CyclePicker } from "../cycles/components/cycle-picker";
+import { useGetCyclesHook } from "@/hooks/use-get-cycle";
+import type { iCycleListResponse } from "@/interfaces/cycle.interface";
 
 export default function IssueDetailView() {
   const queryClient = useQueryClient();
@@ -84,17 +87,25 @@ export default function IssueDetailView() {
   const currentUser = useUser();
 
   const { data } = useGetIssuesDetailHook(Number(id));
-  const {} = useGetSubIssuesHook(Number(id));
+  // const {} = useGetSubIssuesHook(Number(id));
 
   const updateIssueStatus = useUpdateIssueHook();
 
   // console.log("IssueID", id);
   const { currentWorkspace } = useUser();
+  console.log("SLUG", currentWorkspace?.slug);
   const navigate = useNavigate();
-  const dispatch = useDispatch();
 
   const [loading, setLoading] = useState(false);
   // const [data, setData] = useState<iIussesDetail | undefined>();
+
+  const { data: cycleData } = useGetCyclesHook(
+    currentWorkspace?.slug ?? "",
+    Number(data?.team_id),
+  );
+
+
+  console.log("cycle data", cycleData);
 
   const status = useSelector((state: RootState) => state.issuesStatus);
   const statusList = status ?? [];
@@ -316,6 +327,22 @@ export default function IssueDetailView() {
       },
       teamId: Number(data?.team_id),
       workspaceId: Number(currentWorkspace?.id),
+    });
+  };
+
+  const handleCycleUpdate = async (cycleId: iCycleListResponse | null) => {
+    updateIssueStatus.mutate({
+      issueId: Number(id),
+      body: {
+        cycle_id: cycleId?.id  ?? null ,
+        workspace_id: currentWorkspace?.id,
+        team_id: Number(data?.team_id),
+      },
+      teamId: Number(data?.team_id),
+      workspaceId: Number(currentWorkspace?.id),
+      optimisticData: {
+        cycle_id: cycleId?.id
+      }
     });
   };
 
@@ -1721,6 +1748,21 @@ dark:bg-[#101012]"
               <span className="font-medium">Cycle 7</span>
             </div>
           </div> */}
+
+          {/* cycle */}
+
+          <div className="text-md dark:text-[#7e7f82] font-semibold">Cycle</div>
+          <div>
+            <CyclePicker
+              cycles={cycleData || []}
+              value={data?.cycles || null}
+              onChange={handleCycleUpdate}
+              buttnVarient="dark"
+              className="border-0"
+              // buttonVarient="dark"
+              // className="border-0"
+            />
+          </div>
 
           {/* Project */}
           <div className="text-md dark:text-[#7e7f82] font-semibold">

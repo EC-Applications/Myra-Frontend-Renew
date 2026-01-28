@@ -32,7 +32,6 @@ export const createIssuesUri = (body: iIssuePayload) => {
     formData.append("assignee_id", body.assignee_id.toString());
   if (body.due_date) formData.append("due_date", body.due_date);
   if (body.external_link) formData.append("external_link", body.external_link);
-
   // Labels
   if (body.labels) {
     body.labels.forEach((x) =>
@@ -78,11 +77,20 @@ export const updateIssuesUri = async (
   if (body.status_id) formData.append("status_id", body.status_id.toString());
   // if (body.priority_id)
   //   formData.append("priority_id", body.priority_id.toString());
-  if(body.priority_id !== undefined){
+  if (body.priority_id !== undefined) {
     formData.append(
-      "priority_id", body.priority_id === null ? "" : body.priority_id.toString()
-    )
+      "priority_id",
+      body.priority_id === null ? "" : body.priority_id.toString(),
+    );
   }
+
+  if (body.cycle_id !== undefined) {
+    formData.append(
+      "cycle_id",
+      body.cycle_id === null ? "" : body.cycle_id.toString(),
+    );
+  }
+
   if (body.project_id !== undefined) {
     formData.append(
       "project_id",
