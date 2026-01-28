@@ -19,7 +19,7 @@ export interface iIssuePayload {
   external_link?: string;
   attachments?: File[];
   issue_id?: number;
-  cycle_id?: number;
+  cycle_id?: number | null;
 }
 
 export interface iIssuesLabelPayload {

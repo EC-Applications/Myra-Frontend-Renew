@@ -102,7 +102,7 @@ export const createProjectUri = async (
   }
 
   if (iconFile) {
-    console.log("Appending icon file to formData");
+    // console.log("Appending icon file to formData");
     formData.append("icon_file", iconFile);
   }
 
