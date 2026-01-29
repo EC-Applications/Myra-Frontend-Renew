@@ -39,7 +39,7 @@ export const fetchCycleListUri = async (
   teamid: number
 ) => {
   return Axios.get(`/api/${workspaceSlug}/teams/${teamid}/cycles`, {
-    responseType: "json",
+    responseType: "json", 
   }).then((res) => res.data as iResponse<iCycleListResponse[]>);
 };
 

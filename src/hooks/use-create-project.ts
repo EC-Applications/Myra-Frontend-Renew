@@ -1,6 +1,8 @@
 import type { iProjectPayload } from "@/interfaces/project.interface";
 import { createProjectUri } from "@/services/project.service";
+import { addProject } from "@/store/slices/project.slice";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useDispatch } from "react-redux";
 import { toast } from "sonner";
 
 interface useCreateProjectParam {
@@ -13,6 +15,7 @@ interface useCreateProjectParam {
 
 export const useCreateProjectHook = () => {
   const queryClient = useQueryClient();
+  const dispatch = useDispatch();
   return useMutation({
     mutationFn: async ({
       body,
@@ -24,7 +27,8 @@ export const useCreateProjectHook = () => {
       const req = await createProjectUri(body, iconFile, documentFiles);
       return req.data;
     },
-    onSuccess: (data,variable) => {
+    onSuccess: (data, variable) => {
+      dispatch(addProject(data.data)); 
       queryClient.invalidateQueries({
         queryKey: ["all-project", variable.workspaceSlug],
       });
