@@ -488,10 +488,10 @@ export default function Detail() {
     document.body.removeChild(link);
   }, []);
 
-  const backendIcon = "\\ud83d\\ude00"; // Backend se aisa aata hai
-  console.log("Length:", backendIcon.length); // 12 characters
-  console.log("First char:", backendIcon[0]); // "\"
-  console.log("Starts with \\u:", backendIcon.startsWith("\\u")); // true ya false?
+  // const backendIcon = "\\ud83d\\ude00"; // Backend se aisa aata hai
+  // console.log("Length:", backendIcon.length); // 12 characters
+  // console.log("First char:", backendIcon[0]); // "\"
+  // console.log("Starts with \\u:", backendIcon.startsWith("\\u")); // true ya false?
 
   if (loading) {
     return (

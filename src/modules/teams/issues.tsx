@@ -25,22 +25,26 @@ import {
   type ProjectFilters,
 } from "@/components/issue-filter-dropdown";
 import { useGetIssuesHook } from "@/hooks/use-get-issues";
-import { DisplayDropdown, type DisplayState, type ViewType } from "@/components/display-setting";
+import {
+  DisplayDropdown,
+  type DisplayState,
+  type ViewType,
+} from "@/components/display-setting";
 
 export default function Issues() {
   const { currentWorkspace } = useUser();
   const { "team-id": teamId } = useParams();
   const [showNewIssueDialog, setShowNewIssueDialog] = useState(false);
   const dispatch = useDispatch();
-
+  // console.log("Current wrokspace", currentWorkspace?.id);
   const [loading, setLoading] = useState(false);
   const { data: rawIssues, isLoading } = useGetIssuesHook(
     currentWorkspace!.id,
     Number(teamId),
   );
 
-   const [displayState, setDisplayState] = useState<DisplayState>({
-    view: 'list',
+  const [displayState, setDisplayState] = useState<DisplayState>({
+    view: "list",
     grouping: null,
     subGrouping: null,
     ordering: null,
@@ -86,7 +90,7 @@ export default function Issues() {
   // }, [teamId, currentWorkspace, dispatch]);
 
   // const [view, setView] = useState(0);
-  const [view, setView] = useState<ViewType>('list');
+  const [view, setView] = useState<ViewType>("list");
   const [activeFilters, setActiveFilters] = useState<ProjectFilters>({
     status: [],
     priority: [],
@@ -113,6 +117,7 @@ export default function Issues() {
         priority_id: issue.priority_id,
         status_id: issue.status_id,
         // labels: issue.labels?.map((label: any) => label.name || label) || [],
+        labels: issue.labels,
         projects: issue.projects?.name || "No Project",
         due_date: issue.due_date || null,
         due_date_formatted: issue.due_date
@@ -130,7 +135,11 @@ export default function Issues() {
         sub_issues: issue.sub_issues,
         team_id: issue.team_id,
         type: issue.type,
-        issue_id : issue.issue_id
+        issue_id: issue.issue_id,
+        created_at: issue.created_at,
+        updated_at: issue.updated_at,
+        cycles: issue.cycles,
+        parent_issue: issue.parent_issue,
       }));
 
       acc[mappedStatus] = mappedIssuesList;
@@ -239,7 +248,7 @@ export default function Issues() {
                 <Box />
                 All Issues
               </Button>
-{/* 
+              {/* 
               <Button
                 variant="outline"
                 size="sm"
@@ -278,8 +287,8 @@ export default function Issues() {
         </header>
         <div className="flex items-center justify-between px-3 py-1 border-b">
           <IssueFilterDropdown onFilterChange={handleFilterChange} />
-                
-           <DisplayDropdown 
+
+          <DisplayDropdown
             view={view}
             onViewChange={setView}
             displayState={displayState}
@@ -312,7 +321,7 @@ export default function Issues() {
             </DropdownMenuContent>
           </DropdownMenu> */}
         </div>
-        {view == 'list' ? (
+        {view == "list" ? (
           // <div className=""></div>
           <IssueListView
             issuesData={filteredIssues}

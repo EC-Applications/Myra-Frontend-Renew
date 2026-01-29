@@ -34,7 +34,7 @@ export const IssuesStatusPicker = ({
 }: IssuesStatusPickerProps) => {
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
-  console.log("STATUS TEAM", statuses);
+  // console.log("STATUS TEAM", statuses);
   const filteredOptions = statuses.filter((status) =>
     status.name.toLowerCase().includes(search.toLowerCase())
   );

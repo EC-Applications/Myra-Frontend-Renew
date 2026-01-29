@@ -10,8 +10,8 @@ import { IconPicker } from "../projects/components/icon-picker";
 const Teams = () => {
   const teamsData = useSelector((state: any) => state.teams) || [];
   const { currentWorkspace } = useUser();
-  console.log("Worspace Id", currentWorkspace!.id);
-  console.log("TEAMS DATA IN TEAMS", teamsData);
+  // console.log("Worspace Id", currentWorkspace!.id);
+  // console.log("TEAMS DATA IN TEAMS", teamsData);
   return (
     <>
       <div className="p-6 space-y-6 ">

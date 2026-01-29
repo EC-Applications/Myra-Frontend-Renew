@@ -76,7 +76,7 @@ export default function SubIssueDetailView() {
   const { id } = useParams();
   const { currentWorkspace, currentUser } = useUser();
 
-  console.log("IssueID", id);
+  // console.log("IssueID", id);
   const [loading, setLoading] = useState(false);
   const { data } = useGetSubIssuesDetailHook(Number(id));
   // const [data, setData] = useState<iIussesDetail | undefined>();
@@ -138,7 +138,7 @@ export default function SubIssueDetailView() {
     Number(id),
   );
 
-  console.log("ACTIViTY in sub issue", activityData);
+  // console.log("ACTIViTY in sub issue", activityData);
 
   // useEffect(() => {
   //   setLoading(true);
@@ -167,7 +167,7 @@ export default function SubIssueDetailView() {
     if (data?.status) {
       setSelectedStatus(data.status);
     }
-    console.log("data ka status", data?.status);
+    // console.log("data ka status", data?.status);
     if (data?.priority_id) {
       setPriorityId(data?.priority_id);
     }
@@ -190,7 +190,7 @@ export default function SubIssueDetailView() {
     }
   }, [data, data?.labels]);
 
-  console.log("ISSUES", issues);
+  // console.log("ISSUES", issues);
 
   // const [subIssuesExpanded, setSubIssuesExpanded] = useState(true);
   // const [comment, setComment] = useState("");
@@ -345,7 +345,7 @@ export default function SubIssueDetailView() {
   };
 
   const handleUpdateLabel = async (labels: Label[]) => {
-    console.log("janaaaa");
+    // console.log("janaaaa");
 
     setSelectedLabels(labels); // Pehle state update karo
     // setSaving(true);
@@ -439,15 +439,15 @@ export default function SubIssueDetailView() {
   };
 
   const handleDocumentUpload = async (files: FileList | null) => {
-    console.log("handleDocumentUpload called with:", files);
+    // console.log("handleDocumentUpload called with:", files);
 
     if (!files || files.length === 0) {
-      console.log("No files provided");
+      // console.log("No files provided");
       return;
     }
 
     if (!data) {
-      console.log("No Issue Found");
+      // console.log("No Issue Found");
       return;
     }
 
@@ -456,7 +456,7 @@ export default function SubIssueDetailView() {
 
     try {
       const filesArray = Array.from(files);
-      console.log("Uploading files:", filesArray);
+      // console.log("Uploading files:", filesArray);
 
        updateSubIssue.mutate({
         issueId: Number(id),
@@ -859,11 +859,11 @@ export default function SubIssueDetailView() {
               accept="image/*,.pdf,.doc,.docx,.xls,.xlsx"
               className="hidden"
               onChange={(e) => {
-                console.log("Input onChange triggered");
-                console.log("Files selected:", e.target.files);
-                console.log("Files count:", e.target.files?.length);
+                // console.log("Input onChange triggered");
+                // console.log("Files selected:", e.target.files);
+                // console.log("Files count:", e.target.files?.length);
                 if (e.target.files && e.target.files.length > 0) {
-                  console.log(" Calling handleDocumentUpload");
+                  // console.log(" Calling handleDocumentUpload");
                   handleDocumentUpload(e.target.files);
                 } else {
                   console.log(" No files selected");

@@ -28,6 +28,12 @@ export interface iStatus {
   active: number;
 }
 
+export interface iParentIssue{
+  id: number; 
+  name: string;
+
+}
+
 export interface iIssues {
   id: number;
   key: string;
@@ -42,6 +48,7 @@ export interface iIssues {
   assignee_id: number | null;
   milestone_id: number | null;
   cycle: string | null;
+  cycle_id?: number | null;
   due_date: string | null;
   is_recurring: boolean;
   recurring_first_due: string | null;
@@ -61,6 +68,8 @@ export interface iIssues {
   assignee: iMember | null;
   start_date?: string;
   type?: "issue" | "sub_issue";
+  parent_issue: iParentIssue | null ;
+
 }
 
 export interface iIussesDetail {

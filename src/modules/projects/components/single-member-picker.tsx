@@ -36,7 +36,7 @@ export const SingleMemberPicker = ({
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
 
-  console.log("Single picker", members);
+  // console.log("Single picker", members);
 
   const term = search?.toLowerCase() ?? "";
 

@@ -18,6 +18,7 @@ import {
   Circle,
   Clock,
   Plus,
+  X,
   Zap,
 } from "lucide-react";
 import { useEffect, useRef, useState, type FC } from "react";
@@ -32,6 +33,13 @@ import { useSelector } from "react-redux";
 import type { RootState } from "@/store/store";
 import { useUpdateIssueHook } from "@/hooks/use-issue-update";
 import { useUpdateSubIssueHook } from "@/hooks/use-update-subissue";
+import { IssuesStatusPicker } from "./issues-status-picker";
+import type { iIssueStatus } from "@/interfaces/issues-status.interface";
+import { ProjectPicker } from "./project-picker";
+import { ProjecComponentKanban } from "./project-kanban-componenet";
+import { ProjectFormLabels } from "@/modules/projects/components/label-picker";
+import { formatDateToMonthDay } from "@/components/date-converter";
+import { CycleComponentKanaban } from "./cycle-view-kanban";
 
 const columns = [
   { id: "todo", title: "Todo", count: 32, icon: Circle },
@@ -81,10 +89,11 @@ const getLabelColor = (label: string) => {
 };
 
 const IssueKanbanView: FC<{ issuesData: any }> = ({ issuesData }) => {
-  console.log("ISSUE DATA", issuesData);
+  // console.log("ISSUE DATA", issuesData);
   const { "team-id": id } = useParams();
   const { currentWorkspace } = useUser();
   const navigate = useNavigate();
+
   const updateIssueStatus = useUpdateIssueHook();
 
   const updateSubIssue = useUpdateSubIssueHook();
@@ -97,6 +106,8 @@ const IssueKanbanView: FC<{ issuesData: any }> = ({ issuesData }) => {
       { id: s.id, name: s.name, icon: s.icon },
     ]),
   );
+
+  // console.log("STATUS LIST", statusList);
 
   const initialIssues = Object.entries(issuesData).flatMap(
     ([status, issueArray]: [string, any]) =>
@@ -128,21 +139,20 @@ const IssueKanbanView: FC<{ issuesData: any }> = ({ issuesData }) => {
   } | null>(null);
 
   const kanbanColumns = Object.keys(issuesData).map((statusKey) => {
-    const matchingColumn = columns.find((col) => col.id === statusKey);
+    const statusInfo = statusConfig[statusKey]; // ⬅️ Get from backend data
 
     return {
       id: statusKey,
       name:
-        statusKey === "backlog"
-          ? "Backlog"
-          : statusKey.charAt(0).toUpperCase() +
-            statusKey.slice(1).replace(/-/g, " "),
+        statusInfo?.name ||
+        statusKey.charAt(0).toUpperCase() +
+          statusKey.slice(1).replace(/-/g, " "),
       count: issuesData[statusKey].length,
-      icon: matchingColumn?.icon || Circle,
+      iconUrl: statusInfo?.icon || null, // ⬅️ Backend PNG URL
     };
   });
 
-  console.log("Kanban Columns:", kanbanColumns);
+  // console.log("Kanban Columns:", kanbanColumns);
 
   const kanbanData = issues.map((issue) => ({
     ...issue,
@@ -153,7 +163,7 @@ const IssueKanbanView: FC<{ issuesData: any }> = ({ issuesData }) => {
     type: issue.type,
   }));
 
-  console.log("ISSUExyz", issues);
+  // console.log("ISSUExyz", issues);
 
   const handleDragStart = (event: DragStartEvent) => {
     setIsDragging(true);
@@ -163,18 +173,16 @@ const IssueKanbanView: FC<{ issuesData: any }> = ({ issuesData }) => {
         id: String(issue.id),
         originalColumn: issue.status,
       };
-      console.log("Drag Started:", draggedIssueRef.current);
+      // console.log("Drag Started:", draggedIssueRef.current);
     }
   };
 
-  const handleDragEnd = async (
-    event: DragEndEvent,
-  ) => {
-    console.log("DRAG END FIRED");
+  const handleDragEnd = async (event: DragEndEvent) => {
+    // console.log("DRAG END FIRED");
     const { active, over, collisions } = event;
 
     if (!over || !draggedIssueRef.current) {
-      console.log("No valid drop target");
+      // console.log("No valid drop target");
       draggedIssueRef.current = null;
       // Reset dragging state - was not a successful drag
       setIsDragging(false);
@@ -198,14 +206,14 @@ const IssueKanbanView: FC<{ issuesData: any }> = ({ issuesData }) => {
       targetColumnId = overIssue?.status || null;
     }
 
-    console.log("🔍 Comparison:", {
-      originalColumn,
-      targetColumn: targetColumnId,
-      changed: originalColumn !== targetColumnId,
-    });
+    // console.log("🔍 Comparison:", {
+    //   originalColumn,
+    //   targetColumn: targetColumnId,
+    //   changed: originalColumn !== targetColumnId,
+    // });
 
     if (!targetColumnId || originalColumn === targetColumnId) {
-      console.log("Skipping - Same column");
+      // console.log("Skipping - Same column");
       draggedIssueRef.current = null;
       // Reset dragging state - no actual status change
       setIsDragging(false);
@@ -219,7 +227,7 @@ const IssueKanbanView: FC<{ issuesData: any }> = ({ issuesData }) => {
       return;
     }
 
-    console.log("TARGET COL NAME:", targetColumnId);
+    // console.log("TARGET COL NAME:", targetColumnId);
     const statusMapping: Record<string, number> = {
       backlog: 1,
       todo: 2,
@@ -232,12 +240,12 @@ const IssueKanbanView: FC<{ issuesData: any }> = ({ issuesData }) => {
     const statusId = statusMapping[targetColumnId];
 
     if (!statusId) {
-      console.error("Invalid status column:", targetColumnId);
+      // console.error("Invalid status column:", targetColumnId);
       draggedIssueRef.current = null;
       return;
     }
 
-    console.log("Mapped Status ID:", statusId);
+    // console.log("Mapped Status ID:", statusId);
 
     try {
       const mutate =
@@ -306,31 +314,39 @@ const IssueKanbanView: FC<{ issuesData: any }> = ({ issuesData }) => {
 
   return (
     <>
-      <div className="flex-1 overflow-hidden p-4">
+      <div className="flex-1 overflow-hidden p-4 ">
         <KanbanProvider
           columns={kanbanColumns}
           data={kanbanData}
           onDataChange={handleDataChange}
           onDragEnd={handleDragEnd}
           onDragStart={handleDragStart}
-          className="h-full max-w-0"
+          className="h-full max-w-0 "
         >
           {(column) => {
             const columnIssues = getIssuesByStatus(column.id);
-            const IconComponent = column.icon;
-            console.log("Col ICon", column.icon);
-            console.log("Col DATA", column);
+            const IconComponent = column.iconUrl;
+            // console.log("Col ICon", column.icon);
+            // console.log("Col DATA", column);
 
             return (
               <KanbanBoard
                 key={column.id}
                 id={column.id}
-                className="w-80 flex-shrink-0"
+                className="w-80 flex-shrink-0 dark:bg-[#1c1c1e]"
               >
                 {/* Column Header */}
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center gap-2">
-                    <IconComponent className="h-4 w-4 text-muted-foreground" />
+                    {column.iconUrl ? (
+                      <img
+                        src={column.iconUrl}
+                        alt={column.name}
+                        className="h-4 w-4 object-contain"
+                      />
+                    ) : (
+                      <Circle className="h-4 w-4 text-muted-foreground" />
+                    )}
                     <span className="font-medium">{column.name}</span>
                     <Badge variant="secondary" className="text-xs">
                       {columnIssues.length}
@@ -357,7 +373,7 @@ const IssueKanbanView: FC<{ issuesData: any }> = ({ issuesData }) => {
                 {/* Column Content */}
                 <KanbanCards
                   id={column.id}
-                  className="flex-1 space-y-3 overflow-y-auto"
+                  className="flex-1 space-y-3 overflow-y-auto "
                 >
                   {(issue) => (
                     <KanbanCard
@@ -365,11 +381,11 @@ const IssueKanbanView: FC<{ issuesData: any }> = ({ issuesData }) => {
                       id={issue.id}
                       name={issue.due_date}
                       column={issue.column}
-                      className="bg-card border gap-1 rounded p-4 hover:shadow-md transition-shadow cursor-pointer"
+                      className=" dark:bg-[#1f2023] border gap-1 rounded px-3 py-1 hover:shadow-md transition-shadow cursor-pointer "
                       onClick={(e: React.MouseEvent) => {
                         e.stopPropagation();
                         if (!isDragging) {
-                          console.log("navigation");
+                          // console.log("navigation");
                           {
                             issue.type === "issue"
                               ? navigate(`/issues/${issue.id}`)
@@ -381,17 +397,29 @@ const IssueKanbanView: FC<{ issuesData: any }> = ({ issuesData }) => {
                       {/* Issue Header */}
                       <div className="flex items-start justify-between">
                         <div className="flex items-center gap-2">
-                          <span className="text-sm text-muted-foreground font-mono ">
+                          <span className="text-[13px] text-muted-foreground font-semibold ">
                             {issue.key}
                           </span>
-                          {/* <span className="text-sm text-muted-foreground font-mono ">
-                            {issue.name}
-                          </span> */}
+
+                          {issue.type == "sub_issue" && (
+                            <div className="flex items-center gap-2">
+                              <span className="mb-0.5">›</span>
+                              {/* <Arrow */}
+                              <span className="text-sm font-semibold text-muted-foreground  ">
+                                {issue.parent_issue?.name || ""}
+                              </span>
+                            </div>
+                          )}
+
                           {/* {getPriorityIcon(issue.priority)} */}
                         </div>
                         <Avatar className="h-6 w-6">
                           <AvatarImage
-                            src={issue.assignee?.avatar || "/placeholder.svg"}
+                            src={
+                              issue.assignee?.avatar ||
+                              issue.assignee?.image ||
+                              "/placeholder.svg"
+                            }
                           />
                           <AvatarFallback className="text-xs">
                             {issue.assignee?.name
@@ -404,12 +432,20 @@ const IssueKanbanView: FC<{ issuesData: any }> = ({ issuesData }) => {
 
                       <div className="flex items-start justify-between">
                         <div className="flex items-center gap-2">
-                          <Badge className="text-sm text-muted-foreground font-mono bg-muted">
+                          {/* <Badge className="text-sm text-muted-foreground font-mono bg-muted">
                             {issue.status}
-                          </Badge>
-                          <span className="text-sm tex-white font-semibold">
+                          </Badge> */}
+                          <IssuesStatusPicker
+                            statuses={statusList}
+                            variant="icon-only"
+                            value={statusConfig[issue.status] || null}
+                            onChange={() => {}}
+                            className="shrink-0"
+                          />
+
+                          <div className="text-sm tex-white font-semibold">
                             {issue.name}
-                          </span>
+                          </div>
                         </div>
                       </div>
 
@@ -421,27 +457,79 @@ const IssueKanbanView: FC<{ issuesData: any }> = ({ issuesData }) => {
                       )}
 
                       {/* Labels */}
-                      {issue.labels && issue.labels.length > 0 && (
-                        <div className="flex flex-wrap gap-1">
-                          {issue.labels.map((label: string) => (
-                            <Badge
-                              key={label}
-                              variant="secondary"
-                              className={`text-xs ${getLabelColor(label)}`}
-                            >
-                              {label}
-                            </Badge>
-                          ))}
+                      <div className="flex flex-wrap pt-2 gap-0.5">
+                        <div className="flex items-center text-xs text-muted-foreground">
+                          <PriorityPicker
+                            variant="icon-only"
+                            value={issue.priority}
+                            isPriorityShow={true}
+                            size={10}
+                            className="border h-[25px] rounded "
+                            buttonVarient="dark"
+                          />
                         </div>
-                      )}
+                        {issue.projects != "No Project" ? (
+                          <div className="flex items-center pl-1 text-xs text-muted-foreground">
+                            <ProjecComponentKanban
+                              projectName={issue.projects}
+                            />
+                          </div>
+                        ) : (
+                          <div className=""></div>
+                        )}
+
+                        <div className="flex items-center  text-xs text-muted-foreground">
+                          {issue.cycles != null && (
+                            <CycleComponentKanaban cycleData={issue.cycles} />
+                          )}
+                        </div>
+
+                        <div className="">{/* <ProjectFormLabels  /> */}</div>
+                        {issue.labels && issue.labels.length > 0 && (
+                          <ProjectFormLabels
+                            labels={issue.labels}
+                            value={issue.labels || []}
+                            onChange={(labels) =>
+                              // handleLabelChange(issue.id, labels)
+                              console.log("Labels changed", labels)
+                            }
+                            variant="card-row"
+                          />
+                        )}
+                        {/* {issue.labels && issue.labels.length > 0 && (
+                          <div className="flex flex-wrap gap-1">
+                            {issue.labels.map((label: string) => (
+                              <Badge
+                                key={label}
+                                variant="secondary"
+                                className={`text-xs ${getLabelColor(label)}`}
+                              >
+                                {label}
+                              </Badge>
+                            ))}
+                          </div>
+                        )} */}
+                        {/* <button onClick={()=> console.log("issues label", issue.labels)}>
+
+                          <X/>
+                        </button> */}
+                      </div>
 
                       {/* Project */}
-                      <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                      <div className="flex justify-between items-center pb-2 pt-1 text-xs text-muted-foreground">
                         {/* <BarChart3 className="h-3 w-3" /> */}
-                        <div className=" p-1 border rounded border-zinc-600">
-                          {issue.priority}
+                        <div className="flex items-center gap-2">
+                          <span className="text-[12px]">Created At</span>
+                          <span className="text-[12px]">
+                            {formatDateToMonthDay(issue.created_at)}
+                          </span>
                         </div>
-                        <span>{issue.project}</span>
+                        <div className="flex items-center gap-2">
+                          <span className="text-[12px]">Updated At</span>
+                          <span className="text-[12px]">
+                            {formatDateToMonthDay(issue.updated_at)}
+                          </span>
+                        </div>
                       </div>
 
                       {/* Footer */}

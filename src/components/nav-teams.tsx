@@ -43,7 +43,7 @@ const NavTeams = () => {
   const location = useLocation();
   const dispatch = useDispatch();
   const currentPath = location.pathname;
-  console.log("LOG NAV TEAM", teamsData);
+  // console.log("LOG NAV TEAM", teamsData);
 
   return (
     <Collapsible defaultOpen className="group/collapsible">

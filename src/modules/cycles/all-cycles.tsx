@@ -63,7 +63,7 @@ const CyclesScreen = () => {
           Number(id)
         );
         setData(res.data);
-        console.log("All cycle", res.data);
+        // console.log("All cycle", res.data);
       } catch (e: any) {
         console.log(e.message || "Something went wrong");
       } finally {
@@ -125,7 +125,7 @@ const CyclesScreen = () => {
       fetchCycleListUri(currentWorkspace?.slug ?? "", Number(id)).then(
         (res) => {
           setData(res.data);
-          console.log("All cycle", res.data);
+          // console.log("All cycle", res.data);
         }
       );
       toast.success("Cycle updated successfully");

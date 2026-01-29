@@ -49,7 +49,7 @@ interface chartDataProps {
 }
 
 export function LinearStyleChart({chartData}:chartDataProps) {
-  console.log("CHART DATA", chartData);
+  // console.log("CHART DATA", chartData);
 
   return (
     <ChartContainer config={chartConfig} className="h-64 w-full">

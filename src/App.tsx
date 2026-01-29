@@ -38,8 +38,8 @@ function App() {
   const token = auth.tokens[auth.currentUser];
   // console.log("Token in dashboard", token);
 
-  console.log("CURRENT WORKPSACE Id", currentWorkspace?.id)
-  console.log("CURRENT WORKPSACE Name", currentWorkspace?.slug)
+  // console.log("CURRENT WORKPSACE Id", currentWorkspace?.id)
+  // console.log("CURRENT WORKPSACE Name", currentWorkspace?.slug)
 
 
   useEffect(() => {

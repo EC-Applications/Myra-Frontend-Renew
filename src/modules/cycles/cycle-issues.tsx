@@ -348,6 +348,7 @@ export default function Issues() {
               avatar: issue.assignee.avatar ?? undefined,
             }
           : null,
+        parent_issue: issue.parent_issue ?? null, 
       }));
       return acc;
     },
