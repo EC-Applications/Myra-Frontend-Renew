@@ -21,6 +21,10 @@ import {
 import type { iProject } from "@/interfaces/project.interface";
 import { Icon } from "@radix-ui/react-select";
 import { IconPicker } from "@/modules/projects/components/icon-picker";
+import {
+  detectIconType,
+  parseEmojiFromUnicode,
+} from "@/components/parse-emoji";
 
 interface SingleProjectProps {
   projects: iProject[];
@@ -42,8 +46,10 @@ export const ProjectPicker = ({
 
   const term = search?.toLowerCase() ?? "";
 
+  // console.log("PROJECT", projects);
+
   const filteredProjects = (projects || []).filter((p) =>
-    (p?.name ?? "").toLowerCase().includes(term)
+    (p?.name ?? "").toLowerCase().includes(term),
   );
 
   const handleSelectProject = (project: iProject) => {
@@ -67,25 +73,40 @@ export const ProjectPicker = ({
         <Button
           variant="outline"
           className={cn(
-            `h-7.5 justify-start gap-2  text-sm font-semibold text-muted-foreground hover:text-white border dark:bg-[#2a2c33] dark:hover:bg-[#32333a] ${
+            `h-7.5 justify-start gap-2 px-1  text-sm font-semibold text-muted-foreground hover:text-white border dark:bg-[#2a2c33] dark:hover:bg-[#32333a] ${
               buttonVarient == "light"
                 ? "dark:bg-[#2a2c33]"
                 : "dark:bg-transparent"
             }`,
-            className
+            className,
           )}
         >
-          <FolderKanban className="h-3.5 w-3.5" />
           {!value ? (
-            <span className="text-[13px]">Project</span>
+            <div className="flex items-center  space-x-2">
+              <FolderKanban className="h-3.5 w-3.5" />
+              <span className="text-[14px]">Project</span>
+            </div>
           ) : (
             <div className="flex items-center gap-1">
               <div className="flex items-center gap-1">
-                {/* <Avatar className="h-4 w-4">
-                  <AvatarFallback className="text-[10px]">
-                    {getAvatarText(value.name)}
-                  </AvatarFallback>
-                </Avatar> */}
+                <IconPicker
+                  variant="inline"
+                  size={15}
+                  value={
+                    typeof value?.icon === "object"
+                      ? {
+                          ...value.icon,
+                          icon: parseEmojiFromUnicode(value.icon.icon), // ← Parse nested icon
+                        }
+                      : value?.icon
+                        ? {
+                            icon: parseEmojiFromUnicode(value.icon),
+                            color: "#000000",
+                            type: detectIconType(value.icon),
+                          }
+                        : undefined
+                  }
+                />
                 <span className="text-[14px]">{value.name}</span>
                 {/* <button
                   onClick={handleRemoveProject}
@@ -129,15 +150,28 @@ export const ProjectPicker = ({
               return (
                 <DropdownMenuItem
                   key={project.id}
-                  className="flex items-center justify-between rounded-sm px-3 py-1.5 text-[13px] cursor-pointer dark:hover:bg-[#292b30]"
+                  className="flex items-center justify-between rounded-sm py-1 px-2  text-[13px] cursor-pointer dark:hover:bg-[#292b30]"
                   onSelect={() => handleSelectProject(project)}
                 >
-                  <div className="flex items-center gap-2">
-                    <Avatar className="h-5 w-5">
-                      <AvatarFallback className="text-[10px] bg-primary/10">
-                        {getAvatarText(project.name)}
-                      </AvatarFallback>
-                    </Avatar>
+                  <div className="flex items-center gap-1">
+                    <IconPicker
+                      variant="inline"
+                      size={15}
+                      value={
+                        typeof project?.icon === "object"
+                          ? {
+                              ...project.icon,
+                              icon: parseEmojiFromUnicode(project.icon.icon), // ← Parse nested icon
+                            }
+                          : project?.icon
+                            ? {
+                                icon: parseEmojiFromUnicode(project.icon),
+                                color: "#000000",
+                                type: detectIconType(project.icon),
+                              }
+                            : undefined
+                      }
+                    />
 
                     <div className="flex flex-col">
                       <span className="font-medium">{project.name}</span>

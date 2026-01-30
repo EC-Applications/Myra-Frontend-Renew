@@ -312,6 +312,70 @@ const IssueKanbanView: FC<{ issuesData: any }> = ({ issuesData }) => {
     return issues.filter((issue) => issue.status === status);
   };
 
+  const handlePriorityUpdate = (
+    issuid: number,
+    priorityId: number,
+    tId: number,
+    type: string,
+    parent_issue_id?: number,
+  ) => {
+    const mutate =
+      type === "issue"
+        ? updateIssueStatus.mutate({
+            issueId: Number(issuid),
+            body: {
+              priority_id: priorityId,
+              workspace_id: currentWorkspace?.id,
+              team_id: Number(tId),
+            },
+            teamId: Number(tId),
+            workspaceId: Number(currentWorkspace?.id),
+          })
+        : updateSubIssue.mutate({
+            issueId: Number(issuid),
+            body: {
+              issue_id: parent_issue_id,
+              priority_id: priorityId,
+              workspace_id: currentWorkspace?.id,
+              team_id: Number(tId),
+            },
+            teamId: Number(tId),
+            workspaceId: Number(currentWorkspace?.id),
+          });
+  };
+
+  const handleStatusUpdate = async (
+    issueId: number,
+    status: iIssueStatus,
+    tId: number,
+    type: string,
+    parent_issue_id: number,
+  ) => {
+    const mutate =
+      type === "issue"
+        ? updateIssueStatus.mutate({
+            issueId: Number(issueId),
+            body: {
+              status_id: status.id,
+              workspace_id: currentWorkspace?.id,
+              team_id: Number(tId),
+            },
+            teamId: Number(tId),
+            workspaceId: Number(currentWorkspace?.id),
+          })
+        : updateSubIssue.mutate({
+            issueId: Number(issueId),
+            body: {
+              issue_id: parent_issue_id,
+              status_id: status.id,
+              workspace_id: currentWorkspace?.id,
+              team_id: Number(tId),
+            },
+            teamId: Number(tId),
+            workspaceId: Number(currentWorkspace?.id),
+          });
+  };
+
   return (
     <>
       <div className="flex-1 overflow-hidden p-4 ">
@@ -333,7 +397,7 @@ const IssueKanbanView: FC<{ issuesData: any }> = ({ issuesData }) => {
               <KanbanBoard
                 key={column.id}
                 id={column.id}
-                className="w-80 flex-shrink-0 dark:bg-[#1c1c1e]"
+                className="w-80 h-auto flex-shrink-0 dark:bg-[#1c1c1e]"
               >
                 {/* Column Header */}
                 <div className="flex items-center justify-between mb-4">
@@ -439,7 +503,15 @@ const IssueKanbanView: FC<{ issuesData: any }> = ({ issuesData }) => {
                             statuses={statusList}
                             variant="icon-only"
                             value={statusConfig[issue.status] || null}
-                            onChange={() => {}}
+                            onChange={(newStatus) => {
+                              handleStatusUpdate(
+                                Number(issue.id),
+                                newStatus,
+                                issue.team_id,
+                                issue.type || "",
+                                issue.issue_id || 0,
+                              );
+                            }}
                             className="shrink-0"
                           />
 
@@ -461,7 +533,21 @@ const IssueKanbanView: FC<{ issuesData: any }> = ({ issuesData }) => {
                         <div className="flex items-center text-xs text-muted-foreground">
                           <PriorityPicker
                             variant="icon-only"
-                            value={issue.priority}
+                            onChange={(newPriorityId) => {
+                              handlePriorityUpdate(
+                                Number(issue.id),
+                                newPriorityId,
+                                issue.team_id,
+                                issue.type || "",
+                                issue.issue_id,
+                              );
+                              // console.log(
+                              //   "Update priority:",
+                              //   issue.id,
+                              //   newPriorityId,
+                              // );
+                            }}
+                            value={issue.priority_id}
                             isPriorityShow={true}
                             size={10}
                             className="border h-[25px] rounded "

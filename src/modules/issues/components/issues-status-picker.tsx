@@ -46,6 +46,7 @@ export const IssuesStatusPicker = ({
       return (
         <button
           disabled={disabled}
+          onClick={(e) => e.stopPropagation()}
           className={cn(
             "transition-opacity hover:opacity-80",
             disabled && "opacity-50 cursor-not-allowed",
@@ -67,6 +68,7 @@ export const IssuesStatusPicker = ({
         <Button
           variant="outline"
           disabled={disabled}
+          onClick={(e) => e.stopPropagation()}
           className={cn(
             "h-8 w-auto justify-start gap-1.5 px-2 text-sm font-normal text-muted-foreground hover:text-foreground border",
             disabled && "opacity-50 cursor-not-allowed",
@@ -90,6 +92,7 @@ export const IssuesStatusPicker = ({
       <Button
         variant="outline"
         disabled={disabled}
+        onClick={(e) => e.stopPropagation()}
         className={cn(
           `h-7.5 w-auto gap-2 px-2 text-sm font-semibold  dark:text-muted-foreground dark:hover:text-white   ${buttonVarient == "light"  ? "dark:bg-[#32333a]" : "dark:bg-transparent"} `,
           disabled && "opacity-50 cursor-not-allowed ",
@@ -117,6 +120,7 @@ export const IssuesStatusPicker = ({
       <DropdownMenuContent
         align="start"
         className="w-[300px] p-0 dark:bg-[#1c1d1f]"
+         onClick={(e) => e.stopPropagation()}
         onCloseAutoFocus={(e) => {
           e.preventDefault();
           setSearch("");

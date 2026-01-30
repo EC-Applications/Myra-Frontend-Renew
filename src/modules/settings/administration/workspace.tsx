@@ -28,7 +28,7 @@ export function Workspace() {
     url: currentWorkspace?.url || "",
   };
 
-  console.log("current workspace", currentWorkspace);
+  // console.log("current workspace", currentWorkspace);
   const handleNameBlur = (
     currentValue: string,
     initialValue: string | undefined,
@@ -208,7 +208,7 @@ export function Workspace() {
 
                   <Separator />
 
-                  <div>
+                  {/* <div>
                     <h2 className="text-lg font-medium mb-3 ms-1">
                       Danger zone
                     </h2>
@@ -225,7 +225,7 @@ export function Workspace() {
                         <Button variant="destructive">Delete workspace</Button>
                       </div>
                     </div>
-                  </div>
+                  </div> */}
                 </div>
               </div>
             </div>

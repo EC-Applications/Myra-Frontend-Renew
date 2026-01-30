@@ -64,6 +64,7 @@ export function PriorityPicker({
         <Button
           variant="outline"
           disabled={disabled}
+          onClick={(e) => e.stopPropagation()}
           className={cn(
             `h-[30px] w-auto justify-start gap-2 px-2 text-sm font-semibold text-muted-foreground dark:hover:text-white ${buttonVarient == "light" ? "dark:bg-[#2a2c33]" : "dark:bg-transparent"} dark:hover:bg-[#32333a] `,
             disabled && "opacity-50 cursor-not-allowed",
@@ -118,6 +119,7 @@ export function PriorityPicker({
       <DropdownMenuContent
         align="start"
         className="w-[300px] p-0 dark:bg-[#1c1d1f]"
+        onClick={(e) => e.stopPropagation()}
         onCloseAutoFocus={(e) => {
           e.preventDefault();
           setSearch("");

@@ -123,7 +123,7 @@ export default function Teams() {
         <Formik initialValues={initialValues} onSubmit={() => {}}>
           {({ setFieldValue, values }) => (
             <div className="bg-card border rounded-lg p-6">
-              <div className="grid grid-cols-2 gap-6">
+              <div className="grid grid-cols-2 gap-6 items-end">
                 <div>
                   <label className="block text-sm font-medium mb-2">
                     Icon & Name
@@ -174,6 +174,8 @@ export default function Teams() {
                     </span>
                   </label>
                   <Input
+
+                  className="mb-0.5"
                     value={values.identifier}
                     onChange={(e) =>
                       setFieldValue("identifier", e.target.value)

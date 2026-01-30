@@ -13,6 +13,11 @@ import { use, useEffect, useState } from "react";
 import { Check, User, Users, X } from "lucide-react";
 import { useSelector } from "react-redux";
 import { useParams } from "react-router";
+import { IconPicker } from "./icon-picker";
+import {
+  detectIconType,
+  parseEmojiFromUnicode,
+} from "@/components/parse-emoji";
 
 interface TeamPickerProps {
   teams: iTeams[];
@@ -31,6 +36,7 @@ export const TeamPicker = ({
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
 
+  // console.log("teams in team picker", teams);
   const currentTeam = teams.find((team) => team.id === Number(teamId));
   useEffect(() => {
     if (currentTeam && value.length === 0) {
@@ -45,7 +51,7 @@ export const TeamPicker = ({
 
   // Separate current team from others
   const otherTeams = filteredTeams.filter(
-    (team) => team.id !== currentTeam?.id
+    (team) => team.id !== currentTeam?.id,
   );
 
   // Toggle team selection
@@ -72,25 +78,37 @@ export const TeamPicker = ({
           variant="ghost"
           className={cn(
             "h-8 justify-start gap-2 px-2 text-sm  dark:text-muted-foreground hover:font-semibold font-semibold hover:text-white border dark:bg-[#2a2c33] dark:hover:bg-[#32333a]",
-            className
+            className,
           )}
         >
           {value.length === 0 ? (
-            <span className="text-[13px]">Add teams...</span>
+            <span className="text-[13px]">Add teams</span>
           ) : (
             <div className="flex items-center gap-1 flex-wrap">
-              <Users className="h-3.5 w-3.5" />
               {value.slice(0, 2).map((team) => (
                 <div
                   key={team.id}
-                  className="flex items-center gap-1 rounded px-1.5 py-0.5"
+                  className="flex items-center gap-1 rounded px-1 py-0.5"
                 >
-                  {/* <Avatar className="h-4 w-4">
-                                        <AvatarFallback className="text-[10px]">
-                                            {team.name.slice(0, 2).toUpperCase()}
-                                        </AvatarFallback>
-                                    </Avatar> */}
-                  <span className="text-[11px]">{team.name}</span>
+                  <IconPicker
+                    variant="inline"
+                    size={15}
+                    value={
+                      typeof team?.icon === "object"
+                        ? {
+                            ...team.icon,
+                            icon: parseEmojiFromUnicode(team.icon.icon), // ← Parse nested icon
+                          }
+                        : team?.icon
+                          ? {
+                              icon: parseEmojiFromUnicode(team.icon),
+                              color: "#000000",
+                              type: detectIconType(team.icon),
+                            }
+                          : undefined
+                    }
+                  />
+                  <span className="text-[13px] font-semibold">{team.name}</span>
                   {/* <button
                                         onClick={(e) => handleRemoveTeam(Number(team.id), e)}
                                         className="hover:bg-background rounded-full p-0.5"
@@ -136,11 +154,24 @@ export const TeamPicker = ({
                     readOnly
                     className="h-4 w-4"
                   />
-                  <Avatar className="h-5 w-5">
-                    <AvatarFallback className="text-[10px] bg-primary/10">
-                      {currentTeam.name.slice(0, 2).toUpperCase()}
-                    </AvatarFallback>
-                  </Avatar>
+                  <IconPicker
+                    variant="inline"
+                    size={15}
+                    value={
+                      typeof currentTeam?.icon === "object"
+                        ? {
+                            ...currentTeam.icon,
+                            icon: parseEmojiFromUnicode(currentTeam.icon.icon), // ← Parse nested icon
+                          }
+                        : currentTeam?.icon
+                          ? {
+                              icon: parseEmojiFromUnicode(currentTeam.icon),
+                              color: "#000000",
+                              type: detectIconType(currentTeam.icon),
+                            }
+                          : undefined
+                    }
+                  />
                   <div className="flex flex-col">
                     <span className="font-medium">{currentTeam.name}</span>
                     <span className="text-[11px] text-muted-foreground">
@@ -179,11 +210,24 @@ export const TeamPicker = ({
                         readOnly
                         className="h-4 w-4"
                       />
-                      <Avatar className="h-5 w-5">
-                        <AvatarFallback className="text-[10px] bg-primary/10">
-                          {team.name.slice(0, 2).toUpperCase()}
-                        </AvatarFallback>
-                      </Avatar>
+                      <IconPicker
+                        variant="inline"
+                        size={15}
+                        value={
+                          typeof team?.icon === "object"
+                            ? {
+                                ...team.icon,
+                                icon: parseEmojiFromUnicode(team.icon.icon), // ← Parse nested icon
+                              }
+                            : team?.icon
+                              ? {
+                                  icon: parseEmojiFromUnicode(team.icon),
+                                  color: "#000000",
+                                  type: detectIconType(team.icon),
+                                }
+                              : undefined
+                        }
+                      />
                       <span className="font-medium">{team.name}</span>
                     </div>
                   </DropdownMenuItem>

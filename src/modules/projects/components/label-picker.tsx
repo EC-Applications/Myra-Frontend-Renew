@@ -72,6 +72,7 @@ export const ProjectFormLabels = ({
     if (!value.length) {
       return (
         <button
+          onClick={(e) => e.stopPropagation()}
           className={cn(
             "flex items-center gap-1.5 h-[25px] px-2 rounded border text-sm font-semibold text-muted-foreground hover:text-white transition-colors dark:bg-transparent dark:border-zinc-700 dark:hover:bg-[#32333a]",
             className
@@ -87,7 +88,7 @@ export const ProjectFormLabels = ({
     const displayLabels = value.slice(0, 3);
 
     return (
-      <div className="flex items-center gap-1">
+      <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
         {displayLabels.map((label) => (
           <button
             key={label.id}
@@ -111,6 +112,7 @@ export const ProjectFormLabels = ({
   const renderDefaultTrigger = () => (
     <Button
       variant="outline"
+      onClick={(e) => e.stopPropagation()}
       className={cn(
         `h-7.5 justify-start gap-2 px-2 text-sm font-semibold
  text-muted-foreground dark:hover:text-white dark:hover:bg-[#32333a]
@@ -156,6 +158,7 @@ export const ProjectFormLabels = ({
       <DropdownMenuContent
         align="start"
         className="w-[280px] dark:bg-[#1c1d1f] p-0 dark:border-zinc-700"
+         onClick={(e) => e.stopPropagation()}
         onCloseAutoFocus={(e) => {
           e.preventDefault();
           setSearch("");

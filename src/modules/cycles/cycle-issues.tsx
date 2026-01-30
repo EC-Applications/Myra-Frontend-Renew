@@ -253,8 +253,8 @@ export default function Issues() {
   // const [loading, setLoading] = useState(false);
   const { cycleId: id } = useParams();
   const { "team-id": teamid } = useParams();
-  console.log("cycle id", id);
-  console.log("team id", teamid);
+  // console.log("cycle id", id);
+  // console.log("team id", teamid);
 
   // Redux
   const dispatch = useDispatch();
@@ -265,10 +265,10 @@ export default function Issues() {
     Number(teamid),
     Number(id),
   );
-  console.log("ISSUE DATA IN CYCLE", issueData);
-  console.log("SLUG IN CYCLE", currentWorkspace?.slug);
-  console.log("ID IN CYCLE", Number(id));
-  console.log("TEAM ID IN CYCLE", Number(teamid));
+  // console.log("ISSUE DATA IN CYCLE", issueData);
+  // console.log("SLUG IN CYCLE", currentWorkspace?.slug);
+  // console.log("ID IN CYCLE", Number(id));
+  // console.log("TEAM ID IN CYCLE", Number(teamid));
 
   // useEffect(() => {
   //   const fetchCycleDetail = async () => {
@@ -355,7 +355,7 @@ export default function Issues() {
     {} as Record<string, iIssues[]>,
   );
 
-  console.log("setIssues called with:", groupedIssues);
+  // console.log("setIssues called with:", groupedIssues);
 
   if (isLoading) {
     return (
