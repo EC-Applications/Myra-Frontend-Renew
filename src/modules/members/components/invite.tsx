@@ -50,8 +50,8 @@ const Invite: FC<InviteProps> = ({ refresh, teamId, teamName }) => {
   const [open, setOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  console.log("team name", teamName)
-  console.log("team id", teamId)
+  // console.log("team name", teamName)
+  // console.log("team id", teamId)
 
   const formik = useFormik({
     initialValues: {

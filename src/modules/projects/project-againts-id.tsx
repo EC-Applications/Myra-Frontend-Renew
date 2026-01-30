@@ -210,7 +210,7 @@ const ProjectAgainstTeamId = () => {
 
   // Apply filters to project data
   const filteredData = useMemo(() => {
-    console.log("🔍 Filtering with:", activeFilters);
+    // console.log("🔍 Filtering with:", activeFilters);
 
     // Debug: Log first project's team structure
     // if (data.length > 0) {
@@ -253,15 +253,15 @@ const ProjectAgainstTeamId = () => {
           allMemberIds.includes(id),
         );
 
-        console.log("👤 Members Filter:", {
-          projectName: project.name,
-          projectMembers: project.members,
-          projectMemberIds,
-          projectLeadId: project.lead_id,
-          allMemberIds,
-          selectedFilters: activeFilters.members,
-          hasMatchingMember,
-        });
+        // console.log("👤 Members Filter:", {
+        //   projectName: project.name,
+        //   projectMembers: project.members,
+        //   projectMemberIds,
+        //   projectLeadId: project.lead_id,
+        //   allMemberIds,
+        //   selectedFilters: activeFilters.members,
+        //   hasMatchingMember,
+        // });
 
         if (!hasMatchingMember) {
           return false;
@@ -276,13 +276,13 @@ const ProjectAgainstTeamId = () => {
           projectTeamIds.includes(id),
         );
 
-        console.log("👥 Teams Filter:", {
-          projectName: project.name,
-          projectTeams: project.teams,
-          projectTeamIds,
-          selectedFilters: activeFilters.teams,
-          hasMatchingTeam,
-        });
+        // console.log("👥 Teams Filter:", {
+        //   projectName: project.name,
+        //   projectTeams: project.teams,
+        //   projectTeamIds,
+        //   selectedFilters: activeFilters.teams,
+        //   hasMatchingTeam,
+        // });
 
         if (!hasMatchingTeam) {
           return false;

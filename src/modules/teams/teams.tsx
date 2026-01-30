@@ -6,12 +6,16 @@ import { Link } from "react-router";
 import { useSelector } from "react-redux";
 import { useUser } from "@/hooks/use-user";
 import { IconPicker } from "../projects/components/icon-picker";
+import {
+  detectIconType,
+  parseEmojiFromUnicode,
+} from "@/components/parse-emoji";
 
 const Teams = () => {
   const teamsData = useSelector((state: any) => state.teams) || [];
   const { currentWorkspace } = useUser();
-  console.log("Worspace Id", currentWorkspace!.id);
-  console.log("TEAMS DATA IN TEAMS", teamsData);
+  // console.log("Worspace Id", currentWorkspace!.id);
+  // console.log("TEAMS DATA IN TEAMS", teamsData);
   return (
     <>
       <div className="p-6 space-y-6 ">
@@ -39,7 +43,7 @@ const Teams = () => {
             <div className="col-span-2">Membership</div>
             <div className="col-span-3">Members</div>
             <div className="col-span-2">Cycle</div>
-            <div className="col-span-2">Active projects</div>
+            {/* <div className="col-span-2">Active projects</div> */}
           </div>
 
           {/* Team Rows */}
@@ -53,7 +57,24 @@ const Teams = () => {
                 {/* <div className="w-6 h-6 bg-blue-600 rounded flex items-center justify-center">
                   <Users className="w-3 h-3 text-white" />
                 </div> */}
-                <IconPicker variant="inline" value={team.icon}   />
+                <IconPicker
+                  variant="inline"
+                  size={20}
+                  value={
+                    typeof team?.icon === "object"
+                      ? {
+                          ...team.icon,
+                          icon: parseEmojiFromUnicode(team.icon.icon), // ← Parse nested icon
+                        }
+                      : team?.icon
+                        ? {
+                            icon: parseEmojiFromUnicode(team.icon),
+                            color: "#000000",
+                            type: detectIconType(team.icon),
+                          }
+                        : undefined
+                  }
+                />
                 <div className="flex items-center gap-2">
                   <Link
                     to={`./${team.id}/issues`}
@@ -83,8 +104,8 @@ const Teams = () => {
                       key={member.id}
                       className="w-6 h-6 border-2 border-background"
                     >
-                      <AvatarImage src={member.avatar || "/placeholder.svg"} />
-                      <AvatarFallback className="text-xs bg-orange-500 text-white">
+                      <AvatarImage src={member.avatar || member.image || "/placeholder.svg"} />
+                      <AvatarFallback className="text-xs bg-[#5e6ad2] text-white">
                         {String.fromCharCode(65 + index)}
                       </AvatarFallback>
                     </Avatar>
@@ -98,20 +119,22 @@ const Teams = () => {
               {/* Cycle */}
               <div className="col-span-2 flex items-center">
                 <div className="flex items-center gap-2">
-                  <div className="w-2 h-2 bg-muted-foreground rounded-full"></div>
-                  <span className="text-sm text-foreground">{team.cycle}</span>
+                  <div className="w-2 h-2 dark:bg-[#5e6ad2] bg-muted-foreground rounded-full"></div>
+                  <span className="text-sm text-foreground font-semibold">
+                     {team.cyclesPeriod === true ? "Enable" : "Disable"}
+                  </span>
                 </div>
               </div>
 
               {/* Active Projects */}
-              <div className="col-span-2 flex items-center">
+              {/* <div className="col-span-2 flex items-center">
                 <div className="flex items-center gap-2">
                   <div className="w-2 h-2 bg-muted-foreground rounded-full"></div>
                   <span className="text-sm text-foreground">
                     {team.activeProjects}
                   </span>
                 </div>
-              </div>
+              </div> */}
             </div>
           ))}
         </div>

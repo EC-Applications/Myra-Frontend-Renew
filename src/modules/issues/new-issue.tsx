@@ -89,11 +89,11 @@ export default function NewIssueDialog({
     }
   }, [open, currentCycle]);
 
-  console.log("LOAD DATA IN NEW ISSUE", currentCycle?.id);
-  console.log("SELECTED TEAM ID", selectedTeams?.id);
+  // console.log("LOAD DATA IN NEW ISSUE", currentCycle?.id);
+  // console.log("SELECTED TEAM ID", selectedTeams?.id);
 
-  console.log("SET TEAM ID", teamset);
-  console.log("CYCLE ID", cycleID);
+  // console.log("SET TEAM ID", teamset);
+  // console.log("CYCLE ID", cycleID);
 
   // Initial values
   const initialValues: iIssuePayload = {

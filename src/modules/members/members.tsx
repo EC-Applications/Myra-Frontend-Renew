@@ -73,7 +73,7 @@ function UserTableSkeleton() {
 
 const UserTable: FC<{ members: iWorkspaceMember[] }> = ({ members }) => {
   const [memeberId, setMemberId] = useState<number | undefined>();
-  console.log("This is memebr id", memeberId);
+  // console.log("This is memebr id", memeberId);
   const { currentUser, currentWorkspace } = useUser();
   const dispatch = useDispatch();
 

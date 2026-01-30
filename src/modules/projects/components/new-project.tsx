@@ -75,15 +75,15 @@ export function NewProject({
   const { currentWorkspace } = useUser();
   const priorityData = useSelector((state: any) => state.priority);
   const teamsData = useSelector((state: any) => state.teams);
-  console.log("Team data", teamsData);
+  // console.log("Team data", teamsData);
   const status = useSelector((state: any) => state.status);
   const projects = useSelector((state: RootState) => state.project.projects);
 
   const workspaceMember = useSelector((state: any) => state.workspace);
   const members = Array.isArray(workspaceMember) ? workspaceMember : [];
 
-  console.log("WORKSPACE DATA", members);
-  console.log("DEF STATUS", defStatus);
+  // console.log("WORKSPACE DATA", members);
+  // console.log("DEF STATUS", defStatus);
 
   const statusList = status?.status ?? [];
 

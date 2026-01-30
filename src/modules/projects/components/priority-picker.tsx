@@ -15,12 +15,14 @@ type PriorityVariant = "full" | "icon-only" | "compact";
 
 interface PriorityPickerProps {
   value?: number;
+  size?: number | undefined;
   onChange?: (priority: number) => void;
   className?: string;
   variant?: PriorityVariant;
   showLabel?: boolean;
   disabled?: boolean;
-  buttonVarient?: "light" | "dark"  ;
+  buttonVarient?: "light" | "dark";
+  isPriorityShow?: boolean;
 }
 
 export function PriorityPicker({
@@ -30,22 +32,24 @@ export function PriorityPicker({
   variant = "full",
   showLabel = true,
   disabled = false,
-  buttonVarient = "light" , 
+  buttonVarient = "light",
+  isPriorityShow = false,
+  size,
 }: PriorityPickerProps) {
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
   const priorityData = useSelector((state: any) => state.priority);
 
-  console.log("Prioriy data", priorityData);
+  // console.log("Prioriy data", priorityData);
 
-  console.log("PRI DATA", priorityData);
+  // console.log("PRI DATA", priorityData);
 
   const priorities = priorityData?.priority || [];
 
   const selectedPriority = priorities.find((p: any) => p.id === value);
 
   const filteredOptions = priorities.filter((option: any) =>
-    option.description.toLowerCase().includes(search.toLowerCase())
+    option.description.toLowerCase().includes(search.toLowerCase()),
   );
 
   const handleSelect = (priorityId: number) => {
@@ -60,10 +64,11 @@ export function PriorityPicker({
         <Button
           variant="outline"
           disabled={disabled}
+          onClick={(e) => e.stopPropagation()}
           className={cn(
-            `h-[30px] w-auto justify-start gap-2 px-2 text-sm font-semibold text-muted-foreground dark:hover:text-white ${buttonVarient == 'light'? "dark:bg-[#2a2c33]" : "dark:bg-transparent"} dark:hover:bg-[#32333a] `,
+            `h-[30px] w-auto justify-start gap-2 px-2 text-sm font-semibold text-muted-foreground dark:hover:text-white ${buttonVarient == "light" ? "dark:bg-[#2a2c33]" : "dark:bg-transparent"} dark:hover:bg-[#32333a] `,
             disabled && "opacity-50 cursor-not-allowed",
-            className
+            className,
           )}
         >
           {variant === "icon-only" && selectedPriority ? (
@@ -71,7 +76,8 @@ export function PriorityPicker({
             <img
               src={selectedPriority.icon}
               alt={selectedPriority.description}
-              className="h-4 w-4 object-contain filter invert"
+            
+              className={`h-4 w-4 object-contain filter invert`}
             />
           ) : variant === "compact" && selectedPriority ? (
             // Compact variant (icon + shortened label)
@@ -102,8 +108,10 @@ export function PriorityPicker({
           ) : (
             // No selection placeholder
             <div className="flex items-center gap-1">
-              <MoreHorizontal />
-              <span className="text-[14px]">Priority</span>
+              <MoreHorizontal size={size} />
+              {/* {isPriorityShow == true ? (
+                <span className="text-[14px]">Priority</span>
+              ) : null} */}
             </div>
           )}
         </Button>
@@ -111,6 +119,7 @@ export function PriorityPicker({
       <DropdownMenuContent
         align="start"
         className="w-[300px] p-0 dark:bg-[#1c1d1f]"
+        onClick={(e) => e.stopPropagation()}
         onCloseAutoFocus={(e) => {
           e.preventDefault();
           setSearch("");

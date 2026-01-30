@@ -3,6 +3,7 @@ import type { iIssues, iIussesDetail } from "@/interfaces/issues";
 import type { iIssuePayload } from "@/interfaces/issues.interface";
 import { updateIssuesUri } from "@/services/issues.service";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { data } from "react-router";
 import { toast } from "sonner";
 
 interface updateIssueHookParam {
@@ -123,7 +124,7 @@ export const useUpdateIssueHook = () => {
         queryKey: ["project-issue", variables.workspaceId],
       });
       queryClient.invalidateQueries({
-        queryKey: ["cycle-detail"],
+        queryKey: ["cycle-detail", variables.teamId, response.data.cycle_id],
       });
       queryClient.invalidateQueries({
         queryKey: ["activity", variables.issueId],

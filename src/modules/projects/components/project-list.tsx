@@ -50,7 +50,7 @@ const ProjectList: FC<props> = ({ projects }) => {
   const [projectToDelete, setProjectToDelete] = useState<number | null>(null);
   const [openDropdownId, setOpenDropdownId] = useState<number | null>(null);
 
-  console.log("proejct list", id)
+  // console.log("proejct list", id)
 
   // useEffect mein load karo
   useEffect(() => {
@@ -85,7 +85,7 @@ const ProjectList: FC<props> = ({ projects }) => {
   const deleteProject = useDeleteProjectHook();
   const handleDelete = async (projectId: number) => {
     setDeletingId(projectId);
-    console.log("projectId in deeklete", projectId);
+    // console.log("projectId in deeklete", projectId);
     try {
       deleteProject.mutate({
         workspaceSlug:currentWorkspace?.slug ?? "",

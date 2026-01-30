@@ -418,7 +418,7 @@ export function IconPicker({
         />
       );
     }
-    console.log("Rendering icon - Type:", value.type, "Icon:", value.icon);
+    // console.log("Rendering icon - Type:", value.type, "Icon:", value.icon);
     
     if (value.type === "emoji") {
       return (

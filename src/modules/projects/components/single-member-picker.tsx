@@ -36,7 +36,7 @@ export const SingleMemberPicker = ({
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
 
-  console.log("Single picker", members);
+  // console.log("Single picker", members);
 
   const term = search?.toLowerCase() ?? "";
 
@@ -124,7 +124,7 @@ export const SingleMemberPicker = ({
         variant="outline"
         disabled={disabled}
         className={cn(
-          `h-7.5 justify-start gap-1 text-sm font-normal text-muted-foreground dark:hover:text-white border  dark:hover:bg-[#32333a] ${
+          `h-7.5 justify-start gap-1 text-sm font-normal text-muted-foreground dark:hover:text-white border px-1.5  dark:hover:bg-[#32333a] ${
             buttonVarient == "light"
               ? "dark:bg-[#32333a]"
               : "dark:bg-transparent"

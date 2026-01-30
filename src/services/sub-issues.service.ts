@@ -93,6 +93,13 @@ export const updateSubIssuesUri = async (
   if (body.priority_id)
     formData.append("priority_id", body.priority_id.toString());
 
+  if (body.cycle_id !== undefined) {
+    formData.append(
+      "cycle_id",
+      body.cycle_id === null ? "" : body.cycle_id.toString(),
+    );
+  }
+
   if (body.project_id !== undefined) {
     formData.append(
       "project_id",

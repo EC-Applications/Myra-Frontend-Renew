@@ -5,6 +5,7 @@ import type {
   iTeams,
   iTeamsRequest,
   iTeamsResponse,
+  updateTeamPayload,
 } from "@/interfaces/teams.interface";
 
 export const getTeams = async (workspaceName: string, workspaceId: number) => {
@@ -48,7 +49,7 @@ export const addTeams = async (payload: iTeamsRequest, iconFile?: File) => {
 export const inviteMemberInTeamUri = async (
   workspaceName: string,
   teamId: number,
-  payload: iMemberInviteInTeamsRequest
+  payload: iMemberInviteInTeamsRequest,
 ) => {
   return Axios.post(`/api/${workspaceName}/teams/member/${teamId}`, payload, {
     responseType: "json",
@@ -58,15 +59,55 @@ export const inviteMemberInTeamUri = async (
 export const removeMemberFromTeamUri = async (
   workspaceName: string,
   teamId: number,
-  memberId: number
+  memberId: number,
 ) => {
   return Axios.delete(
-    `/api/${workspaceName}/teams/member/${teamId}/${memberId}`
+    `/api/${workspaceName}/teams/member/${teamId}/${memberId}`,
   ).then((res) => res.data as iTeamsResponse);
 };
 
 export const removeTeamUri = async (workspaceName: string, teamId: number) => {
   return Axios.delete(`/api/${workspaceName}/teams/delete/${teamId}`).then(
-    (res) => res.data as iTeamsResponse
+    (res) => res.data as iTeamsResponse,
   );
+};
+
+export const updateteamUri = async (
+  workspace_slug : string | number,
+  team_id: number,
+  body: Partial<updateTeamPayload>,
+  iconFile?: File,
+) => {
+  const formData = new FormData();
+
+  if (body.workspace_id)
+    formData.append("workspace_id", body.workspace_id.toString());
+  if (body.name) formData.append("name", body.name);
+  if (body.identifier)
+    formData.append("identifier", body.identifier.toString());
+
+  if (body.icon) {
+    if (typeof body.icon === "object") {
+      const iconData = JSON.stringify({
+        icon: body.icon.icon,
+        type: body.icon.type,
+        color: body.icon.color,
+      });
+      formData.append("icon", iconData);
+    } else if (typeof body.icon === "string") {
+      // Icon string hai (old format or URL)
+      formData.append("icon", body.icon);
+    }
+  }
+
+  if (iconFile) {
+    console.log("Appending icon file to formData");
+    formData.append("icon_file", iconFile);
+  }
+
+  return Axios.post(`/api/${workspace_slug}/teams/update/${team_id}`, formData , {
+    headers: {
+      "Content-Type": "multipart/form-data",
+    }
+  }).then((res) => res.data as iResponse<iTeams>)
 };

@@ -1,3 +1,5 @@
+import type { iParentIssue } from "./issues";
+
 export interface CyclePeriodItem {
   id: number;
   period: string;
@@ -30,11 +32,11 @@ export interface iCycleResponse {
   updated_at: string; // ISO timestamp
 }
 
-export interface iChart{
-  date : string;
-  completed : number;
-  remaining : number;
-  issue_progress : number
+export interface iChart {
+  date: string;
+  completed: number;
+  remaining: number;
+  issue_progress: number;
 }
 
 export interface iCycleListResponse {
@@ -51,24 +53,19 @@ export interface iCycleListResponse {
   completed: string;
   created_at: string;
   updated_at: string;
-        issue_progress?: number,
-  
-  chart : iChart[]
+  issue_progress?: number;
+
+  chart: iChart[];
 }
-
-
 
 export interface iCycleUpdatePayload {
   name?: string;
   description?: string;
 }
 
-
 export interface iCycleRange {
-  end_date : string
+  end_date: string;
 }
-
-
 
 // cycle detail
 
@@ -128,7 +125,7 @@ export interface Issue extends BaseTimestamps {
   milestone_id: number | null;
 
   cycle: null;
-  type?: "issue" | "sub_issue" 
+  type?: "issue" | "sub_issue";
   due_date: string | null;
 
   is_recurring: boolean;
@@ -146,6 +143,7 @@ export interface Issue extends BaseTimestamps {
   status: Status;
   assignee: User | null;
 
+  parent_issue: iParentIssue | null;
   group: string;
 }
 
@@ -179,12 +177,12 @@ export interface CycleIssueDetail extends BaseTimestamps {
 
   start_date: string;
   end_date: string;
-  status: 'current' | 'completed' | 'upcoming';
+  status: "current" | "completed" | "upcoming";
 
   priorities: Priority[];
   team: Team;
   issues: IssuesByStatus;
 
-  assignees: Pick<User, 'id' | 'name' | 'email' | 'avatar'>[];
+  assignees: Pick<User, "id" | "name" | "email" | "avatar">[];
   projects: any[];
 }
