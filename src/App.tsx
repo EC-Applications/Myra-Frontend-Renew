@@ -39,7 +39,7 @@ function App() {
   // console.log("Token in dashboard", token);
 
   console.log("CURRENT WORKPSACE Id", currentWorkspace?.id)
-  console.log("CURRENT WORKPSACE", currentWorkspaceName)
+  console.log("CURRENT WORKPSACE Name", currentWorkspace?.slug)
 
 
   useEffect(() => {
@@ -59,7 +59,7 @@ function App() {
             dispatch(setProject(res.data));
           }),
 
-          getTeams(currentWorkspaceName.name, currentWorkspaceData).then((res) => {
+          getTeams( currentWorkspace?.slug, currentWorkspace.id).then((res) => {
             dispatch(setTeams(res.data));
           }),
 
@@ -99,7 +99,7 @@ function App() {
   if (loading) {
     return (
       <div className="fixed inset-0 flex items-center justify-center bg-background/60 z-50">
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-muted border-t-primary" />
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
       </div>
     );
   }

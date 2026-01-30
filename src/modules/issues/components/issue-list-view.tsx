@@ -51,6 +51,14 @@ import { fetchProjectIssueUri } from "@/services/project.service";
 import { useTheme } from "@/components/theme-provider";
 import { useUpdateIssueHook } from "@/hooks/use-issue-update";
 import { useDeleteIssueHook } from "@/hooks/use-delete-issue";
+import { useUpdateSubIssueHook } from "@/hooks/use-update-subissue";
+import { useDeleteSubIssue } from "@/hooks/use-delete-subissues";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 const IssueListView: FC<{
   issuesData: Record<string, iIssues[]>;
@@ -60,20 +68,31 @@ const IssueListView: FC<{
   const { "team-id": teamId, id: projectId } = useParams();
   const teamset = useSelector((state: RootState) => state.useTeamId);
 
-  console.log("TEAM ID", teamId);
-  console.log("ProjectID", projectId);
+  // console.log("TEAM ID", teamId);
+  // console.log("ProjectID", projectId);
   const { currentWorkspace } = useUser();
   console.log("ISSUES DATA IN LIST VIEW", issuesData);
   const [expandedSections, setExpandedSections] = useState<string[]>(
     Object.keys(issuesData),
   );
   const updateIssueStatus = useUpdateIssueHook();
+  const updateSubIssue = useUpdateSubIssueHook();
   const deleteIssue = useDeleteIssueHook();
 
-  const [defStatus, setDefaultStatus] = useState<number>();
-  const [defProject, setDefProject] = useState<number>();
+  const deleteSubIssue = useDeleteSubIssue();
 
-  console.log("SET TEAM ID", teamset);
+  const [defStatus, setDefaultStatus] = useState<number>();
+
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [issueToDelete, setIssueToDelete] = useState<{
+    id: number;
+    team_id: number;
+    type: string;
+    issue_id: number;
+  } | null>(null);
+  const [openDropdownId, setOpenDropdownId] = useState<number | null>(null);
+
+  // console.log("SET TEAM ID", teamset);
 
   const [cycleData, setCycleData] = useState<iCycleListResponse[]>();
   useEffect(() => {
@@ -81,7 +100,7 @@ const IssueListView: FC<{
       fetchCycleListUri(currentWorkspace?.slug ?? "", Number(teamId)).then(
         (res) => {
           setCycleData(res.data);
-          console.log("CYCLE DATA IN LIST", cycleData);
+          // console.log("CYCLE DATA IN LIST", cycleData);
         },
       );
     } catch (error) {
@@ -104,9 +123,7 @@ const IssueListView: FC<{
   const status = useSelector((state: RootState) => state.issuesStatus);
   const statusList = status ?? [];
 
-  console.log("DYNMAIC STATUS", statusList);
-
-  const [priorityId, setPriorityId] = useState<number | undefined>();
+  // console.log("DYNMAIC STATUS", statusList);
   const [activeTab, setActiveTab] = useState("all");
 
   const dispatch = useDispatch();
@@ -125,17 +142,33 @@ const IssueListView: FC<{
     );
   };
 
-  const handleIssueDelete = async (issueId: number, teamid: number) => {
+  const handleIssueDelete = async (
+    issueId: number,
+    teamid: number,
+    type: string,
+    parent_issue_id: number,
+  ) => {
     const loadingToast = toast.loading("Deleting issue...");
 
-    console.log(issueId);
+    // console.log(issueId);
 
     try {
-      deleteIssue.mutate({
-        issueId: Number(issueId),
-        teamId: teamid,
-        workspaceId: Number(currentWorkspace?.id),
-      });
+      const mutate =
+        type === "issue"
+          ? deleteIssue.mutate({
+              issueId: Number(issueId),
+              teamId: teamid,
+              workspaceId: Number(currentWorkspace?.id),
+            })
+          : deleteSubIssue.mutate({
+              body: {
+                issue_id: Number(parent_issue_id),
+                sub_issue_ids: [Number(issueId)], // Must be array
+              },
+              teamId: Number(teamid),
+              workspaceId: Number(currentWorkspace?.id),
+            });
+
       // const res = await deleteIssueUri(issueId);
       // toast.success(res.data.message);
       const method = teamId
@@ -155,18 +188,33 @@ const IssueListView: FC<{
     issuid: number,
     priorityId: number,
     tId: number,
+    type: string,
+    parent_issue_id?: number,
   ) => {
     try {
-      updateIssueStatus.mutate({
-        issueId: Number(issuid),
-        body: {
-          priority_id: priorityId,
-          workspace_id: currentWorkspace?.id,
-          team_id: Number(tId),
-        },
-        teamId: Number(tId),
-        workspaceId: Number(currentWorkspace?.id),
-      });
+      const mutate =
+        type === "issue"
+          ? updateIssueStatus.mutate({
+              issueId: Number(issuid),
+              body: {
+                priority_id: priorityId,
+                workspace_id: currentWorkspace?.id,
+                team_id: Number(tId),
+              },
+              teamId: Number(tId),
+              workspaceId: Number(currentWorkspace?.id),
+            })
+          : updateSubIssue.mutate({
+              issueId: Number(issuid),
+              body: {
+                issue_id: parent_issue_id,
+                priority_id: priorityId,
+                workspace_id: currentWorkspace?.id,
+                team_id: Number(tId),
+              },
+              teamId: Number(tId),
+              workspaceId: Number(currentWorkspace?.id),
+            });
       // const payload = {
       //   priority_id: priorityId,
       //   workspace_id: currentWorkspace?.id,
@@ -192,18 +240,33 @@ const IssueListView: FC<{
     issueId: number,
     date: Date | null,
     tId: number,
+    type: string,
+    parent_issue_id?: number,
   ) => {
     try {
-      updateIssueStatus.mutate({
-        issueId: Number(issueId),
-        body: {
-          due_date: date ? format(date, "yyyy-MM-dd") : undefined,
-          workspace_id: currentWorkspace?.id,
-          team_id: Number(tId),
-        },
-        teamId: Number(tId),
-        workspaceId: Number(currentWorkspace?.id),
-      });
+      const mutate =
+        type === "issue"
+          ? updateIssueStatus.mutate({
+              issueId: Number(issueId),
+              body: {
+                due_date: date ? format(date, "yyyy-MM-dd") : undefined,
+                workspace_id: currentWorkspace?.id,
+                team_id: Number(tId),
+              },
+              teamId: Number(tId),
+              workspaceId: Number(currentWorkspace?.id),
+            })
+          : updateSubIssue.mutate({
+              issueId: Number(issueId),
+              body: {
+                issue_id: parent_issue_id,
+                due_date: date ? format(date, "yyyy-MM-dd") : undefined,
+                workspace_id: currentWorkspace?.id,
+                team_id: Number(tId),
+              },
+              teamId: Number(tId),
+              workspaceId: Number(currentWorkspace?.id),
+            });
       // const payload = {
       //   due_date: date ? format(date, "yyyy-MM-dd") : undefined,
       //   workspace_id: currentWorkspace?.id,
@@ -227,18 +290,33 @@ const IssueListView: FC<{
     issueId: number,
     member: iMember | undefined,
     tId: number,
+    type: string,
+    parent_issue_id: number,
   ) => {
     try {
-      updateIssueStatus.mutate({
-        issueId: Number(issueId),
-        body: {
-          assignee_id: member?.id,
-          workspace_id: currentWorkspace?.id,
-          team_id: Number(tId),
-        },
-        teamId: Number(tId),
-        workspaceId: Number(currentWorkspace?.id),
-      });
+      const mutate =
+        type === "issue"
+          ? updateIssueStatus.mutate({
+              issueId: Number(issueId),
+              body: {
+                assignee_id: member?.id,
+                workspace_id: currentWorkspace?.id,
+                team_id: Number(tId),
+              },
+              teamId: Number(tId),
+              workspaceId: Number(currentWorkspace?.id),
+            })
+          : updateSubIssue.mutate({
+              issueId: Number(issueId),
+              body: {
+                issue_id: Number(parent_issue_id),
+                assignee_id: member?.id,
+                workspace_id: currentWorkspace?.id,
+                team_id: Number(tId),
+              },
+              teamId: Number(tId),
+              workspaceId: Number(currentWorkspace?.id),
+            });
       // const payload = {
       //   assignee_id: member?.id,
       //   workspace_id: currentWorkspace?.id,
@@ -262,18 +340,33 @@ const IssueListView: FC<{
     issueId: number,
     status: iIssueStatus,
     tId: number,
+    type: string,
+    parent_issue_id: number,
   ) => {
     try {
-      updateIssueStatus.mutate({
-        issueId: Number(issueId),
-        body: {
-          status_id: status.id,
-          workspace_id: currentWorkspace?.id,
-          team_id: Number(tId),
-        },
-        teamId: Number(tId),
-        workspaceId: Number(currentWorkspace?.id),
-      });
+      const mutate =
+        type === "issue"
+          ? updateIssueStatus.mutate({
+              issueId: Number(issueId),
+              body: {
+                status_id: status.id,
+                workspace_id: currentWorkspace?.id,
+                team_id: Number(tId),
+              },
+              teamId: Number(tId),
+              workspaceId: Number(currentWorkspace?.id),
+            })
+          : updateSubIssue.mutate({
+              issueId: Number(issueId),
+              body: {
+                issue_id: parent_issue_id,
+                status_id: status.id,
+                workspace_id: currentWorkspace?.id,
+                team_id: Number(tId),
+              },
+              teamId: Number(tId),
+              workspaceId: Number(currentWorkspace?.id),
+            });
       // const payload = {
       //   status_id: status.id,
       //   workspace_id: currentWorkspace?.id,
@@ -320,7 +413,7 @@ const IssueListView: FC<{
         Duplicate: { from: "#f5f5f6", to: "#f5f6f5" },
       };
 
-  console.log("def status", defStatus);
+  // console.log("def status", defStatus);
   return (
     <>
       <div className="flex-1  overflow-auto dark:bg-[#17181b]">
@@ -347,7 +440,7 @@ const IssueListView: FC<{
           // Regular issue list
           <div className="">
             {Object.keys(issuesData).map((status) => {
-              console.log(issuesData);
+              // console.log(issuesData);
               const issues = issuesData[status] || [];
               const isExpanded = expandedSections.includes(status);
               const config = statusConfig[
@@ -361,7 +454,7 @@ const IssueListView: FC<{
               };
 
               if (issues.length === 0) return null;
-              console.log("DYANAMIC COFIG", config);
+              // console.log("DYANAMIC COFIG", config);
               const gradientColors = statusColors[config.name] || {
                 from: "#191b22",
                 to: "#191b22",
@@ -407,7 +500,7 @@ const IssueListView: FC<{
                   {isExpanded && issues.length > 0 && (
                     <div className="">
                       {issues.map((issue) => {
-                        console.log("issuedadtada", issue);
+                        // console.log("issuedadtada", issue);
                         return (
                           <div
                             key={issue.id}
@@ -423,12 +516,14 @@ const IssueListView: FC<{
                                   issue.id,
                                   newPriorityId,
                                   issue.team_id,
+                                  issue.type || "",
+                                  issue.issue_id,
                                 );
-                                console.log(
-                                  "Update priority:",
-                                  issue.id,
-                                  newPriorityId,
-                                );
+                                // console.log(
+                                //   "Update priority:",
+                                //   issue.id,
+                                //   newPriorityId,
+                                // );
                               }}
                             />
 
@@ -445,12 +540,14 @@ const IssueListView: FC<{
                                   issue.id,
                                   newStatus,
                                   issue.team_id,
+                                  issue.type || "",
+                                  issue.issue_id || 0,
                                 );
                               }}
                             />
 
                             <Link
-                              to={`/issues/${issue.id}`}
+                              to={`${issue.type === "issue" ? `/issues/${issue.id}` : `/issues/${issue.id}/sub-issue`}`}
                               className="flex items-center gap-2 min-w-0 flex-1"
                             >
                               <Badge
@@ -499,12 +596,14 @@ const IssueListView: FC<{
                                     issue.id,
                                     newDate,
                                     issue.team_id,
+                                    issue.type || "",
+                                    issue.issue_id,
                                   );
-                                  console.log(
-                                    "Update due date:",
-                                    issue.id,
-                                    newDate,
-                                  );
+                                  // console.log(
+                                  //   "Update due date:",
+                                  //   issue.id,
+                                  //   newDate,
+                                  // );
                                 }}
                               />
 
@@ -517,12 +616,14 @@ const IssueListView: FC<{
                                     issue.id,
                                     newMember,
                                     issue.team_id,
+                                    issue.type || "",
+                                    issue.issue_id || 0,
                                   );
-                                  console.log(
-                                    "Update assignee:",
-                                    issue.id,
-                                    newMember,
-                                  );
+                                  // console.log(
+                                  //   "Update assignee:",
+                                  //   issue.id,
+                                  //   newMember,
+                                  // );
                                 }}
                               />
 
@@ -532,18 +633,34 @@ const IssueListView: FC<{
                                 </AvatarFallback>
                               </Avatar> */}
                             </div>
-                            <DropdownMenu>
+                            <DropdownMenu
+                              open={openDropdownId === issue.id}
+                              onOpenChange={(open) => {
+                                setOpenDropdownId(open ? issue.id : null);
+                              }}
+                            >
                               <DropdownMenuTrigger asChild>
                                 <button className="p-1 rounded hover:bg-muted transition">
                                   <MoreHorizontal className="w-4 h-4 text-muted-foreground" />
                                 </button>
                               </DropdownMenuTrigger>
 
-                              <DropdownMenuContent align="end">
+                              <DropdownMenuContent
+                                align="end"
+                                className="dark:bg-[#1c1d1f]"
+                              >
                                 <DropdownMenuItem
-                                  onClick={() =>
-                                    handleIssueDelete(issue.id, issue.team_id)
-                                  }
+                                  className=" font-semibold"
+                                  onClick={() => {
+                                    setOpenDropdownId(null);
+                                    setIssueToDelete({
+                                      id: issue.id,
+                                      team_id: issue.team_id,
+                                      type: issue.type || "",
+                                      issue_id: issue.issue_id || 0,
+                                    });
+                                    setShowDeleteDialog(true);
+                                  }}
                                 >
                                   Delete Issue
                                 </DropdownMenuItem>
@@ -568,6 +685,50 @@ const IssueListView: FC<{
         defStatus={defStatus}
         defProject={Number(projectId)}
       />
+
+      <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <DialogContent className="max-w-sm bg-card" showCloseButton={false}>
+          <DialogHeader>
+            <DialogTitle className="text-base font-semibold">
+              Delete Issue?
+            </DialogTitle>
+          </DialogHeader>
+          <p className="text-sm text-muted-foreground">
+            Are you sure you want to delete this issue? This action cannot be
+            undone.
+          </p>
+          <div className="flex items-center justify-end gap-3">
+            <Button
+              variant="customDark"
+              onClick={() => {
+                setShowDeleteDialog(false);
+                setIssueToDelete(null);
+                setOpenDropdownId(null);
+              }}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={() => {
+                if (issueToDelete) {
+                  handleIssueDelete(
+                    issueToDelete.id,
+                    issueToDelete.team_id,
+                    issueToDelete.type,
+                    issueToDelete.issue_id,
+                  );
+                }
+                setShowDeleteDialog(false);
+                setIssueToDelete(null);
+                setOpenDropdownId(null);
+              }}
+            >
+              Delete
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </>
   );
 };

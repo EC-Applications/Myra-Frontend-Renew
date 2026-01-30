@@ -1,3 +1,4 @@
+import type { iCycleListResponse } from "./cycle.interface";
 import type { iIssueStatus } from "./issues-status.interface";
 import type { iLabel } from "./label.interface";
 import type { iMilestone } from "./milestone.interface";
@@ -30,7 +31,7 @@ export interface iStatus {
 export interface iIssues {
   id: number;
   key: string;
-  issue_id?:number;
+  issue_id?: number;
   name: string;
   description: string | null;
   workspace_id: number;
@@ -58,8 +59,8 @@ export interface iIssues {
   milestones: iMilestone | null;
   labels: iLabel;
   assignee: iMember | null;
-  start_date? : string ;
-  type?: "issue" | "sub_issue" 
+  start_date?: string;
+  type?: "issue" | "sub_issue";
 }
 
 export interface iIussesDetail {
@@ -75,7 +76,8 @@ export interface iIussesDetail {
   project_id: number | null;
   assignee_id: number | null;
   milestone_id: number | null;
-  cycle: string | null;
+  cycles: iCycleListResponse | null;
+  cycle_id: number | null;
   due_date: Date | null;
   is_recurring: boolean;
   recurring_first_due: string | null;
@@ -90,7 +92,7 @@ export interface iIussesDetail {
   documents: DocumentItem[];
   priority_detail: IPriority;
   status: iIssueStatus;
-  projects: iProject;
+  projects: iProject | null;
   milestones: iMilestone;
   labels: Label[];
   assignee: iMember;

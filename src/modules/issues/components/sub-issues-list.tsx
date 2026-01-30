@@ -49,6 +49,8 @@ import { useUser } from "@/hooks/use-user";
 import { updateSubIssuesUri } from "@/services/sub-issues.service";
 import { ProjectDatePicker } from "@/modules/projects/components/date-picker";
 import { format } from "date-fns";
+import { useUpdateSubIssueHook } from "@/hooks/use-update-subissue";
+import { useParams } from "react-router";
 
 interface SubIssuesListProps {
   subIssues: iIssues[];
@@ -73,9 +75,10 @@ export default function SubIssuesList({
   onSubIssueUpdate,
 }: SubIssuesListProps) {
   const { currentWorkspace } = useUser();
+  const { id } = useParams();
   const [selectedSubIssues, setSelectedSubIssues] = useState<number[]>([]);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
-
+  const updateSubIssue = useUpdateSubIssueHook();
   const toggleSelection = (id: number) => {
     setSelectedSubIssues((prev) =>
       prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id],
@@ -86,30 +89,37 @@ export default function SubIssuesList({
   const statusList = status ?? [];
   const isSelected = (id: number) => selectedSubIssues.includes(id);
 
-  console.log("subissue update", subIssues)
+  console.log("subissue update", subIssues);
 
-  const handleStatusUpdate = async (
-    issue: iIssues,
-    status: iIssueStatus,
-  ) => {
+  const handleStatusUpdate = async (issue: iIssues, status: iIssueStatus) => {
     try {
-      const payload = {
-        issue_id: issue.issue_id,
-        status_id: status.id,
-        workspace_id: currentWorkspace?.id,
-        team_id: issue.team_id,
-      };
-      await updateSubIssuesUri(Number(issue.id), payload);
+      updateSubIssue.mutate({
+        issueId: Number(issue.id),
+        body: {
+          issue_id: Number(id),
+          status_id: status.id,
+          workspace_id: currentWorkspace?.id,
+          team_id: Number(issue.team_id),
+        },
+        teamId: Number(issue.team_id),
+        workspaceId: Number(currentWorkspace?.id),
+      });
+      // const payload = {
+      //   issue_id: issue.issue_id,
+      //   status_id: status.id,
+      //   workspace_id: currentWorkspace?.id,
+      //   team_id: issue.team_id,
+      // };
+      // await updateSubIssuesUri(Number(issue.id), payload);
 
       // Update parent state
       onSubIssueUpdate?.({ ...issue, status, status_id: status.id });
-      toast.success("Status updated");
+      // toast.success("Status updated");
     } catch (error: any) {
       toast.error(error.message || "Failed to update status");
     }
   };
 
-  
   // useEffect(() => {
   //   if (subIssues?.status) {
   //     setSelectedStatus(subIssues.status);
@@ -119,10 +129,7 @@ export default function SubIssuesList({
   //   }
   // });
 
-  const handleTargetDate = async (
-    issue: iIssues,
-    date: Date | null,
-  ) => {
+  const handleTargetDate = async (issue: iIssues, date: Date | null) => {
     try {
       const payload = {
         issue_id: issue.issue_id,
@@ -135,7 +142,7 @@ export default function SubIssuesList({
       // Update parent state
       const updatedDueDate = date ? format(date, "yyyy-MM-dd") : null;
       onSubIssueUpdate?.({ ...issue, due_date: updatedDueDate });
-      toast.success("Date updated");
+      // toast.success("Date updated");
     } catch (error: any) {
       toast.error(error.message || "Failed to update date");
     }
@@ -216,9 +223,7 @@ export default function SubIssuesList({
                 <ProjectDatePicker
                   label="Due Date"
                   variant="inline"
-                  value={
-                    issue.due_date ? new Date(issue.due_date) : undefined
-                  }
+                  value={issue.due_date ? new Date(issue.due_date) : undefined}
                   onChange={(date) => handleTargetDate(issue, date)}
                   className="border-0"
                   buttonVarient="dark"

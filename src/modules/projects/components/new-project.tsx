@@ -38,6 +38,7 @@ import { ProjectFormStatus } from "./status-picker";
 import { TeamPicker } from "./team-picker";
 import { setTeams } from "@/store/slices/team.slice";
 import * as yup from "yup";
+import { useCreateProjectHook } from "@/hooks/use-create-project";
 interface NewProjectModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -126,7 +127,7 @@ export function NewProject({
   const [selectedMembers, setSelectedMembers] = useState<iMember[]>([]);
   const [selectedLead, setSelectedLead] = useState<iMember | undefined>();
   const [selectedTeams, setSelectedTeams] = useState<iTeams[]>([]);
-
+  const [showDiscardDialog, setShowDiscardDialog] = useState(false);
   const [priority, setPriority] = useState<number | undefined>();
   const [description, setDescription] = useState("");
   const [attachments, setAttachments] = useState<File[]>([]);
@@ -160,9 +161,25 @@ export function NewProject({
     setIsOpen(false);
     setSelectedTeams([]);
     setStartDate(null);
-
+    setShowDiscardDialog(false);
     dispatch(clearMilestones());
   };
+
+  const handleCloseAttempt = () => {
+    if (!projectName.trim() && !description.trim()) {
+      resetForm();
+      onOpenChange(false);
+      return;
+    }
+    setShowDiscardDialog(true);
+  };
+
+  const handleDiscard = () => {
+    resetForm();
+    onOpenChange(false);
+  };
+
+  const createProject = useCreateProjectHook();
 
   const handleCreateProject = async () => {
     if (!projectName.trim()) {
@@ -174,6 +191,7 @@ export function NewProject({
       toast.error("Please select at least one team");
       return;
     }
+
     const loadingToast = toast.loading("Creating project...");
 
     try {
@@ -191,25 +209,25 @@ export function NewProject({
         target_date: endDate ? format(endDate, "yyyy-MM-dd") : undefined,
         member: selectedMembers,
         lead_id: selectedLead?.id,
-        team_id: selectedTeams?.map((t) => t.id),
+        team_id: selectedTeams.map((t) => t.id),
         label: selectedLabels.map((l) => l.id),
         milestones,
       };
-      const iconFile = projectIcon?.file;
-      console.log(payload, "PAYLOAD");
 
-      const res = await createProjectUri(payload, iconFile, attachments);
-      fetchProjectUri(currentWorkspace?.slug).then((res) =>
-        dispatch(setProject(res.data))
-      );
+      await createProject.mutateAsync({
+        body: payload,
+        iconFile: projectIcon?.file,
+        documentFiles: attachments,
+        workspaceSlug: currentWorkspace?.slug,
+        teamId: selectedTeams[0]?.id,
+      });
+
       toast.success("Project created successfully");
-
       resetForm();
       onOpenChange(false);
     } catch (error: any) {
       console.error("=== API ERROR ===", error);
-
-      toast.error(error.response?.data?.message || "Failed to create project");
+      toast.error(error?.message || "Failed to create project");
     } finally {
       toast.dismiss(loadingToast);
     }
@@ -218,11 +236,11 @@ export function NewProject({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
-        className="md:max-w-5xl w-full h-[85vh] overflow-y-auto p-0 gap-0 dark:bg-[#1c1d1f]"
+        className="md:max-w-5xl w-full h-[85vh] overflow-y-auto p-0 gap-0 dark:bg-[#1c1d1f] flex flex-col"
         showCloseButton={false}
       >
         {/* Header */}
-        <DialogHeader className="flex flex-row items-center justify-between px-6 py-2 pb-4 space-y-0">
+        <DialogHeader className="flex flex-row items-center justify-between px-6 h-14 space-y-0">
           <div className="flex items-center gap-2">
             <TeamPicker
               teams={teamsData}
@@ -238,16 +256,13 @@ export function NewProject({
             variant="ghost"
             size="icon"
             className="h-6 w-6 cursor-pointer"
-            onClick={() => {
-              resetForm();
-              onOpenChange(false);
-            }}
+            onClick={handleCloseAttempt}
           >
             <X className="h-4 w-4" />
           </Button>
         </DialogHeader>
 
-        <div className="px-6 space-y-3">
+        <div className="px-6 space-y-4 flex flex-1 flex-col">
           {/* Project Icon and Name */}
           <div className="space-y-4">
             <div className="flex items-center gap-4">
@@ -256,7 +271,7 @@ export function NewProject({
 
             <div className="">
               <Input
-                className="sm:text-lg md:text-2xl font-semibold border-0 px-0 shadow-none focus-visible:ring-0 dark:bg-transparent dark:text-white  dark:placeholder:text-[#626366]"
+                className="!text-2xl font-semibold border-0 px-0 shadow-none focus-visible:ring-0 dark:bg-transparent dark:text-white dark:placeholder:text-[#626366] h-auto py-1"
                 placeholder="Project name"
                 value={projectName}
                 onChange={(e) => setProjectName(e.target.value)}
@@ -266,13 +281,13 @@ export function NewProject({
                 placeholder="Add a short summary..."
                 value={shortSummary}
                 onChange={(e) => setShortSummary(e.target.value)}
-                className="md:text-lg border-0 px-0 shadow-none focus-visible:ring-0 dark:bg-transparent resize-none dark:text-white dark:placeholder:text-[#626366]"
+                className="text-base border-0 px-0 shadow-none focus-visible:ring-0 dark:bg-transparent resize-none dark:text-white dark:placeholder:text-[#626366] min-h-0 h-auto py-0"
               />
             </div>
           </div>
 
           {/* Tags */}
-          <div className="flex flex-wrap gap-2 space-y-2.5">
+          <div className="flex flex-wrap items-center gap-2 ">
             <PriorityPicker
               value={priority}
               onChange={setPriority}
@@ -283,7 +298,6 @@ export function NewProject({
               statuses={statusList}
               value={selectedStatus}
               onChange={setSelectedStatus}
-              
             />
 
             <ProjectDatePicker
@@ -321,7 +335,7 @@ export function NewProject({
               // className="w-full"
             />
 
-            <Label className="h-7.5 w-auto rounded justify-start align-center gap-2 px-2 text-sm   text-muted-foreground dark:text-muted-foreground hover:font-semibold font-semibold hover:text-white border dark:bg-[#2a2c33] dark:hover:bg-[#32333a]">
+            <Label className="h-7.5 w-auto rounded-md justify-start align-center gap-2 px-2 text-sm   text-muted-foreground dark:text-muted-foreground hover:font-semibold font-semibold hover:text-white border dark:bg-[#2a2c33] dark:hover:bg-[#32333a]">
               <PaperclipIcon className="size-3.5" />
 
               <span className="text-[13px]">Attachment</span>
@@ -338,11 +352,11 @@ export function NewProject({
             </Label>
           </div>
 
-          <hr className="dark:text-zinc-600" />
+          <hr className="dark:text-zinc-700" />
 
           {/* Description */}
           <div
-            className="rounded-md p-2"
+            className="rounded-md "
             onDrop={(e) => {
               e.preventDefault();
               setAttachments((prev) => [
@@ -363,7 +377,7 @@ export function NewProject({
                   setAttachments((prev) => [...prev, ...files]);
                 }
               }}
-              className="min-h-[100px] placeholder:text-[17px] font-semibold dark:placeholder:text-[#626366] resize-none border-0  shadow-none focus-visible:ring-0 dark:bg-transparent  "
+              className="min-h-[100px] placeholder:text-[17px] font-semibold dark:placeholder:text-[#626366] resize-none border-0  shadow-none focus-visible:ring-0 dark:bg-transparent  px-0"
             />
 
             {/* Attachments */}
@@ -394,7 +408,7 @@ export function NewProject({
                               onClick={(e) => {
                                 e.stopPropagation();
                                 setAttachments((prev) =>
-                                  prev.filter((_, i) => i !== index)
+                                  prev.filter((_, i) => i !== index),
                                 );
                                 setSelectedIndex(null);
                               }}
@@ -427,7 +441,7 @@ export function NewProject({
                               onClick={(e) => {
                                 e.stopPropagation();
                                 setAttachments((prev) =>
-                                  prev.filter((_, i) => i !== index)
+                                  prev.filter((_, i) => i !== index),
                                 );
                                 setSelectedIndex(null);
                               }}
@@ -444,20 +458,14 @@ export function NewProject({
               </div>
             )}
           </div>
-          <div className="">
+          <div className="mt-auto pt-4">
             <MilestoneSection />
           </div>
         </div>
 
         {/* Footer */}
-        <div className="flex items-center justify-end gap-3 py-2 px-4  border-t cursor-pointer">
-          <Button
-            variant="customDark"
-            onClick={() => {
-              resetForm();
-              onOpenChange(false);
-            }}
-          >
+        <div className="flex items-center justify-end gap-3 py-2 px-4  border-t border-zinc-700 mt-auto sticky bottom-0 bg-[#1c1d1f] cursor-pointer">
+          <Button variant="customDark" onClick={handleCloseAttempt}>
             Cancel
           </Button>
 
@@ -470,6 +478,32 @@ export function NewProject({
           </Button>
         </div>
       </DialogContent>
+      <Dialog open={showDiscardDialog} onOpenChange={setShowDiscardDialog}>
+        <DialogContent
+          className="max-w-sm dark:bg-[#1c1d1f]"
+          showCloseButton={false}
+        >
+          <DialogHeader>
+            <DialogTitle className="text-base font-semibold dark:text-white">
+              Want to discard?
+            </DialogTitle>
+          </DialogHeader>
+          <p className="text-sm text-muted-foreground">
+            If you discard, details will be lost.
+          </p>
+          <div className="flex items-center justify-end gap-3">
+            <Button
+              variant="customDark"
+              onClick={() => setShowDiscardDialog(false)}
+            >
+              Cancel
+            </Button>
+            <Button variant="custom" onClick={handleDiscard}>
+              Discard
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </Dialog>
   );
 }

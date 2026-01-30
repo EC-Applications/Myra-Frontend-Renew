@@ -107,10 +107,11 @@ export interface iProject {
   start_date?: string;
   target_date?: string;
   workspace_id?: number;
-  labels?: Label[];
+  labels?: Label[] | null;
+   labels_id?: number[] | null;
   health?: iProjectHealth[];
   members?: iMember[];
-  members_id? : number[];
+  members_id? : number[] | null;
   lead_id?: number;
   short_summary?: string;
   icon?:

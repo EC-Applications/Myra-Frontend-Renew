@@ -36,12 +36,14 @@ export const SingleMemberPicker = ({
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
 
+  console.log("Single picker", members);
+
   const term = search?.toLowerCase() ?? "";
 
   const filteredMembers = (members || []).filter(
     (m) =>
       (m?.name ?? "").toLowerCase().includes(term) ||
-      (m?.email ?? "").toLowerCase().includes(term)
+      (m?.email ?? "").toLowerCase().includes(term),
   );
 
   const handleSelectMember = (member: iMember) => {
@@ -70,11 +72,13 @@ export const SingleMemberPicker = ({
           className={cn(
             "transition-opacity hover:opacity-80",
             disabled && "opacity-50 cursor-not-allowed",
-            className
+            className,
           )}
         >
           <Avatar className="w-6 h-6">
-            <AvatarImage src={value?.image || value?.avatar || "/placeholder.svg"} />
+            <AvatarImage
+              src={value?.image || value?.avatar || "/placeholder.svg"}
+            />
             <AvatarFallback className="text-xs">
               {value ? getAvatarText(value.name) : "U"}
             </AvatarFallback>
@@ -92,7 +96,7 @@ export const SingleMemberPicker = ({
           className={cn(
             "h-8 w-auto justify-start gap-1.5 px-2 text-sm font-normal text-muted-foreground hover:text-foreground border",
             disabled && "opacity-50 cursor-not-allowed",
-            className
+            className,
           )}
         >
           {value ? (
@@ -121,10 +125,12 @@ export const SingleMemberPicker = ({
         disabled={disabled}
         className={cn(
           `h-7.5 justify-start gap-1 text-sm font-normal text-muted-foreground dark:hover:text-white border  dark:hover:bg-[#32333a] ${
-            buttonVarient == "light" ? "dark:bg-[#32333a]" : "dark:bg-transparent"
+            buttonVarient == "light"
+              ? "dark:bg-[#32333a]"
+              : "dark:bg-transparent"
           } `,
           disabled && "opacity-50 cursor-not-allowed",
-          className
+          className,
         )}
       >
         {!value ? (
@@ -133,14 +139,16 @@ export const SingleMemberPicker = ({
           <div className="flex items-center ">
             <div className="flex items-center gap-1 rounded  py-0.5">
               <Avatar className="h-5 w-5 p-0">
-                <AvatarImage src={value?.image || value?.avatar || "/placeholder.svg"} />
+                <AvatarImage
+                  src={value?.image || value?.avatar || "/placeholder.svg"}
+                />
                 <AvatarFallback className="text-[10px] bg-primary/10 ">
-                        {(value?.name || value?.email)
-                          .slice(0, 2)
-                          .toUpperCase()}
-                      </AvatarFallback>
+                  {(value?.name || value?.email).slice(0, 2).toUpperCase()}
+                </AvatarFallback>
               </Avatar>
-              <span className="text-[13px] font-semibold">{value.name || value.email}</span>
+              <span className="text-[13px] font-semibold">
+                {value.name || value.email}
+              </span>
               {/* <button
                                 onClick={handleRemoveMember}
                                 className="hover:bg-background rounded-full p-0.5"
@@ -187,16 +195,24 @@ export const SingleMemberPicker = ({
                 >
                   <div className="flex items-center gap-2">
                     <Avatar className="h-5 w-5">
-                      
-                <AvatarImage src={member?.image || member?.avatar || "/placeholder.svg"} />
+                      <AvatarImage
+                        src={
+                          member?.image || member?.avatar || "/placeholder.svg"
+                        }
+                      />
                       <AvatarFallback className="text-[10px] bg-primary/10">
                         {getAvatarText(member.name)}
                       </AvatarFallback>
                     </Avatar>
-                    <div className="flex flex-col">
+                    <div className="flex gap-2">
                       <span className="font-medium">
                         {member.name || member.email}
                       </span>
+                      {member.is_accept == false ? (
+                        <span className="font-medium ">(Invited)</span>
+                      ) : (
+                        <div className=""></div>
+                      )}
                     </div>
                   </div>
                   {isSelected && (
