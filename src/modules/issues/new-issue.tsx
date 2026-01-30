@@ -37,6 +37,7 @@ import { CyclePicker } from "../cycles/components/cycle-picker";
 import { TeamPicker } from "../projects/components/team-picker";
 import type { iTeams } from "@/interfaces/teams.interface";
 import { SingleTeamPicker } from "@/components/single-team-picker";
+import { Editor } from "@/components/blocks/editor-00/editor";
 
 interface NewIssueDialogProps {
   open: boolean;
@@ -223,17 +224,23 @@ export default function NewIssueDialog({
                     {/* Description Editor */}
                     <div
                       className="rounded-md"
-                      onDrop={(e) => {
-                        e.preventDefault();
-                        const files = Array.from(e.dataTransfer.files);
-                        setFieldValue("attachments", [
-                          ...(values.attachments || []),
-                          ...files,
-                        ]);
-                      }}
-                      onDragOver={(e) => e.preventDefault()}
+                      // onDrop={(e) => {
+                      //   e.preventDefault();
+                      //   const files = Array.from(e.dataTransfer.files);
+                      //   setFieldValue("attachments", [
+                      //     ...(values.attachments || []),
+                      //     ...files,
+                      //   ]);
+                      // }}
+                      // onDragOver={(e) => e.preventDefault()}
                     >
-                      <Textarea
+                      <Editor
+                        editorHtmlState={values.description}
+                        onHtmlChange={(html) =>
+                          setFieldValue("description", html)
+                        }
+                      />
+                      {/* <Textarea
                         placeholder="Add description..."
                         value={values.description}
                         onChange={(e) =>
@@ -249,7 +256,7 @@ export default function NewIssueDialog({
                           }
                         }}
                         className="min-h-[80px] dark:placeholder:text-[#616265] placeholder:text-[20px] resize-none border-0 shadow-none focus-visible:ring-0 dark:bg-transparent"
-                      />
+                      /> */}
 
                       {/* Attachments */}
                       {values.attachments && values.attachments.length > 0 && (

@@ -64,6 +64,7 @@ import { useUpdateSubIssueHook } from "@/hooks/use-update-subissue";
 import { CyclePicker } from "../cycles/components/cycle-picker";
 import { useGetCyclesHook } from "@/hooks/use-get-cycle";
 import type { iCycleListResponse } from "@/interfaces/cycle.interface";
+import { Editor } from "@/components/blocks/editor-00/editor";
 
 interface ActivityItem {
   id: string;
@@ -80,8 +81,8 @@ export default function SubIssueDetailView() {
   const { currentWorkspace, currentUser } = useUser();
 
   // console.log("IssueID", id);
-  const [loading, setLoading] = useState(false);
-  const { data } = useGetSubIssuesDetailHook(Number(id));
+  // const [loading, setLoading] = useState(false);
+  const { data, isLoading: loading } = useGetSubIssuesDetailHook(Number(id));
   // const [data, setData] = useState<iIussesDetail | undefined>();
 
   // CYCLE DATA
@@ -678,6 +679,8 @@ export default function SubIssueDetailView() {
     );
   }
 
+  if (!data) return <>Something went wrong!</>;
+
   return (
     <div className="flex h-[calc(100vh-1rem)] border dark:border-zinc-800 bg-background dark:bg-[#101012]">
       {/* Main Content */}
@@ -795,12 +798,16 @@ export default function SubIssueDetailView() {
 
           {/* Description */}
           <div className="px-3">
-            <Textarea
+            <Editor
+              editorHtmlState={data?.description || description}
+              onHtmlChange={(e) => handleDescriptionChange(e)}
+            />
+            {/* <Textarea
               placeholder="Add description..."
               value={description}
               onChange={(e) => handleDescriptionChange(e.target.value)}
               className=" min-h-[100px]  resize-none border-0 shadow-none focus-visible:ring-0 dark:bg-transparent text-[25px] leading-7 placeholder:text-[18px] dark:placeholder:text-[#57595c]"
-            />
+            /> */}
             {documents.length > 0 ? (
               <div className="space-y-2">
                 {documents.map((doc) => {

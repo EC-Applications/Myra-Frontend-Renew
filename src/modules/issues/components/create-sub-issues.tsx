@@ -24,6 +24,7 @@ import { createSubIssueUri } from "@/services/sub-issues.service";
 import { issueDetailUri } from "@/services/issues.service";
 import type { RootState } from "@/store/store";
 import { useCreateSubIssueHook } from "@/hooks/use-create-subissue";
+import { Editor } from "@/components/blocks/editor-00/editor";
 
 // Validation schema
 const subIssueSchema = yup.object({
@@ -156,12 +157,16 @@ export default function SubIssueForm({
             </div>
 
             {/* Description */}
-            <Textarea
+            <Editor
+              editorHtmlState={values.description}
+              onHtmlChange={(e) => setFieldValue("description", e)}
+            />
+            {/* <Textarea
               placeholder="Add description..."
               value={values.description}
               onChange={(e) => setFieldValue("description", e.target.value)}
               className="sm:text-lg md:text-sm font-semibold border-0 px-0 shadow-none focus-visible:ring-0 dark:bg-transparent dark:placeholder:text-[#616265]"
-            />
+            /> */}
 
             {/* Attachments Preview */}
             {values.documents && values.documents.length > 0 && (
