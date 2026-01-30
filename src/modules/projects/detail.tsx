@@ -29,6 +29,7 @@ import {
   detectIconType,
   parseEmojiFromUnicode,
 } from "@/components/parse-emoji";
+import { Editor } from "@/components/blocks/editor-00/editor";
 
 export default function Detail() {
   const { id } = useParams();
@@ -727,12 +728,17 @@ export default function Detail() {
             Description
           </h3>
           <div className="relative">
-            <Textarea
+            <Editor
+              placeholder="Add a description..."
+              editorHtmlState={formik.values.description}
+              onHtmlChange={(e) => handleDescriptionChange(e)}
+            />
+            {/* <Textarea
               placeholder="Add a description..."
               value={formik.values.description}
               onChange={(e) => handleDescriptionChange(e.target.value)}
               className="min-h-36 md:text-lg border-0 px-3 shadow-none focus-visible:ring-0 dark:bg-transparent resize-none dark:text-white dark:placeholder:text-[#626366]"
-            />
+            /> */}
             {/* {isSavingDescription && (
               <span className="absolute top-2 right-2 text-xs text-muted-foreground">
                 Saving...

@@ -39,6 +39,7 @@ import { TeamPicker } from "./team-picker";
 import { setTeams } from "@/store/slices/team.slice";
 import * as yup from "yup";
 import { useCreateProjectHook } from "@/hooks/use-create-project";
+import { Editor } from "@/components/blocks/editor-00/editor";
 interface NewProjectModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -367,7 +368,12 @@ export function NewProject({
             onDragOver={(e) => e.preventDefault()}
           >
             {/* Text */}
-            <Textarea
+            <Editor
+              editorHtmlState={description}
+              onHtmlChange={(e) => setDescription(e)}
+              placeholder="Write a description, a project brief, or collect ideas..."
+            />
+            {/* <Textarea
               placeholder="Write a description, a project brief, or collect ideas..."
               value={description}
               onChange={(e) => setDescription(e.target.value)}
@@ -378,7 +384,7 @@ export function NewProject({
                 }
               }}
               className="min-h-[100px] placeholder:text-[17px] font-semibold dark:placeholder:text-[#626366] resize-none border-0  shadow-none focus-visible:ring-0 dark:bg-transparent  px-0"
-            />
+            /> */}
 
             {/* Attachments */}
             {attachments.length > 0 && (
