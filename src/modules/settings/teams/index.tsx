@@ -1,12 +1,18 @@
 "use client";
+import {
+  detectIconType,
+  parseEmojiFromUnicode,
+} from "@/components/parse-emoji";
 import { Input } from "@/components/ui/input";
+import { useUpdateTeamHook } from "@/hooks/use-update-team";
 import { useUser } from "@/hooks/use-user";
 import { IconPicker } from "@/modules/projects/components/icon-picker";
 import { removeTeamUri } from "@/services/team.service";
 import { removeTeam } from "@/store/slices/team.slice";
+import { Formik } from "formik";
+
 import {
   Clock,
-  Earth,
   FileText,
   Hash,
   Info,
@@ -32,11 +38,43 @@ export default function Teams() {
   const [teamName, setTeamName] = useState("");
   const [teamIdentifier, setTeamIdentifier] = useState("");
   const team = teamsData.find((t: any) => t.id == id);
-  console.log("Team Data", teamsData);
-  console.log("filtered team", team);
+  const { mutate: updateTeam, isPending } = useUpdateTeamHook();
+  // console.log("Team Data", teamsData);
+  console.log("Curent workspace slug", currentWorkspace?.slug);
+  console.log("Curent workspace id", currentWorkspace?.id);
 
   const [isOpen, setIsOpen] = useState(false);
   const [confirmText, setConfirmText] = useState("");
+
+  const initialValues = {
+    name: team?.name,
+    identifier: team.identifier,
+    logo: team?.icon,
+  };
+
+  const handleUpdateTeamName = (name: string) => {
+    if (name === team.name) return;
+    updateTeam({
+      body: {
+        name: name,
+        workspace_id: currentWorkspace!.id,
+      },
+      team_id: Number(id),
+      workspace_slug: currentWorkspace!.slug,
+    });
+  };
+
+  const handleIdentiferUpdate = (identifer: string | number) => {
+    if (identifer === team.identifier) return;
+    updateTeam({
+      body: {
+        workspace_id: currentWorkspace!.id,
+        identifier: identifer,
+      },
+      team_id: Number(id),
+      workspace_slug: currentWorkspace!.slug,
+    });
+  };
 
   const handleTeamDelete = async () => {
     if (confirmText !== team.name) return;
@@ -46,17 +84,26 @@ export default function Teams() {
     try {
       const res = await removeTeamUri(currentWorkspace!.name, team.id);
 
-      // Dispatch Redux update AFTER API confirms deletion
       dispatch(removeTeam(team.id));
 
       toast.success(res.message, { id: "delete-team" });
-
       navigate("/settings/administration/teams");
     } catch (error: any) {
       toast.error(error?.message || "Failed to delete team", {
         id: "delete-team",
       });
     }
+  };
+
+  const handleIconUpdate = (icon: any) => {
+    updateTeam({
+      body: {
+        icon: icon,
+        workspace_id: currentWorkspace!.id,
+      },
+      team_id: Number(id),
+      workspace_slug: currentWorkspace!.slug,
+    });
   };
 
   // useState(() => {}, [
@@ -72,43 +119,74 @@ export default function Teams() {
         </div>
 
         {/* Icon & Name Section */}
-        <div className="bg-card border rounded-lg p-6">
-          <div className="grid grid-cols-2 gap-6">
-            <div>
-              <label className="block text-sm font-medium mb-2">
-                Icon & Name
-              </label>
-              <div className="flex items-center gap-3">
-                <IconPicker
-                  value={team.icon}
-                  variant="inline"
-                  size={25}
-                  className="mb-1"
-                />
 
-                {/* <div className="w-10 h-10 px-2 bg-pink-500 rounded-full flex items-center justify-center text-foreground font-medium">
+        <Formik initialValues={initialValues} onSubmit={() => {}}>
+          {({ setFieldValue, values }) => (
+            <div className="bg-card border rounded-lg p-6">
+              <div className="grid grid-cols-2 gap-6">
+                <div>
+                  <label className="block text-sm font-medium mb-2">
+                    Icon & Name
+                  </label>
+                  <div className="flex items-center gap-3">
+                    <IconPicker
+                      value={
+                        typeof team?.icon === "object"
+                          ? {
+                              ...team.icon,
+                              icon: parseEmojiFromUnicode(team.icon.icon), // ← Parse nested icon
+                            }
+                          : team?.icon
+                            ? {
+                                icon: parseEmojiFromUnicode(team.icon),
+                                color: "#000000",
+                                type: detectIconType(team.icon),
+                              }
+                            : undefined
+                      }
+                      onChange={handleIconUpdate}
+                      variant="compact"
+                    />
+
+                    {/* <div className="w-10 h-10 px-2 bg-pink-500 rounded-full flex items-center justify-center text-foreground font-medium">
                   <Earth className="w-6 h-6" />
                 </div> */}
-                <Input
-                  value={team.name}
-                  onChange={(e) => setTeamName(e.target.value)}
-                />
+                    <Input
+                      value={values.name}
+                      onChange={(e) => setFieldValue("name", e.target.value)}
+                      disabled={isPending}
+                      onBlur={() => {
+                        handleUpdateTeamName(values.name);
+                      }}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                          e.currentTarget.blur();
+                        }
+                      }}
+                    />
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-2">
+                    Identifier{" "}
+                    <span className="text-muted-foreground">
+                      - Used in issue IDs
+                    </span>
+                  </label>
+                  <Input
+                    value={values.identifier}
+                    onChange={(e) =>
+                      setFieldValue("identifier", e.target.value)
+                    }
+                    onBlur={() => {
+                      handleIdentiferUpdate(values.identifier);
+                    }}
+                  />
+                </div>
               </div>
             </div>
-            <div>
-              <label className="block text-sm font-medium mb-2">
-                Identifier{" "}
-                <span className="text-muted-foreground">
-                  - Used in issue IDs
-                </span>
-              </label>
-              <Input
-                value={team.identifier}
-                onChange={(e) => setTeamIdentifier(e.target.value)}
-              />
-            </div>
-          </div>
-        </div>
+          )}
+        </Formik>
 
         {/* Configuration Sections */}
         <div className="bg-card border rounded-lg divide-y divide-card-foreground/30">

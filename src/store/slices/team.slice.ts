@@ -17,21 +17,31 @@ const teamsSlice = createSlice({
       return action.payload;
     },
 
-    removeMemberFromTeam: (state, action: PayloadAction<{ teamId: number, memberId: number }>) => {
-      const team = state.find(t => t.id === action.payload.teamId);
+    removeMemberFromTeam: (
+      state,
+      action: PayloadAction<{ teamId: number; memberId: number }>,
+    ) => {
+      const team = state.find((t) => t.id === action.payload.teamId);
       if (team && team.members) {
-        team.members = team.members.filter(m => m.id !== action.payload.memberId);
+        team.members = team.members.filter(
+          (m) => m.id !== action.payload.memberId,
+        );
       }
     },
 
     removeTeam: (state, action: PayloadAction<number | string>) => {
-      return state.filter(team => team.id !== action.payload);
+      return state.filter((team) => team.id !== action.payload);
     },
 
+    updateTeam: (state, action: PayloadAction<iTeams>) => {
+      const index = state.findIndex((team) => team.id === action.payload.id);
+      if (index !== -1) {
+        state[index] = action.payload;
+      }
+    },
   },
 });
 
-export const { setTeams, removeMemberFromTeam, removeTeam } = teamsSlice.actions;
+export const { setTeams, removeMemberFromTeam, removeTeam, updateTeam } =
+  teamsSlice.actions;
 export default teamsSlice.reducer;
-
-

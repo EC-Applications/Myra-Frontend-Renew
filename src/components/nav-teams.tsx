@@ -36,6 +36,7 @@ import { Link, Navigate, useLocation, useNavigate } from "react-router";
 import { useDispatch, useSelector } from "react-redux";
 import { setTeamId } from "@/store/slices/use-team-id";
 import { IconPicker } from "@/modules/projects/components/icon-picker";
+import { detectIconType, parseEmojiFromUnicode } from "./parse-emoji";
 
 const NavTeams = () => {
   const teamsData = useSelector((state: any) => state.teams) || [];
@@ -62,7 +63,24 @@ const NavTeams = () => {
                   <Collapsible defaultOpen className="group/sub">
                     <CollapsibleTrigger asChild>
                       <SidebarMenuButton>
-                        <IconPicker variant="inline" value={t.icon} size={18} />
+                        <IconPicker
+                          variant="inline"
+                          value={
+                            typeof t?.icon === "object"
+                              ? {
+                                  ...t.icon,
+                                  icon: parseEmojiFromUnicode(t.icon.icon), 
+                                }
+                              : t?.icon
+                                ? {
+                                    icon: parseEmojiFromUnicode(t.icon),
+                                    color: "#000000",
+                                    type: detectIconType(t.icon),
+                                  }
+                                : undefined
+                          }
+                          size={18}
+                        />
                         <span className="font-semibold dark:text-white">
                           {t.name}
                         </span>
