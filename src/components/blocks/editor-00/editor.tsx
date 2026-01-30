@@ -36,6 +36,7 @@ export function Editor({
   onSerializedChange,
   onHtmlChange,
   className,
+  placeholder
 }: {
   namespace?: string;
   editorState?: EditorState;
@@ -45,6 +46,7 @@ export function Editor({
   onSerializedChange?: (editorSerializedState: SerializedEditorState) => void;
   onHtmlChange?: (editorHtmlState: string) => void;
   className?: string;
+  placeholder?: string;
 }) {
   const internalResetRef = useRef(0);
   const hadContentRef = useRef(false);
@@ -118,7 +120,7 @@ export function Editor({
         // }}
       >
         <TooltipProvider>
-          <Plugins />
+          <Plugins/>
 
           <OnChangePlugin
             ignoreSelectionChange
