@@ -12,7 +12,7 @@ export const Axios = axios.create({
 Axios.interceptors.request.use((config) => {
   const auth = store.getState().auth;
   const token = auth.tokens[auth.currentUser];
-  console.log("TOKEN", token)
+  // console.log("TOKEN", token)
 
   config.headers.Accept = "application/json";
   if (token) {

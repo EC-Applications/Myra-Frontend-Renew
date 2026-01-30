@@ -33,9 +33,12 @@ export interface iTeams {
   description: string;
   members?: iMember[];
   identifier?: number;
+  created_at? : string;
+  updated_at? : string;
+  timezone: string | null ;
   icon?: iIcon;
-  cyclesPeriod? : boolean ;
-  cycles_period : iCycleResponse;
+  cyclesPeriod?: boolean;
+  cycles_period: iCycleResponse;
 }
 
 export interface iIcon {
@@ -63,10 +66,23 @@ export interface iMember {
   name: string;
   email: string;
   image?: string;
-  avatar? : string;
+  avatar?: string;
   role?: string;
-  is_accept? :boolean;
+  is_accept?: boolean;
   pivot?: {
     role: string;
   };
+}
+
+export interface updateTeamPayload {
+  workspace_id: number;
+  name?: string;
+  identifier?: string | number;
+  icon?:
+    | {
+        icon: string;
+        type: "icon" | "emoji";
+        color: string;
+      }
+    | string;
 }

@@ -230,9 +230,9 @@ export function SettingsSidebar() {
                 {group.items.map((item: any) => {
                   const isActive = currentPath === item.url ||
                     currentPath.startsWith(item.url + '/');
-                  console.log('Current Path:', currentPath);
-                  console.log('Item URL:', item.url);
-                  console.log('Is Active:', isActive);
+                  // console.log('Current Path:', currentPath);
+                  // console.log('Item URL:', item.url);
+                  // console.log('Is Active:', isActive);
 
                   return (
                     <SidebarMenuItem key={item.title} >

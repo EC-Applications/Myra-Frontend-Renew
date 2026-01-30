@@ -61,6 +61,9 @@ import { useActivityHook } from "@/hooks/use-activity-hook";
 import Activity from "./components/issues-activity";
 import { useGetSubIssuesDetailHook } from "@/hooks/use-get-subissue-detail";
 import { useUpdateSubIssueHook } from "@/hooks/use-update-subissue";
+import { CyclePicker } from "../cycles/components/cycle-picker";
+import { useGetCyclesHook } from "@/hooks/use-get-cycle";
+import type { iCycleListResponse } from "@/interfaces/cycle.interface";
 
 interface ActivityItem {
   id: string;
@@ -76,10 +79,16 @@ export default function SubIssueDetailView() {
   const { id } = useParams();
   const { currentWorkspace, currentUser } = useUser();
 
-  console.log("IssueID", id);
+  // console.log("IssueID", id);
   const [loading, setLoading] = useState(false);
   const { data } = useGetSubIssuesDetailHook(Number(id));
   // const [data, setData] = useState<iIussesDetail | undefined>();
+
+  // CYCLE DATA
+  const { data: cycleData } = useGetCyclesHook(
+    currentWorkspace?.slug ?? "",
+    Number(data?.team_id),
+  );
 
   const status = useSelector((state: any) => state.issuesStatus);
   const statusList = status ?? [];
@@ -99,9 +108,7 @@ export default function SubIssueDetailView() {
   const [startDate, setStartDate] = useState<Date | null>(null);
 
   const projects = useSelector((state: any) => state.project.projects);
-  const [selectedProjects, setSelectedProjects] = useState<
-    iProject | null
-  >();
+  const [selectedProjects, setSelectedProjects] = useState<iProject | null>();
 
   const labels = useSelector((state: any) => state.issuesLabel);
   const [selectedLabels, setSelectedLabels] = useState<Label[]>([]);
@@ -111,6 +118,8 @@ export default function SubIssueDetailView() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const commentfileInputRef = useRef<HTMLInputElement>(null);
   const [uploadingDocs, setUploadingDocs] = useState(false);
+
+  const [cycleState, setCycleUpdate] = useState<iCycleListResponse | null>(null);
 
   const deleteComment = useDeleteCommentHook();
 
@@ -138,7 +147,7 @@ export default function SubIssueDetailView() {
     Number(id),
   );
 
-  console.log("ACTIViTY in sub issue", activityData);
+  // console.log("ACTIViTY in sub issue", activityData);
 
   // useEffect(() => {
   //   setLoading(true);
@@ -167,7 +176,7 @@ export default function SubIssueDetailView() {
     if (data?.status) {
       setSelectedStatus(data.status);
     }
-    console.log("data ka status", data?.status);
+    // console.log("data ka status", data?.status);
     if (data?.priority_id) {
       setPriorityId(data?.priority_id);
     }
@@ -188,9 +197,13 @@ export default function SubIssueDetailView() {
     if (data?.documents && Array.isArray(data?.documents)) {
       setDocuments(data?.documents);
     }
+
+    if (data?.cycles) {
+      setCycleUpdate(data.cycles);
+    }
   }, [data, data?.labels]);
 
-  console.log("ISSUES", issues);
+  // console.log("ISSUES", issues);
 
   // const [subIssuesExpanded, setSubIssuesExpanded] = useState(true);
   // const [comment, setComment] = useState("");
@@ -345,7 +358,7 @@ export default function SubIssueDetailView() {
   };
 
   const handleUpdateLabel = async (labels: Label[]) => {
-    console.log("janaaaa");
+    // console.log("janaaaa");
 
     setSelectedLabels(labels); // Pehle state update karo
     // setSaving(true);
@@ -395,6 +408,25 @@ export default function SubIssueDetailView() {
     }
   };
 
+  const handleCycleUpdate = async (cycleId: iCycleListResponse | null) => {
+    updateSubIssue.mutate({
+      issueId: Number(id),
+      body: {
+        issue_id: data?.issue_id,
+        cycle_id: cycleId?.id ?? null,
+        workspace_id: currentWorkspace?.id,
+        team_id: Number(data?.team_id),
+      },
+      teamId: Number(data?.team_id),
+      workspaceId: Number(currentWorkspace?.id),
+      // optimisticData: {
+      //   cycle_id: cycleId?.id
+      // }
+    });
+
+    setCycleUpdate(cycleId);
+  };
+
   const handleDescriptionChange = (value: string) => {
     setDescription(value);
     if (saveTimeoutRef.current) {
@@ -439,15 +471,15 @@ export default function SubIssueDetailView() {
   };
 
   const handleDocumentUpload = async (files: FileList | null) => {
-    console.log("handleDocumentUpload called with:", files);
+    // console.log("handleDocumentUpload called with:", files);
 
     if (!files || files.length === 0) {
-      console.log("No files provided");
+      // console.log("No files provided");
       return;
     }
 
     if (!data) {
-      console.log("No Issue Found");
+      // console.log("No Issue Found");
       return;
     }
 
@@ -456,9 +488,9 @@ export default function SubIssueDetailView() {
 
     try {
       const filesArray = Array.from(files);
-      console.log("Uploading files:", filesArray);
+      // console.log("Uploading files:", filesArray);
 
-       updateSubIssue.mutate({
+      updateSubIssue.mutate({
         issueId: Number(id),
         body: {
           issue_id: data?.issue_id,
@@ -859,11 +891,11 @@ export default function SubIssueDetailView() {
               accept="image/*,.pdf,.doc,.docx,.xls,.xlsx"
               className="hidden"
               onChange={(e) => {
-                console.log("Input onChange triggered");
-                console.log("Files selected:", e.target.files);
-                console.log("Files count:", e.target.files?.length);
+                // console.log("Input onChange triggered");
+                // console.log("Files selected:", e.target.files);
+                // console.log("Files count:", e.target.files?.length);
                 if (e.target.files && e.target.files.length > 0) {
-                  console.log(" Calling handleDocumentUpload");
+                  // console.log(" Calling handleDocumentUpload");
                   handleDocumentUpload(e.target.files);
                 } else {
                   console.log(" No files selected");
@@ -1730,17 +1762,18 @@ export default function SubIssueDetailView() {
           </div>
 
           {/* Cycle */}
-          {/* <div>
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-sm font-medium text-muted-foreground">
-                Cycle
-              </span>
-            </div>
-            <div className="flex items-center gap-2">
-              <Clock className="h-4 w-4 text-muted-foreground" />
-              <span className="font-medium">Cycle 7</span>
-            </div>
-          </div> */}
+          <div className="text-md dark:text-[#7e7f82] font-semibold">Cycle</div>
+          <div>
+            <CyclePicker
+              cycles={cycleData || []}
+              value={cycleState}
+              onChange={handleCycleUpdate}
+              buttnVarient="dark"
+              className="border-0"
+              // buttonVarient="dark"
+              // className="border-0"
+            />
+          </div>
 
           {/* Project */}
 

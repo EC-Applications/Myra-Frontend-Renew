@@ -17,12 +17,15 @@ export interface Label {
   description?: string;
 }
 
+type LabelPickerVariant = "default" | "card-row";
+
 interface ProjectFormLabelsProps {
   labels: Label[];
   value: Label[];
   onChange: (labels: Label[]) => void;
   className?: string;
   buttonVarient?: "light" | "dark";
+  variant?: LabelPickerVariant;
 }
 
 export const ProjectFormLabels = ({
@@ -31,11 +34,12 @@ export const ProjectFormLabels = ({
   onChange,
   className,
   buttonVarient = "light",
+  variant = "default",
 }: ProjectFormLabelsProps) => {
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
 
-  console.log("Labels", labels);
+// console.log("Labels", labels);
   const filteredLabels = labels.filter((label) =>
     label.name.toLowerCase().includes(search.toLowerCase()),
   );
@@ -62,50 +66,99 @@ export const ProjectFormLabels = ({
     </div>
   );
 
+  // Card-row variant trigger
+  const renderCardRowTrigger = () => {
+    // No labels selected - show default "Labels" text
+    if (!value.length) {
+      return (
+        <button
+          onClick={(e) => e.stopPropagation()}
+          className={cn(
+            "flex items-center gap-1.5 h-[25px] px-2 rounded border text-sm font-semibold text-muted-foreground hover:text-white transition-colors dark:bg-transparent dark:border-zinc-700 dark:hover:bg-[#32333a]",
+            className
+          )}
+        >
+          <Tag className="h-3 w-3" />
+          <span className="text-[12px]">Labels</span>
+        </button>
+      );
+    }
+
+    // Show labels as separate cards (max 3)
+    const displayLabels = value.slice(0, 3);
+
+    return (
+      <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
+        {displayLabels.map((label) => (
+          <button
+            key={label.id}
+            className={cn(
+              "flex items-center gap-1.5 h-[26px] px-2 rounded border text-[13px] font-semibold  text-muted-foreground dark:hover:text-white transition-colors dark:bg-transparent dark:border-zinc-700 dark:hover:bg-[#32333a]",
+              className
+            )}
+          >
+            <span
+              className="h-2.5 w-2.5 rounded-full"
+              style={{ backgroundColor: label.color }}
+            />
+            <span className="text-[12px]">{label.name}</span>
+          </button>
+        ))}
+      </div>
+    );
+  };
+
+  // Default variant trigger
+  const renderDefaultTrigger = () => (
+    <Button
+      variant="outline"
+      onClick={(e) => e.stopPropagation()}
+      className={cn(
+        `h-7.5 justify-start gap-2 px-2 text-sm font-semibold
+ text-muted-foreground dark:hover:text-white dark:hover:bg-[#32333a]
+ ${buttonVarient === "light" ? "dark:bg-[#2a2c33]" : "dark:bg-transparent"}`,
+        className,
+      )}
+    >
+      {/* No labels */}
+      {!value.length && (
+        <div className="flex items-center gap-1.5">
+          <Tag />
+          <span className="text-[14px]">Labels</span>
+        </div>
+      )}
+
+      {/* Single label */}
+      {value.length === 1 && (
+        <div className="flex items-center gap-2 truncate">
+          <span
+            className="h-3 w-3 rounded-full"
+            style={{ backgroundColor: value[0].color }}
+          />
+          <span className="max-w-[100px] truncate">{value[0].name}</span>
+        </div>
+      )}
+
+      {/* Multiple labels */}
+      {value.length > 1 && (
+        <div className="flex items-center gap-2">
+          {renderMergedColors()}
+          <span className="text-[14px]">Labels</span>
+        </div>
+      )}
+    </Button>
+  );
+
   return (
     <DropdownMenu open={open} onOpenChange={setOpen}>
       <DropdownMenuTrigger asChild>
-        <Button
-          variant="outline"
-          className={cn(
-            `h-7.5 justify-start gap-2 px-2 text-sm font-semibold
-     text-muted-foreground dark:hover:text-white dark:hover:bg-[#32333a]
-     ${buttonVarient === "light" ? "dark:bg-[#2a2c33]" : "dark:bg-transparent"}`,
-            className,
-          )}
-        >
-          {/* No labels */}
-          {!value.length && (
-            <div className="flex items-center gap-1.5">
-              <Tag />
-              <span className="text-[14px]">Labels</span>
-            </div>
-          )}
-
-          {/* Single label */}
-          {value.length === 1 && (
-            <div className="flex items-center gap-2 truncate">
-              <span
-                className="h-3 w-3 rounded-full"
-                style={{ backgroundColor: value[0].color }}
-              />
-              <span className="max-w-[100px] truncate">{value[0].name}</span>
-            </div>
-          )}
-
-          {/* Multiple labels */}
-          {value.length > 1 && (
-            <div className="flex items-center gap-2">
-              {renderMergedColors()}
-              <span className="text-[14px]">Labels</span>
-            </div>
-          )}
-        </Button>
+        {variant === "card-row" ? renderCardRowTrigger() : renderDefaultTrigger()}
       </DropdownMenuTrigger>
 
       <DropdownMenuContent
         align="start"
         className="w-[280px] dark:bg-[#1c1d1f] p-0 dark:border-zinc-700"
+         onClick={(e) => e.stopPropagation()}
         onCloseAutoFocus={(e) => {
           e.preventDefault();
           setSearch("");

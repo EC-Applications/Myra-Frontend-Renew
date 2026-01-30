@@ -43,13 +43,13 @@ const Projects = () => {
   const { data} = useGetAllProject(currentWorkspace?.slug || "" );
   // const projectState = useSelector((state: any) => state.project);
   const status = useSelector((state: RootState) => state.status);
-  console.log("STATAUS", status);
+  // console.log("STATAUS", status);
 
   // const data = useMemo(
   //   () => projectState?. projects || [],
   //   [projectState?.projects]
   // );
-  console.log("extracted data", data);
+  // console.log("extracted data", data);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [view, setView] = useState(0);
   const [filterOpen, setFilterOpen] = useState(false);
@@ -69,7 +69,7 @@ const Projects = () => {
   const filteredData = useMemo(() => {
     if (!data) return [];
 
-    console.log("🔍 Filtering with:", activeFilters);
+    // console.log("🔍 Filtering with:", activeFilters);
 
     return data.filter((project: any) => {
       // Check status filter
@@ -97,15 +97,15 @@ const Projects = () => {
         const hasMatchingLead =
           project.lead_id && activeFilters.members.includes(project.lead_id);
 
-        console.log("👤 Members Filter:", {
-          projectName: project.name,
-          projectMemberIds,
-          projectLeadId: project.lead_id,
-          selectedFilters: activeFilters.members,
-          hasMatchingMember,
-          hasMatchingLead,
-          willPass: hasMatchingMember || hasMatchingLead,
-        });
+        // console.log("👤 Members Filter:", {
+        //   projectName: project.name,
+        //   projectMemberIds,
+        //   projectLeadId: project.lead_id,
+        //   selectedFilters: activeFilters.members,
+        //   hasMatchingMember,
+        //   hasMatchingLead,
+        //   willPass: hasMatchingMember || hasMatchingLead,
+        // });
 
         if (!hasMatchingMember && !hasMatchingLead) {
           return false;
@@ -120,13 +120,13 @@ const Projects = () => {
           projectTeamIds.includes(id)
         );
 
-        console.log("👥 Teams Filter:", {
-          projectName: project.name,
-          projectTeams: project.teams,
-          projectTeamIds,
-          selectedFilters: activeFilters.teams,
-          hasMatchingTeam,
-        });
+        // console.log("👥 Teams Filter:", {
+        //   projectName: project.name,
+        //   projectTeams: project.teams,
+        //   projectTeamIds,
+        //   selectedFilters: activeFilters.teams,
+        //   hasMatchingTeam,
+        // });
 
         if (!hasMatchingTeam) {
           return false;

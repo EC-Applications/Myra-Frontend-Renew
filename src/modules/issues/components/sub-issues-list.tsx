@@ -89,7 +89,7 @@ export default function SubIssuesList({
   const statusList = status ?? [];
   const isSelected = (id: number) => selectedSubIssues.includes(id);
 
-  console.log("subissue update", subIssues);
+  // console.log("subissue update", subIssues);
 
   const handleStatusUpdate = async (issue: iIssues, status: iIssueStatus) => {
     try {
@@ -153,7 +153,7 @@ export default function SubIssuesList({
       <div className="space-y-0.5">
         {subIssues.map((issue) => {
           const selected = isSelected(issue.id);
-          console.log("labels from subissue list", issue.labels);
+          // console.log("labels from subissue list", issue.labels);
           return (
             <div
               key={issue.id}
@@ -289,9 +289,9 @@ export default function SubIssuesList({
             <AlertDialogCancel
               disabled={isDeleting}
               onClick={() => {
-                console.log("Cancel clicked");
-                console.log("Current selectedSubIssues:", selectedSubIssues);
-                console.log("Current isDeleting:", isDeleting);
+                // console.log("Cancel clicked");
+                // console.log("Current selectedSubIssues:", selectedSubIssues);
+                // console.log("Current isDeleting:", isDeleting);
                 setShowDeleteDialog(false);
               }}
             >
@@ -299,8 +299,8 @@ export default function SubIssuesList({
             </AlertDialogCancel>
             <AlertDialogAction
               onClick={async () => {
-                console.log("Delete clicked - START");
-                console.log("selectedSubIssues:", selectedSubIssues);
+                // console.log("Delete clicked - START");
+                // console.log("selectedSubIssues:", selectedSubIssues);
                 if (handleDelete) {
                   await handleDelete(selectedSubIssues, () => {
                     setSelectedSubIssues([]);

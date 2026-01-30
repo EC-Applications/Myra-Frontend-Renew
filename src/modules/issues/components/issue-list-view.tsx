@@ -71,7 +71,7 @@ const IssueListView: FC<{
   // console.log("TEAM ID", teamId);
   // console.log("ProjectID", projectId);
   const { currentWorkspace } = useUser();
-  console.log("ISSUES DATA IN LIST VIEW", issuesData);
+  // console.log("ISSUES DATA IN LIST VIEW", issuesData);
   const [expandedSections, setExpandedSections] = useState<string[]>(
     Object.keys(issuesData),
   );
@@ -562,7 +562,7 @@ const IssueListView: FC<{
                             </Link>
 
                             <div className="flex items-center gap-2">
-                              {(issue.labels as any)?.map(
+                              {/* {(issue.labels as any)?.map(
                                 (label: any, idx: number) => (
                                   <Badge
                                     key={idx}
@@ -578,7 +578,7 @@ const IssueListView: FC<{
                                     {label}
                                   </Badge>
                                 ),
-                              )}
+                              )} */}
                               {/* <Badge variant="outline" className="text-xs">
                                 {issue.projects}
                               </Badge> */}

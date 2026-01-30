@@ -93,7 +93,7 @@ export default function IssueDetailView() {
 
   // console.log("IssueID", id);
   const { currentWorkspace } = useUser();
-  console.log("SLUG", currentWorkspace?.slug);
+  // console.log("SLUG", currentWorkspace?.slug);
   const navigate = useNavigate();
 
   const [loading, setLoading] = useState(false);
@@ -105,7 +105,7 @@ export default function IssueDetailView() {
   );
 
 
-  console.log("cycle data", cycleData);
+  // console.log("cycle data", cycleData);
 
   const status = useSelector((state: RootState) => state.issuesStatus);
   const statusList = status ?? [];
@@ -841,11 +841,11 @@ dark:bg-[#101012]"
               accept="image/*,.pdf,.doc,.docx,.xls,.xlsx"
               className="hidden"
               onChange={(e) => {
-                console.log("Input onChange triggered");
-                console.log("Files selected:", e.target.files);
-                console.log("Files count:", e.target.files?.length);
+                // console.log("Input onChange triggered");
+                // console.log("Files selected:", e.target.files);
+                // console.log("Files count:", e.target.files?.length);
                 if (e.target.files && e.target.files.length > 0) {
-                  console.log(" Calling handleDocumentUpload");
+                  // console.log(" Calling handleDocumentUpload");
                   handleDocumentUpload(e.target.files);
                 } else {
                   console.log(" No files selected");
