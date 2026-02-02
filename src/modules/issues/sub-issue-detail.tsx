@@ -78,14 +78,20 @@ interface ActivityItem {
   icon?: React.ReactNode;
 }
 
-export default function SubIssueDetailView() {
+interface SubIssueDetailViewProps {
+  subIssueId?: number;
+}
+
+export default function SubIssueDetailView({ subIssueId }: SubIssueDetailViewProps) {
   const issues = useSelector((state: any) => state.subIssues);
-  const { id } = useParams();
+  const { id: routeId } = useParams();
   const { currentWorkspace, currentUser } = useUser();
 
-  // console.log("IssueID", id);
+  // Use prop subIssueId if provided, otherwise use route param
+  const id = subIssueId ?? Number(routeId);
+
   const [loading, setLoading] = useState(false);
-  const { data } = useGetSubIssuesDetailHook(Number(id));
+  const { data } = useGetSubIssuesDetailHook(id);
   // const [data, setData] = useState<iIussesDetail | undefined>();
 
   // CYCLE DATA

@@ -84,13 +84,21 @@ import {
   parseEmojiFromUnicode,
 } from "@/components/parse-emoji";
 
-export default function IssueDetailView() {
+interface IssueDetailViewProps {
+  issueId?: number;
+}
+
+export default function IssueDetailView({ issueId }: IssueDetailViewProps) {
   const queryClient = useQueryClient();
   const issues = useSelector((state: any) => state.issues);
-  const { id } = useParams();
+  const { id: routeId } = useParams();
   const currentUser = useUser();
 
-  const { data } = useGetIssuesDetailHook(Number(id));
+  // Use prop issueId if provided, otherwise use route param
+  const id = issueId ?? Number(routeId);
+
+  const { data } = useGetIssuesDetailHook(id);
+  console.log(data, "issue detail")
   // const {} = useGetSubIssuesHook(Number(id));
 
   const updateIssueStatus = useUpdateIssueHook();
@@ -686,7 +694,7 @@ export default function IssueDetailView() {
 
   return (
     <div
-      className="flex h-[calc(100vh-1rem)] bg-background dark:border-zinc-800
+      className="flex h-[calc(100vh-1rem)] bg-background border dark:border-zinc-800
 dark:bg-[#101012]"
     >
       {/* Main Content */}
@@ -710,7 +718,7 @@ dark:bg-[#101012]"
                         typeof data?.team?.icon === "object"
                           ? {
                               ...data?.team?.icon,
-                              icon: parseEmojiFromUnicode(data?.team.icon.icon), // ← Parse nested icon
+                              icon: parseEmojiFromUnicode(data?.team?.icon?.icon ?? ''), // ← Parse nested icon
                             }
                           : data?.team?.icon
                             ? {
