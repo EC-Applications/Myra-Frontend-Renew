@@ -79,6 +79,10 @@ import { useQueryClient } from "@tanstack/react-query";
 import { CyclePicker } from "../cycles/components/cycle-picker";
 import { useGetCyclesHook } from "@/hooks/use-get-cycle";
 import type { iCycleListResponse } from "@/interfaces/cycle.interface";
+import {
+  detectIconType,
+  parseEmojiFromUnicode,
+} from "@/components/parse-emoji";
 
 export default function IssueDetailView() {
   const queryClient = useQueryClient();
@@ -103,7 +107,6 @@ export default function IssueDetailView() {
     currentWorkspace?.slug ?? "",
     Number(data?.team_id),
   );
-
 
   // console.log("cycle data", cycleData);
 
@@ -334,15 +337,15 @@ export default function IssueDetailView() {
     updateIssueStatus.mutate({
       issueId: Number(id),
       body: {
-        cycle_id: cycleId?.id  ?? null ,
+        cycle_id: cycleId?.id ?? null,
         workspace_id: currentWorkspace?.id,
         team_id: Number(data?.team_id),
       },
       teamId: Number(data?.team_id),
       workspaceId: Number(currentWorkspace?.id),
       optimisticData: {
-        cycle_id: cycleId?.id
-      }
+        cycle_id: cycleId?.id,
+      },
     });
   };
 
@@ -691,15 +694,33 @@ dark:bg-[#101012]"
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-2 border-b border-border">
           <div className="flex items-center gap-2">
-            <div className="flex items-center gap-1 text-sm text-muted-foreground">
+            <div className="flex items-center gap-2 text-sm text-muted-foreground ">
               <NavLink to={`/teams/${data?.team.id}/issues`}>
                 {({ isActive }) => (
                   <div
-                    className={`flex items-center gap-1 text-sm text-muted-foreground dark:hover:bg-muted p-1 rounded text-[14px] font-semibold  ${
+                    className={`flex items-center gap-1 text-sm text-muted-foreground dark:hover:bg-muted px-1 rounded text-[14px] font-semibold  ${
                       isActive ? "" : " text-muted-foreground "
                     }`}
                   >
-                    <IconPicker value={data?.team.icon} variant="inline" />
+                    {/* <IconPicker value={data?.team.icon} variant="inline" /> */}
+                    <IconPicker
+                      variant="inline"
+                      size={20}
+                      value={
+                        typeof data?.team?.icon === "object"
+                          ? {
+                              ...data?.team?.icon,
+                              icon: parseEmojiFromUnicode(data?.team.icon.icon), // ← Parse nested icon
+                            }
+                          : data?.team?.icon
+                            ? {
+                                icon: parseEmojiFromUnicode(data?.team.icon),
+                                color: "#000000",
+                                type: detectIconType(data?.team.icon),
+                              }
+                            : undefined
+                      }
+                    />
                     {data?.team.name}
                   </div>
                 )}
@@ -1751,18 +1772,24 @@ dark:bg-[#101012]"
 
           {/* cycle */}
 
-          <div className="text-md dark:text-[#7e7f82] font-semibold">Cycle</div>
-          <div>
-            <CyclePicker
-              cycles={cycleData || []}
-              value={data?.cycles || null}
-              onChange={handleCycleUpdate}
-              buttnVarient="dark"
-              className="border-0"
-              // buttonVarient="dark"
-              // className="border-0"
-            />
-          </div>
+          {cycleData && cycleData.length > 0 && (
+            <div className="">
+              <div className="text-md dark:text-[#7e7f82] font-semibold pb-4">
+                Cycle
+              </div>
+              <div>
+                <CyclePicker
+                  cycles={cycleData || []}
+                  value={data?.cycles || null}
+                  onChange={handleCycleUpdate}
+                  buttnVarient="dark"
+                  className="border-0"
+                  // buttonVarient="dark"
+                  // className="border-0"
+                />
+              </div>
+            </div>
+          )}
 
           {/* Project */}
           <div className="text-md dark:text-[#7e7f82] font-semibold">

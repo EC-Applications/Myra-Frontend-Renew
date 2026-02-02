@@ -100,7 +100,6 @@ const IssueListView: FC<{
       fetchCycleListUri(currentWorkspace?.slug ?? "", Number(teamId)).then(
         (res) => {
           setCycleData(res.data);
-          // console.log("CYCLE DATA IN LIST", cycleData);
         },
       );
     } catch (error) {

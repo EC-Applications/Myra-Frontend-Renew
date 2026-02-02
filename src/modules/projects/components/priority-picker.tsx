@@ -77,7 +77,7 @@ export function PriorityPicker({
               src={selectedPriority.icon}
               alt={selectedPriority.description}
             
-              className={`h-4 w-4 object-contain filter invert`}
+              className={`h-4 w-4 object-contain dark:filter dark:invert`}
             />
           ) : variant === "compact" && selectedPriority ? (
             // Compact variant (icon + shortened label)
@@ -85,7 +85,7 @@ export function PriorityPicker({
               <img
                 src={selectedPriority.icon}
                 alt={selectedPriority.description}
-                className="h-4 w-4 object-contain filter invert"
+                className="h-4 w-4 object-contain dark:filter dark:invert"
               />
               {showLabel && (
                 <span className="text-[14px]">{selectedPriority.status}</span>
@@ -97,7 +97,7 @@ export function PriorityPicker({
               <img
                 src={selectedPriority.icon}
                 alt={selectedPriority.description}
-                className="h-4 w-4 object-contain filter invert"
+                className="h-4 w-4 object-contain dark:filter dark:invert"
               />
               {showLabel && (
                 <span className="text-[14px]">

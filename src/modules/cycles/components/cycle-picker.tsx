@@ -155,7 +155,7 @@ export function CyclePicker({
         <Button
           variant="outline"
           className={cn(
-            `h-7.5 w-auto  justify-start gap-2 px-2 text-sm  text-muted-foreground  font-semibold  hover:text-white border  ${buttnVarient === "light" ? "dark:bg-[#2a2c33] dark:hover:bg-[#32333a]" : "dark:bg-transparent"}`,
+            `h-7.5 w-auto  justify-start gap-2 px-2 text-sm  text-muted-foreground  font-semibold  dark:hover:text-white border  ${buttnVarient === "light" ? "dark:bg-[#2a2c33] dark:hover:bg-[#32333a]" : "dark:bg-transparent"}`,
             className,
           )}
         >

@@ -510,7 +510,7 @@ const ProjectProperties = () => {
         {/* Milestones */}
         <div className="mb-6">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-[15px] font-semibold">Milestones</h3>
+            <h3 className="text-[15px] font-semibold text-muted-foreground">Milestones</h3>
             {/* <Plus className="w-4 h-4" /> */}
           </div>
 

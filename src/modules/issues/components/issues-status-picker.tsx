@@ -94,7 +94,7 @@ export const IssuesStatusPicker = ({
         disabled={disabled}
         onClick={(e) => e.stopPropagation()}
         className={cn(
-          `h-7.5 w-auto gap-2 px-2 text-sm font-semibold  dark:text-muted-foreground dark:hover:text-white   ${buttonVarient == "light"  ? "dark:bg-[#32333a]" : "dark:bg-transparent"} `,
+          `h-7.5 w-auto gap-2 px-2 text-sm font-semibold text-muted-foreground dark:  dark:text-muted-foreground dark:hover:text-white   ${buttonVarient == "light"  ? "dark:bg-[#32333a]" : "dark:bg-transparent"} `,
           disabled && "opacity-50 cursor-not-allowed ",
           className
         )}
