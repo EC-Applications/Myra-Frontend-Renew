@@ -2,10 +2,26 @@ import type { iLabel, iLabelPayLoad } from "@/interfaces/label.interface";
 import { Axios } from "./axios.service";
 import type { iResponse } from "@/interfaces/common.interface";
 import type { iIssueStatus } from "@/interfaces/issues-status.interface";
+import type { iInboxResponse } from "@/interfaces/inbox.interface";
+
+// INBOX
+
+export const inboxUri = async (workspace_slug: string | number) => {
+  return Axios.get(`/api/${workspace_slug}/inbox`, {responseType:"json"}).then(
+    (res) => res.data as iResponse<iInboxResponse[]>,
+  );
+};
+
+//  mark as read
+
+export const markAsReadUri = async (workspaceSlud : number | string , inboxTileId :  number) => {
+  return Axios.get(`/api/${workspaceSlud}/inbox/${inboxTileId}`, {responseType: "json"})
+}
+ 
 
 export const createLableUri = async (body: iLabelPayLoad) => {
   return Axios.post(`/api/label/store`, body, { responseType: "json" }).then(
-    (res) => res.data as iResponse<iLabel[]>
+    (res) => res.data as iResponse<iLabel[]>,
   );
 };
 
@@ -30,7 +46,7 @@ export const updateLabelUri = async (label_id: number, body: iLabelPayLoad) => {
 // ------------------- Isssue Status ------------------
 export const fetchissueStatusUri = async () => {
   return Axios.get("/api/issue/status", { responseType: "json" }).then(
-    (res) => res.data as iResponse<iIssueStatus[]>
+    (res) => res.data as iResponse<iIssueStatus[]>,
   );
 };
 

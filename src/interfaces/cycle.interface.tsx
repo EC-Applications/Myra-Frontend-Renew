@@ -1,3 +1,4 @@
+import type { Label } from "@/modules/projects/components/label-picker";
 import type { iParentIssue } from "./issues";
 
 export interface CyclePeriodItem {
@@ -180,6 +181,7 @@ export interface CycleIssueDetail extends BaseTimestamps {
   status: "current" | "completed" | "upcoming";
 
   priorities: Priority[];
+  label?: Label[];
   team: Team;
   issues: IssuesByStatus;
 

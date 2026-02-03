@@ -1,4 +1,5 @@
 import MasterLayout from "@/components/master-layout";
+import { Inbox } from "@/modules/inbox/inbox";
 import Members from "@/modules/members/members";
 import { lazy, Suspense } from "react";
 import { Navigate, Route, Routes } from "react-router";
@@ -13,6 +14,14 @@ const PrivateRoutes = () => {
   return (
     <Routes>
       <Route element={<MasterLayout />}>
+      <Route
+        path="/inbox"
+        element={
+          <Suspense>
+            <Inbox/>
+          </Suspense>
+        }
+      />
         <Route
           path="/projects/*"
           element={

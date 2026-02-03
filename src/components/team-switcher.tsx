@@ -1,4 +1,4 @@
-import { ChevronDown } from "lucide-react";
+import { ChevronDown, Inbox } from "lucide-react";
 
 import {
   DropdownMenu,
@@ -28,7 +28,7 @@ import {
   logout as logoutAction,
 } from "@/store/slices/auth.slice";
 import { DropdownMenuLabel } from "@radix-ui/react-dropdown-menu";
-import { useNavigate } from "react-router";
+import { Link, useNavigate } from "react-router";
 import { toast } from "sonner";
 import { Avatar, AvatarFallback } from "./ui/avatar";
 import { useState } from "react";
@@ -42,11 +42,18 @@ export function TeamSwitcher() {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
 
-  const switchWorkspace = (userId: number, workspaceId: number, workspaceName: string) => {
-    dispatch(changeWorkspace({
-      userId, workspaceId,
-      workspaceName: workspaceName
-    }));
+  const switchWorkspace = (
+    userId: number,
+    workspaceId: number,
+    workspaceName: string,
+  ) => {
+    dispatch(
+      changeWorkspace({
+        userId,
+        workspaceId,
+        workspaceName: workspaceName,
+      }),
+    );
     navigate("/", { replace: true });
     setTimeout(() => window.location.reload(), 100);
   };
@@ -61,7 +68,7 @@ export function TeamSwitcher() {
           (er) => {
             console.warn(er);
             toast.error("Something went wrong while trying to logout.");
-          }
+          },
         )
         .finally(() => setLoggingOut(false));
     }
@@ -102,7 +109,9 @@ export function TeamSwitcher() {
             sideOffset={4}
           >
             <DropdownMenuGroup>
-              <DropdownMenuItem onClick={() => navigate('/settings')}>Settings</DropdownMenuItem>
+              <DropdownMenuItem onClick={() => navigate("/settings")}>
+                Settings
+              </DropdownMenuItem>
               <DropdownMenuItem onClick={() => navigate("/members")}>
                 Invite and manage members
               </DropdownMenuItem>
@@ -180,6 +189,16 @@ export function TeamSwitcher() {
             </DropdownMenuGroup>
           </DropdownMenuContent>
         </DropdownMenu>
+
+        <SidebarMenuItem className="pt-5">
+          <SidebarMenuButton className="w-full px-1.5">
+            <Link to={"/inbox"} className="flex items-center gap-2">
+              <Inbox className="dark:bg-[#2a2c33] dark:text-white font-medium text-xs rounded-sm h-4 w-4" />
+              {/* </div> */}
+              <span className="truncate font-medium text-[15px]">Inbox</span>
+            </Link>
+          </SidebarMenuButton>
+        </SidebarMenuItem>
       </SidebarMenuItem>
     </SidebarMenu>
   );

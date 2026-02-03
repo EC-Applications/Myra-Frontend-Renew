@@ -146,7 +146,7 @@ export const SingleMemberPicker = ({
                   {(value?.name || value?.email).slice(0, 2).toUpperCase()}
                 </AvatarFallback>
               </Avatar>
-              <span className="text-[13px] font-semibold">
+              <span className="text-[14px] font-semibold">
                 {value.name || value.email}
               </span>
               {/* <button

@@ -255,7 +255,7 @@ const CyclesScreen = () => {
                         </DropdownMenuTrigger>
 
                         <DropdownMenuContent
-                          className="w-64 bg-[#1e1e1e] border border-neutral-700 shadow-xl rounded-md"
+                          className="z-50 w-64 bg-[#1e1e1e] border border-neutral-700 shadow-xl rounded-md"
                           align="end"
                         >
                           <DropdownMenuItem
@@ -264,7 +264,7 @@ const CyclesScreen = () => {
                               setSelectedCycle(cycle);
                               setTimeout(() => setEditOpen(true), 100);
                             }}
-                            className="flex items-center gap-3 px-3 py-2 text-sm text-neutral-200 hover:bg-neutral-700 hover:text-white cursor-pointer"
+                            className="flex items-center gap-3 px-3 py-2 text-sm text-neutral-200 hover:bg-neutral-700 hover:text-white cursor-pointer font-semibold"
                           >
                             <Pencil className="h-4 w-4" />
                             Edit cycle name and description
@@ -276,20 +276,20 @@ const CyclesScreen = () => {
                               setSelectedCycle(cycle);
                               setTimeout(() => setDialogOpen(true), 100);
                             }}
-                            className="flex items-center gap-3 px-3 py-2 text-sm text-neutral-200 hover:bg-neutral-700 hover:text-white cursor-pointer"
+                            className="flex items-center gap-3 px-3 py-2 text-sm text-neutral-200 hover:bg-neutral-700 hover:text-white cursor-pointer font-semibold"
                           >
                             <Calendar className="h-4 w-4" />
                             Change cycle dates
                           </DropdownMenuItem>
 
-                          <DropdownMenuSeparator className="bg-neutral-700" />
+                          <hr />
 
-                          <DropdownMenuItem className="flex items-center gap-3 px-3 py-2 text-sm text-neutral-200 hover:bg-neutral-700 hover:text-white cursor-pointer">
+                          <DropdownMenuItem className="flex items-center gap-3 px-3 py-2 text-sm text-neutral-200 hover:bg-neutral-700 hover:text-white cursor-pointer font-semibold">
                             <Bell className="h-4 w-4" />
                             Subscribe to cycle notifications
                           </DropdownMenuItem>
 
-                          <DropdownMenuItem className="flex items-center gap-3 px-3 py-2 text-sm text-neutral-200 hover:bg-neutral-700 hover:text-white cursor-pointer">
+                          <DropdownMenuItem className="flex items-center gap-3 px-3 py-2 text-sm text-neutral-200 hover:bg-neutral-700 hover:text-white cursor-pointer font-semibold">
                             <Star className="h-4 w-4" />
                             Favorite
                             <span className="ml-auto text-xs text-neutral-400">
@@ -297,12 +297,12 @@ const CyclesScreen = () => {
                             </span>
                           </DropdownMenuItem>
 
-                          <DropdownMenuItem className="flex items-center gap-3 px-3 py-2 text-sm text-neutral-200 hover:bg-neutral-700 hover:text-white cursor-pointer">
+                          <DropdownMenuItem className="flex items-center gap-3 px-3 py-2 text-sm text-neutral-200 hover:bg-neutral-700 hover:text-white cursor-pointer font-semibold">
                             <Link className="h-4 w-4" to={""} />
                             Copy link
                           </DropdownMenuItem>
 
-                          <DropdownMenuItem className="flex items-center gap-3 px-3 py-2 text-sm text-neutral-200 hover:bg-neutral-700 hover:text-white cursor-pointer">
+                          <DropdownMenuItem className="flex items-center gap-3 px-3 py-2 text-sm text-neutral-200 hover:bg-neutral-700 hover:text-white cursor-pointer font-semibold">
                             <CalendarPlus className="h-4 w-4" />
                             Subscribe to cycle calendar
                           </DropdownMenuItem>

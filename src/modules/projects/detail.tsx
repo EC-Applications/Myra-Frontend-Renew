@@ -30,8 +30,15 @@ import {
   parseEmojiFromUnicode,
 } from "@/components/parse-emoji";
 
-export default function Detail() {
-  const { id } = useParams();
+interface projectDEtailProps {
+  projectId?: number;
+}
+
+export default function Detail({ projectId }: projectDEtailProps) {
+  const { id: routeId } = useParams();
+
+  const id = projectId ?? Number(routeId);
+
   const { data: project } = useProjectDetail(Number(id));
   const workpsace = useUser();
   const priorityData = useSelector((state: any) => state.priority);

@@ -335,10 +335,10 @@ export function NewProject({
               // className="w-full"
             />
 
-            <Label className="h-7.5 w-auto rounded-md justify-start align-center gap-2 px-2 text-sm   text-muted-foreground dark:text-muted-foreground hover:font-semibold font-semibold hover:text-white border dark:bg-[#2a2c33] dark:hover:bg-[#32333a]">
+            <Label className="h-7.5 w-auto rounded-md justify-start align-center gap-2 px-2 text-sm   text-muted-foreground dark:text-muted-foreground hover:font-semibold font-semibold hover:text-black dark:hover:text-white border dark:bg-[#2a2c33] dark:hover:bg-[#32333a]">
               <PaperclipIcon className="size-3.5" />
 
-              <span className="text-[13px]">Attachment</span>
+              <span className="text-[13px] textmute">Attachment</span>
               <input
                 type="file"
                 className="hidden"
@@ -464,7 +464,7 @@ export function NewProject({
         </div>
 
         {/* Footer */}
-        <div className="flex items-center justify-end gap-3 py-2 px-4  border-t border-zinc-700 mt-auto sticky bottom-0 bg-[#1c1d1f] cursor-pointer">
+        <div className="flex items-center justify-end gap-3 py-2 px-4  border-t dark:border-zinc-700 mt-auto sticky bottom-0 dark:bg-[#1c1d1f] cursor-pointer">
           <Button variant="customDark" onClick={handleCloseAttempt}>
             Cancel
           </Button>

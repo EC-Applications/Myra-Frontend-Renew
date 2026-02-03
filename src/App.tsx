@@ -39,7 +39,7 @@ function App() {
   // console.log("Token in dashboard", token);
 
   // console.log("CURRENT WORKPSACE Id", currentWorkspace?.id)
-  // console.log("CURRENT WORKPSACE Name", currentWorkspace?.slug)
+  // console.log("CURRENT WORKPSACE Slug", currentWorkspace?.slug)
 
 
   useEffect(() => {
@@ -52,6 +52,7 @@ function App() {
       try {
         await Promise.all([
           getMembers(currentWorkspace.slug, currentWorkspace.id).then((res) => {
+            // console.log("DATA MEMEBRS",res.data)
             dispatch(setWorkspaceMember(res.data));
           }),
 

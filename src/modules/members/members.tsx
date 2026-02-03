@@ -193,7 +193,7 @@ const Members = () => {
       .then(
         (res) => {
           // setMembers(res.data);
-          console.log("worksapace", res.data);
+          // console.log("worksapace", res.data);
           dispatch(setWorkspaceMember(res.data));
         },
         (er: iResponse<null>) => {

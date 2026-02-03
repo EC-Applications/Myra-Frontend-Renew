@@ -35,9 +35,10 @@ export const SingleTeamPicker = ({
   const [search, setSearch] = useState("");
   const teamset = useSelector((state: RootState) => state.useTeamId);
   // console.log("teams in team picker", teams);
-  const currentTeam = teams.find((t) =>
-    [Number(teamId), Number(teamset)].includes(Number(t.id)),
-  );
+  // Priority: teamId from params first, then teamset from Redux
+  const currentTeam =
+    teams.find((t) => Number(t.id) === Number(teamId)) ||
+    teams.find((t) => Number(t.id) === Number(teamset));
 
   // default select current team
   useEffect(() => {

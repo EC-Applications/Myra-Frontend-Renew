@@ -38,16 +38,19 @@ export const useUpdateSubIssueHook = () => {
       });
 
       queryClient.invalidateQueries({
-        queryKey: [
-          "issues",
-          variables.body.workspace_id,
-          variables.body.team_id,
-        ],
-        exact: false,
+        queryKey: ["issues", variables.workspaceId, variables.teamId],
+      });
+
+      queryClient.invalidateQueries({
+        queryKey: ["project-issue", variables.workspaceId],
       });
 
       queryClient.invalidateQueries({
         queryKey: ["cycle-detail", variables.teamId, _data.data.cycle_id],
+      });
+
+      queryClient.invalidateQueries({
+        queryKey: ["inbox"],
       });
     },
     onError: (error) => {
