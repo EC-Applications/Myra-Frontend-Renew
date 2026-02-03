@@ -48,6 +48,10 @@ export const useUpdateSubIssueHook = () => {
       queryClient.invalidateQueries({
         queryKey: ["cycle-detail", variables.teamId, _data.data.cycle_id],
       });
+
+      queryClient.invalidateQueries({
+        queryKey: ["inbox"],
+      });
     },
     onError: (error) => {
       toast.error(error.message || "Failed to update issue");

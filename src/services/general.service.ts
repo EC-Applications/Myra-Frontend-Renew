@@ -12,6 +12,13 @@ export const inboxUri = async (workspace_slug: string | number) => {
   );
 };
 
+//  mark as read
+
+export const markAsReadUri = async (workspaceSlud : number | string , inboxTileId :  number) => {
+  return Axios.get(`/api/${workspaceSlud}/inbox/${inboxTileId}`, {responseType: "json"})
+}
+ 
+
 export const createLableUri = async (body: iLabelPayLoad) => {
   return Axios.post(`/api/label/store`, body, { responseType: "json" }).then(
     (res) => res.data as iResponse<iLabel[]>,
@@ -42,3 +49,4 @@ export const fetchissueStatusUri = async () => {
     (res) => res.data as iResponse<iIssueStatus[]>,
   );
 };
+

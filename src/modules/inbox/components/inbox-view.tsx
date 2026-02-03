@@ -121,6 +121,10 @@ const InboxItem: FC<InboxItemProps> = ({
           <div className="flex-1 min-w-0">
             {/* Title */}
             <div className="flex items-center gap-2">
+              {is_read !== true && (
+                <div className="w-3 h-3 rounded-full bg-[#5e6ad2]"></div>
+              )}
+
               <span className="font-semibold text-sm">{issue_key}</span>
               <h3
                 className={cn(

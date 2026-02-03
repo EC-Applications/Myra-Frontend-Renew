@@ -756,7 +756,7 @@ dark:bg-[#101012]"
         <div className="flex-1 py-6 px-12 overflow-auto">
           {/* Title */}
           <Input
-            className="md:text-2xl font-semibold mb-6 border-0 p-0 focus-visible:ring-0 dark:bg-transparent"
+            className="md:text-2xl font-semibold mb-2 border-0 p-0 focus-visible:ring-0 dark:bg-transparent"
             defaultValue={data?.name}
             onChange={(e) => setIssueName(e.target.value)}
             onBlur={handleIssueName}
@@ -767,12 +767,12 @@ dark:bg-[#101012]"
             }}
           />
           {/* Description */}
-          <div className="mb-8">
+          <div className="mb-2">
             <Textarea
               placeholder="Write a description, a project brief, or collect ideas..."
               value={description}
               onChange={(e) => handleDescriptionChange(e.target.value)}
-              className=" min-h-[100px]
+              className=" min-h-[30px]
     resize-none
     border-0
     shadow-none
@@ -1704,8 +1704,8 @@ dark:bg-[#101012]"
         </div>
       </div>
       {/* Properties Sidebar */}
-      <div className="w-80 border-l border-border bg-muted/20 px-4 py-2 border dark:border-zinc-800">
-        <h3 className="font-medium mb-6">Properties</h3>
+      <div className="w-70 border-l border-border bg-muted/20 pl-6 py-2 border dark:border-zinc-800">
+        <h3 className="text-muted-foreground text-sm font-semibold mb-6">Properties</h3>
 
         <div className="space-y-6">
           {/* Status */}

@@ -5,15 +5,21 @@ import { useUser } from "@/hooks/use-user";
 import IssueDetailView from "../issues/issue-detail";
 import SubIssueDetailView from "../issues/sub-issue-detail";
 import type { iInboxResponse } from "@/interfaces/inbox.interface";
+import CursorLoader from "@/components/cursor-loader";
+import Detail from "../projects/detail";
+import { useMarkAsReadHook } from "@/hooks/use-get-mark-as-read-hook";
 
 export const Inbox = () => {
   const { currentWorkspace } = useUser();
-  const { data: inboxData } = useGetInboxHook(currentWorkspace?.slug ?? "");
-  console.log(inboxData, "inbix")
+  const { data: inboxData, isLoading } = useGetInboxHook(
+    currentWorkspace?.slug ?? "",
+  );
+  console.log(inboxData, "inbix");
   const [selectedItem, setSelectedItem] = useState<iInboxResponse | null>(null);
 
   const handleSelectItem = (item: iInboxResponse) => {
     setSelectedItem(item);
+
   };
 
   // Render right side content based on selection
@@ -21,7 +27,7 @@ export const Inbox = () => {
     if (!selectedItem) {
       return (
         <div className="flex flex-col items-center justify-center h-full text-muted-foreground font-semibold gap-4">
-            <img src="/images/inbox/unread.png" alt=""  className="h-60" />
+          <img src="/images/inbox/unread.png" alt="" className="h-60" />
           <p>Select an item to view details</p>
         </div>
       );
@@ -37,6 +43,9 @@ export const Inbox = () => {
       return <SubIssueDetailView subIssueId={notifiable.id} />;
     }
 
+    if (notifiable.type == "project") {
+      return <Detail projectId={notifiable.id} />;
+    }
     // Fallback for unknown types
     return (
       <div className="flex items-center justify-center h-full text-muted-foreground">
@@ -44,6 +53,10 @@ export const Inbox = () => {
       </div>
     );
   };
+
+  if (isLoading) {
+    return <CursorLoader />;
+  }
 
   return (
     <div className="flex w-full h-full ">
@@ -57,9 +70,7 @@ export const Inbox = () => {
       </div>
 
       {/* Right side – Detail view */}
-      <div className="flex-1 overflow-hidden">
-        {renderDetailView()}
-      </div>
+      <div className="flex-1 overflow-hidden">{renderDetailView()}</div>
     </div>
   );
 };

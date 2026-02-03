@@ -5,6 +5,8 @@ import type { iInboxResponse } from "@/interfaces/inbox.interface";
 import { MoreVertical, Sliders } from "lucide-react";
 import type { FC } from "react";
 import InboxItem from "./inbox-view";
+import { useMarkAsReadHook } from "@/hooks/use-get-mark-as-read-hook";
+import { useUser } from "@/hooks/use-user";
 
 interface InboxViewProps {
   inboxList: iInboxResponse[] | null;
@@ -18,6 +20,8 @@ const InboxView: FC<InboxViewProps> = ({
   onSelectItem,
 }) => {
   const unreadCount = inboxList?.filter((item) => !item.is_read).length || 0;
+  const { currentWorkspace } = useUser();
+  const markAsRead = useMarkAsReadHook();
 
   return (
     <div className="flex flex-col border border-b-0 dark:border-zinc-800 h-full dark:bg-[#101012]">
@@ -68,7 +72,13 @@ const InboxView: FC<InboxViewProps> = ({
                 key={item.id}
                 {...item}
                 isSelected={selectedItem?.id === item.id}
-                onClick={() => onSelectItem(item)}
+                onClick={() => {
+                  onSelectItem(item);
+                  markAsRead.mutate({
+                    workspaceSlug: currentWorkspace?.slug ?? "",
+                    inboxTileId: Number(item.id),
+                  });
+                }}
               />
             ))}
           </div>
