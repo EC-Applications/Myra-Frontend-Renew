@@ -9,8 +9,10 @@ import { DragDropPastePlugin } from "@/components/editor/plugins/drag-drop-paste
 import { FloatingTextFormatToolbarPlugin } from "@/components/editor/plugins/floating-text-format-plugin";
 import { ImagesPlugin } from "@/components/editor/plugins/images-plugin";
 import { HistoryPlugin } from "@lexical/react/LexicalHistoryPlugin";
-
-export function Plugins() {
+interface Props {
+  placeholder?: string;
+}
+export function Plugins({ placeholder }: Props) {
   const [floatingAnchorElem, setFloatingAnchorElem] =
     useState<HTMLDivElement | null>(null);
   const [isLinkEditMode, setIsLinkEditMode] = useState(false);
@@ -29,7 +31,9 @@ export function Plugins() {
           contentEditable={
             <div className="">
               <div className="" ref={onRef}>
-                <ContentEditable placeholder={"Add description..."} />
+                <ContentEditable
+                  placeholder={placeholder || "Add description..."}
+                />
               </div>
             </div>
           }

@@ -69,6 +69,7 @@ import {
   parseEmojiFromUnicode,
 } from "@/components/parse-emoji";
 import { Editor } from "@/components/blocks/editor-00/editor";
+import { sanitizeHtml } from "@/lib/helpers/sanitize-html";
 
 interface ActivityItem {
   id: string;
@@ -1163,13 +1164,17 @@ export default function SubIssueDetailView({ subIssueId }: SubIssueDetailViewPro
                       {/* Comment Text */}
                       {editingCommentId === comment.id ? (
                         <div className="space-y-2">
-                          <Textarea
+                          <Editor
+                            editorHtmlState={editCommentText}
+                            onHtmlChange={(e) => setEditCommentText(e)}
+                          />
+                          {/* <Textarea
                             ref={editTextareaRef}
                             value={editCommentText}
                             onChange={(e) => setEditCommentText(e.target.value)}
                             className="border-0 resize-none focus-visible:ring-0 dark:bg-transparent p-3 dark:placeholder:font-semibold font-semibold"
                             placeholder="Edit your comment..."
-                          />
+                          /> */}
                           {editCommentAttachments.length > 0 && (
                             <div className="space-y-2 mt-3">
                               {editCommentAttachments.map((file, index) => (
@@ -1268,9 +1273,12 @@ export default function SubIssueDetailView({ subIssueId }: SubIssueDetailViewPro
                         </div>
                       ) : (
                         <div className="">
-                          <p className="text-[15px] font-semibold dark:text-white whitespace-pre-line leading-relaxed">
-                            {comment.body}
-                          </p>
+                          <p
+                            className="text-[15px] "
+                            dangerouslySetInnerHTML={{
+                              __html: sanitizeHtml(comment.body),
+                            }}
+                          ></p>
                           {comment.attachments.length > 0 ? (
                             <div className="pt-2 space-y-2">
                               {comment.attachments.map((doc) => {
@@ -1341,7 +1349,13 @@ export default function SubIssueDetailView({ subIssueId }: SubIssueDetailViewPro
                                 </div>
                                 {editingCommentId === reply.id ? (
                                   <div className="space-y-2 mt-1">
-                                    <Textarea
+                                    <Editor
+                                      editorHtmlState={editCommentText}
+                                      onHtmlChange={(e) =>
+                                        setEditCommentText(e)
+                                      }
+                                    />
+                                    {/* <Textarea
                                       ref={editTextareaRef}
                                       value={editCommentText}
                                       onChange={(e) =>
@@ -1349,7 +1363,7 @@ export default function SubIssueDetailView({ subIssueId }: SubIssueDetailViewPro
                                       }
                                       className="border-0 resize-none focus-visible:ring-0 dark:bg-transparent p-3 dark:placeholder:font-semibold font-semibold"
                                       placeholder="Edit your reply..."
-                                    />
+                                    /> */}
 
                                     {editCommentAttachments.length > 0 && (
                                       <div className="space-y-2 mt-3">
@@ -1454,9 +1468,12 @@ export default function SubIssueDetailView({ subIssueId }: SubIssueDetailViewPro
                                   </div>
                                 ) : (
                                   <>
-                                    <p className="text-sm font-semibold dark:text-white/90 mt-0.5">
-                                      {reply.body}
-                                    </p>
+                                    <p
+                                      className="text-sm"
+                                      dangerouslySetInnerHTML={{
+                                        __html: sanitizeHtml(reply.body),
+                                      }}
+                                    ></p>
                                     {reply.attachments.length > 0 ? (
                                       <div className="pt-2 space-y-2">
                                         {reply.attachments.map((doc) => {
@@ -1560,7 +1577,17 @@ export default function SubIssueDetailView({ subIssueId }: SubIssueDetailViewPro
                         </Avatar>
 
                         <div className="flex-1 flex items-start gap-2">
-                          <Textarea
+                          <Editor
+                            className="flex-1 min-h-[20px]"
+                            editorHtmlState={replyText[comment.id]}
+                            onHtmlChange={(e) =>
+                              setReplyText((prev) => ({
+                                ...prev,
+                                [comment.id]: e,
+                              }))
+                            }
+                          />
+                          {/* <Textarea
                             placeholder="Leave a reply..."
                             className="flex-1 border-0 resize-none focus:outline-none focus-visible:ring-0 text-sm text-white placeholder:text-muted-foreground min-h-[20px] dark:bg-transparent dark:placeholder:font-semibold font-semibold"
                             value={replyText[comment.id] || ""}
@@ -1570,7 +1597,7 @@ export default function SubIssueDetailView({ subIssueId }: SubIssueDetailViewPro
                                 [comment.id]: e.target.value,
                               }))
                             }
-                          />
+                          /> */}
                           <Button
                             size="icon"
                             type="button"
@@ -1594,7 +1621,12 @@ export default function SubIssueDetailView({ subIssueId }: SubIssueDetailViewPro
             {({ values, setFieldValue, isSubmitting }) => (
               <Form className="pt-5">
                 <div className="border dark:border-zinc-800 dark:bg-[#17181b] rounded-lg">
-                  <Textarea
+                  <Editor
+                    className="p-3"
+                    editorHtmlState={values.comment_body}
+                    onHtmlChange={(e) => setFieldValue("comment_body", e)}
+                  />
+                  {/* <Textarea
                     placeholder="Leave a comment..."
                     value={values.comment_body}
                     onChange={(e) =>
@@ -1611,7 +1643,7 @@ export default function SubIssueDetailView({ subIssueId }: SubIssueDetailViewPro
                         ]);
                       }
                     }}
-                  />
+                  /> */}
                   {values.attachments && values.attachments.length > 0 && (
                     <div className="mt-3 space-y-3 px-2 dark:bg-">
                       {values.attachments.map((file, index) => {

@@ -103,7 +103,7 @@ const ProjectList: FC<props> = ({ projects }) => {
       //   id: toastId,
       // });
     } catch (e: any) {
-  
+      // 
     } finally {
       setDeletingId(null);
     }
@@ -142,9 +142,9 @@ const ProjectList: FC<props> = ({ projects }) => {
                   >
                     <div>{project.name || "daw"}</div>
                   </Link>
-                  {project.description && (
+                  {project.short_summary && (
                     <div className="text-sm text-muted-foreground flex items-center">
-                      {project.description}
+                      {project.short_summary}
                       {project.progress > 0 && (
                         <span className="ml-2">• {project.progress}%</span>
                       )}

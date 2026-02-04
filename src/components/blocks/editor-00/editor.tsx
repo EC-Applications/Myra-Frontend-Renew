@@ -1,21 +1,22 @@
 "use client";
 
+import { $generateHtmlFromNodes } from "@lexical/html";
 import {
   type InitialConfigType,
   LexicalComposer,
 } from "@lexical/react/LexicalComposer";
 import { OnChangePlugin } from "@lexical/react/LexicalOnChangePlugin";
 import { type EditorState, type SerializedEditorState } from "lexical";
-import { $generateHtmlFromNodes } from "@lexical/html";
 
 import { editorTheme } from "@/components/editor/themes/editor-theme";
 import { TooltipProvider } from "@/components/ui/tooltip";
 
+import { htmlToEditorState } from "@/components/editor/utils/htmlToEditorState";
+import { cn } from "@/lib/utils";
+import { isEmpty } from "lodash";
 import { nodes } from "./nodes";
 import { Plugins } from "./plugins";
-import { htmlToEditorState } from "@/components/editor/utils/htmlToEditorState";
-import { useMemo } from "react";
-import { cn } from "@/lib/utils";
+import { useRef, useEffect } from "react";
 
 const editorConfig: InitialConfigType = {
   namespace: "Editor",
@@ -35,6 +36,7 @@ export function Editor({
   onSerializedChange,
   onHtmlChange,
   className,
+  placeholder
 }: {
   namespace?: string;
   editorState?: EditorState;
@@ -44,7 +46,25 @@ export function Editor({
   onSerializedChange?: (editorSerializedState: SerializedEditorState) => void;
   onHtmlChange?: (editorHtmlState: string) => void;
   className?: string;
+  placeholder?: string;
 }) {
+  const internalResetRef = useRef(0);
+  const hadContentRef = useRef(false);
+
+  useEffect(() => {
+    const isEmpty = !editorHtmlState || editorHtmlState.trim() === "";
+
+    if (isEmpty && hadContentRef.current) {
+      // External reset detected (Formik resetForm)
+      internalResetRef.current += 1;
+      hadContentRef.current = false;
+    }
+
+    if (!isEmpty) {
+      hadContentRef.current = true;
+    }
+  }, [editorHtmlState]);
+
   return (
     <div
       className={cn(
@@ -53,7 +73,7 @@ export function Editor({
       )}
     >
       <LexicalComposer
-        key={namespace}
+        key={`${namespace}-${internalResetRef.current}`}
         initialConfig={{
           ...editorConfig,
           ...(editorState ? { editorState } : {}),
@@ -64,14 +84,14 @@ export function Editor({
             ? {
                 editorState: (editor) => {
                   // Priority order
-                  if (editorHtmlState) {
-                    editor.update(() => {
-                      htmlToEditorState(editorHtmlState, editor);
-                    });
-                    return;
-                  }
+                  editor.update(() => {
+                    htmlToEditorState(editorHtmlState, editor);
+                  });
                 },
               }
+            : {}),
+          ...(!editorState && !editorSerializedState && isEmpty(editorHtmlState)
+            ? { editorState: undefined }
             : {}),
         }}
         // initialConfig={{
@@ -100,7 +120,7 @@ export function Editor({
         // }}
       >
         <TooltipProvider>
-          <Plugins />
+          <Plugins/>
 
           <OnChangePlugin
             ignoreSelectionChange
