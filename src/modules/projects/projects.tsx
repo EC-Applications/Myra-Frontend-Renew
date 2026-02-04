@@ -36,11 +36,12 @@ import {
 } from "@/components/filter-dropdown";
 import type { RootState } from "@/store/store";
 import { useGetAllProject } from "@/hooks/use-get-all-project";
+import CursorLoader from "@/components/cursor-loader";
 
 const Projects = () => {
   const { "team-id": teamId } = useParams();
   const { currentUser, currentWorkspace } = useUser();
-  const { data} = useGetAllProject(currentWorkspace?.slug || "" );
+  const { data , isLoading} = useGetAllProject(currentWorkspace?.slug || "" );
   // const projectState = useSelector((state: any) => state.project);
   const status = useSelector((state: RootState) => state.status);
   // console.log("STATAUS", status);
@@ -148,6 +149,10 @@ const Projects = () => {
       return true;
     });
   }, [data, activeFilters]);
+
+  if(isLoading){
+    return <CursorLoader />;
+  }
 
   return (
     <>

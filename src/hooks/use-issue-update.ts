@@ -59,7 +59,7 @@ export const useUpdateIssueHook = () => {
               ...old,
               ...variables.optimisticData,
             } as iIussesDetail;
-          }
+          },
         );
       }
 
@@ -84,7 +84,8 @@ export const useUpdateIssueHook = () => {
               due_date: old.due_date,
               // Handle labels: empty array = cleared, full objects = use server, IDs only = preserve old
               labels:
-                Array.isArray(serverData.labels) && serverData.labels.length === 0
+                Array.isArray(serverData.labels) &&
+                serverData.labels.length === 0
                   ? [] // User cleared all labels
                   : serverData.labels?.[0] &&
                       typeof serverData.labels[0] === "object" &&
@@ -98,7 +99,8 @@ export const useUpdateIssueHook = () => {
                   : old.status,
               // Preserve priority if server didn't return full object
               priority_detail:
-                serverData.priority_detail && "name" in serverData.priority_detail
+                serverData.priority_detail &&
+                "name" in serverData.priority_detail
                   ? serverData.priority_detail
                   : old.priority_detail,
               // Preserve assignee if server didn't return full object
@@ -112,7 +114,7 @@ export const useUpdateIssueHook = () => {
                   ? serverData.projects
                   : old.projects,
             } as iIussesDetail;
-          }
+          },
         );
       }
 
@@ -130,6 +132,9 @@ export const useUpdateIssueHook = () => {
         queryKey: ["activity", variables.issueId],
         exact: false,
       });
+      queryClient.invalidateQueries({
+        queryKey: ["inbox"],
+      });
     },
 
     // Rollback on error
@@ -139,7 +144,7 @@ export const useUpdateIssueHook = () => {
       if (context?.previousIssue) {
         queryClient.setQueryData(
           ["issue-detail", variables.issueId],
-          context.previousIssue
+          context.previousIssue,
         );
       }
     },

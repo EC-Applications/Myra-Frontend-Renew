@@ -12,15 +12,15 @@ import { useUser } from "@/hooks/use-user";
 import type { iProjectPayload } from "@/interfaces/project.interface";
 import type { iMember, iTeams } from "@/interfaces/teams.interface";
 import { createProjectUri, fetchProjectUri } from "@/services/project.service";
+import { generateAIDescriptionUri } from "@/services/ai.service";
 import { clearMilestones } from "@/store/slices/milestone.slice";
 import { setProject } from "@/store/slices/project.slice";
 import type { RootState } from "@/store/store";
 import { format } from "date-fns";
 import {
-  Delete,
-  FileIcon,
+  BotMessageSquareIcon,
+  Loader2,
   PaperclipIcon,
-  Trash2,
   Trash2Icon,
   X,
 } from "lucide-react";
@@ -108,6 +108,7 @@ export function NewProject({
 
   const [projectName, setProjectName] = useState("");
   const [shortSummary, setShortSummary] = useState("");
+  const [isGeneratingAI, setIsGeneratingAI] = useState(false);
   const [milestoneName, setMilestoneName] = useState("");
   const [startDate, setStartDate] = useState<Date | null>(null);
   const [endDate, setEndDate] = useState<Date | null>(null);
@@ -136,6 +137,7 @@ export function NewProject({
   const resetForm = () => {
     setProjectName("");
     setShortSummary("");
+    setIsGeneratingAI(false);
     setMilestoneName("");
     setMilestoneDescription("");
     setDescription("");
@@ -163,6 +165,30 @@ export function NewProject({
     setStartDate(null);
     setShowDiscardDialog(false);
     dispatch(clearMilestones());
+  };
+
+  const handleGetAISuggestions = async () => {
+    if (!projectName.trim() || isGeneratingAI) return;
+
+    setIsGeneratingAI(true);
+    setShortSummary("");
+
+    try {
+      await generateAIDescriptionUri("project", projectName, (text) => {
+        const plainText = text
+          .replace(/#{1,6}\s?/g, "")
+          .replace(/\*\*([^*]+)\*\*/g, "$1")
+          .replace(/\*([^*]+)\*/g, "$1")
+          .replace(/`([^`]+)`/g, "$1")
+          .trim();
+        setShortSummary(plainText);
+      });
+    } catch (error) {
+      console.error("AI generation failed:", error);
+      toast.error("Failed to generate AI suggestion");
+    } finally {
+      setIsGeneratingAI(false);
+    }
   };
 
   const handleCloseAttempt = () => {
@@ -277,12 +303,27 @@ export function NewProject({
                 onChange={(e) => setProjectName(e.target.value)}
               />
 
-              <Textarea
-                placeholder="Add a short summary..."
-                value={shortSummary}
-                onChange={(e) => setShortSummary(e.target.value)}
-                className="text-base border-0 px-0 shadow-none focus-visible:ring-0 dark:bg-transparent resize-none dark:text-white dark:placeholder:text-[#626366] min-h-0 h-auto py-0"
-              />
+              <div className="relative">
+                {isGeneratingAI ? (
+                  <div className="skeleton-container">
+                    <div className="flex items-start gap-1 mb-2">
+                     <span className="ai-star-cursor">✦</span>
+                    </div>
+
+                    <div className="skeleton-line" style={{ width: "100%" }} />
+                    <div className="skeleton-line" style={{ width: "88%" }} />
+                    {/* <div className="skeleton-line" style={{ width: "94%" }} />
+                    <div className="skeleton-line" style={{ width: "72%" }} /> */}
+                  </div>
+                ) : (
+                  <Textarea
+                    placeholder="Add a short summary..."
+                    value={shortSummary}
+                    onChange={(e) => setShortSummary(e.target.value)}
+                    className="text-base border-0 px-0 shadow-none focus-visible:ring-0 dark:bg-transparent resize-none dark:text-white dark:placeholder:text-[#626366] min-h-0 h-auto py-0"
+                  />
+                )}
+              </div>
             </div>
           </div>
 
@@ -335,10 +376,10 @@ export function NewProject({
               // className="w-full"
             />
 
-            <Label className="h-7.5 w-auto rounded-md justify-start align-center gap-2 px-2 text-sm   text-muted-foreground dark:text-muted-foreground hover:font-semibold font-semibold hover:text-white border dark:bg-[#2a2c33] dark:hover:bg-[#32333a]">
+            <Label className="h-7.5 w-auto rounded-md justify-start align-center gap-2 px-2 text-sm   text-muted-foreground dark:text-muted-foreground hover:font-semibold font-semibold hover:text-black dark:hover:text-white border dark:bg-[#2a2c33] dark:hover:bg-[#32333a]">
               <PaperclipIcon className="size-3.5" />
 
-              <span className="text-[13px]">Attachment</span>
+              <span className="text-[13px] textmute">Attachment</span>
               <input
                 type="file"
                 className="hidden"
@@ -350,6 +391,7 @@ export function NewProject({
                 }}
               />
             </Label>
+
           </div>
 
           <hr className="dark:text-zinc-700" />
@@ -464,18 +506,35 @@ export function NewProject({
         </div>
 
         {/* Footer */}
-        <div className="flex items-center justify-end gap-3 py-2 px-4  border-t border-zinc-700 mt-auto sticky bottom-0 bg-[#1c1d1f] cursor-pointer">
-          <Button variant="customDark" onClick={handleCloseAttempt}>
-            Cancel
-          </Button>
+        <div className="flex items-center justify-between  py-2 px-4  border-t dark:border-zinc-700 mt-auto sticky bottom-0 dark:bg-[#1c1d1f] cursor-pointer">
+          <div className="flex items-center gap-2">
+            <Button
+              variant="ghost"
+              className="cursor-pointer"
+              disabled={!projectName.trim() || isGeneratingAI}
+              onClick={handleGetAISuggestions}
+            >
+              {isGeneratingAI ? (
+                <Loader2 className="animate-spin" />
+              ) : (
+                <BotMessageSquareIcon />
+              )}
+              {isGeneratingAI ? "Generating..." : "Get AI Suggestions"}
+            </Button>
+          </div>
+          <div className="flex items-center gap-3">
+            <Button variant="customDark" onClick={handleCloseAttempt}>
+              Cancel
+            </Button>
 
-          <Button
-            className="cursor-pointer"
-            onClick={handleCreateProject}
-            variant="custom"
-          >
-            Create project
-          </Button>
+            <Button
+              className="cursor-pointer"
+              onClick={handleCreateProject}
+              variant="custom"
+            >
+              Create project
+            </Button>
+          </div>
         </div>
       </DialogContent>
       <Dialog open={showDiscardDialog} onOpenChange={setShowDiscardDialog}>

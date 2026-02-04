@@ -76,7 +76,9 @@ export default function NewIssueDialog({
 
   // USE STATES
   const [showDiscardDialog, setShowDiscardDialog] = useState(false);
-  const [selectedTeams, setSelectedTeams] = useState<iTeams | null>();
+  const [selectedTeams, setSelectedTeams] = useState<iTeams | null>(
+    fiterTeam || null
+  );
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
   const teamset = useSelector((state: RootState) => state.useTeamId);
   const [selectedCycle, setSelectedCycle] = useState<
@@ -90,6 +92,13 @@ export default function NewIssueDialog({
     }
   }, [open, currentCycle]);
 
+  // Set team from params when dialog opens
+  useEffect(() => {
+    if (open && fiterTeam) {
+      setSelectedTeams(fiterTeam);
+    }
+  }, [open, fiterTeam]);
+
   // console.log("LOAD DATA IN NEW ISSUE", currentCycle?.id);
   // console.log("SELECTED TEAM ID", selectedTeams?.id);
 
@@ -101,7 +110,7 @@ export default function NewIssueDialog({
     name: "",
     description: "",
     cycle_id: selectedCycle?.id || currentCycle?.id,
-    team_id: Number(selectedTeams?.id) || Number(teamId) || teamset,
+    team_id: Number(teamId) || Number(selectedTeams?.id) || teamset,
     workspace_id: workspace?.currentWorkspace?.id || 0,
     status_id: defStatus || statusList?.[0]?.id || 0,
     priority_id: undefined,
@@ -113,13 +122,14 @@ export default function NewIssueDialog({
     attachments: [],
   };
 
+  console.log("INITIAL VALUES", initialValues.team_id);
   const handleSubmit = (
     values: iIssuePayload,
     { resetForm }: FormikHelpers<iIssuePayload>,
   ) => {
     const payload: iIssuePayload = {
       ...values,
-      team_id: selectedTeams?.id ? Number(selectedTeams.id) : 0,
+      team_id: Number(selectedTeams?.id) || Number(teamId) || 0,
       due_date: values.due_date
         ? new Date(values.due_date).toISOString().split("T")[0]
         : null,
@@ -180,7 +190,7 @@ export default function NewIssueDialog({
                     <div className="flex items-center gap-2 pt-2">
                       <SingleTeamPicker
                         teams={teams}
-                        value={selectedTeams ?? null}
+                        value={selectedTeams || null}
                         onChange={setSelectedTeams}
                       />
                       {/* <LucideSquareArrowRight className="h-4 w-4" /> */}
@@ -408,12 +418,16 @@ export default function NewIssueDialog({
                           )
                         }
                       />
-                      <CyclePicker
-                        cycles={cycleData || []}
-                        value={selectedCycle}
-                        onChange={(cycle) => setSelectedCycle(cycle || undefined)}
-                        variant="default"
-                      />
+                      {cycleData && cycleData.length > 0 && (
+                        <CyclePicker
+                          cycles={cycleData || []}
+                          value={selectedCycle}
+                          onChange={(cycle) =>
+                            setSelectedCycle(cycle || undefined)
+                          }
+                          variant="default"
+                        />
+                      )}
                     </div>
                   </div>
 

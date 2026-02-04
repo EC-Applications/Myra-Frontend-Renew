@@ -24,11 +24,14 @@ import {
   fetchCycleUri,
   type iCycleSave,
 } from "@/services/cycle.service";
+import { getTeams } from "@/services/team.service";
+import { setTeams } from "@/store/slices/team.slice";
 import { addDays, format } from "date-fns";
 import { Formik, Form } from "formik";
 import { values } from "lodash";
 import { CalendarIcon, ChevronDown } from "lucide-react";
 import { useEffect, useState } from "react";
+import { useDispatch } from "react-redux";
 import { useParams } from "react-router";
 import { toast } from "sonner";
 
@@ -39,6 +42,7 @@ const Cycles = () => {
   const [data, setData] = useState<CycleConfigResponse>();
   const [initData, setInitData] = useState<iCycleResponse>();
   const [loading, setLoading] = useState(false);
+  const dispatch = useDispatch();
 
   const calculateEnabledDays = () => {
     if (!initData?.cycle_period_id || !initData?.cycle_upcoming_id) {
@@ -55,13 +59,13 @@ const Cycles = () => {
       try {
         const res1 = await fetchCycleUri(
           currentWorkspace?.slug ?? "",
-          Number(id)
+          Number(id),
         );
         setInitData(res1.data);
 
         const res2 = await cycleConfigUri(
           currentWorkspace?.slug ?? "",
-          Number(id)
+          Number(id),
         );
         setData(res2.data);
       } catch (e: any) {
@@ -87,7 +91,7 @@ const Cycles = () => {
 
   const handleCycleSave = async (
     cycleEnabled: boolean,
-    formValues: typeof initialValues
+    formValues: typeof initialValues,
   ) => {
     try {
       const body: iCycleSave = {
@@ -97,8 +101,12 @@ const Cycles = () => {
       await cycleSaveUri(currentWorkspace?.slug ?? "", Number(id), body);
 
       setInitData((prev) =>
-        prev ? { ...prev, enable_cycle: cycleEnabled } : prev
+        prev ? { ...prev, enable_cycle: cycleEnabled } : prev,
       );
+      getTeams(currentWorkspace?.slug ?? "", currentWorkspace!.id).then((res) =>
+        dispatch(setTeams(res.data)),
+      );
+
       toast.success("Cycle configuration saved successfully!");
     } catch (error) {
       console.error("Error saving cycle config:", error);
@@ -192,7 +200,7 @@ const Cycles = () => {
       await cycleSaveUri(currentWorkspace?.slug ?? "", Number(id), body);
 
       setInitData((prev) =>
-        prev ? { ...prev, active_issues: checked } : prev
+        prev ? { ...prev, active_issues: checked } : prev,
       );
       toast.success("Cycle configuration saved successfully!");
     } catch (error) {
@@ -208,7 +216,7 @@ const Cycles = () => {
       };
       await cycleSaveUri(currentWorkspace?.slug ?? "", Number(id), body);
       setInitData((prev) =>
-        prev ? { ...prev, started_issues: checked } : prev
+        prev ? { ...prev, started_issues: checked } : prev,
       );
       toast.success("Cycle configuration saved successfully!");
     } catch (error) {
@@ -224,7 +232,7 @@ const Cycles = () => {
       };
       await cycleSaveUri(currentWorkspace?.slug ?? "", Number(id), body);
       setInitData((prev) =>
-        prev ? { ...prev, completed_issues: checked } : prev
+        prev ? { ...prev, completed_issues: checked } : prev,
       );
       toast.success("Cycle configuration saved successfully!");
     } catch (error) {

@@ -74,7 +74,8 @@ export const createProjectUri = async (
   if (body.short_summary) formData.append("short_summary", body.short_summary);
 
   if (body.member && body.member.length > 0) {
-    formData.append("member", JSON.stringify(body.member));
+    body.member.forEach((x)=> formData.append("members[]", JSON.stringify(x.id)));
+    
   }
 
   if (body.label) {

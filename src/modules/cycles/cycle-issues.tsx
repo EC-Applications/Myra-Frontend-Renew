@@ -46,6 +46,12 @@ import { setCycleIssues } from "@/store/slices/cycle-issues.slice";
 import type { RootState } from "@/store/store";
 import { Badge } from "@/components/ui/badge";
 import { useCycleDetailHook } from "@/hooks/use-cycle-detail-hook";
+import { IconPicker } from "../projects/components/icon-picker";
+import {
+  detectIconType,
+  parseEmojiFromUnicode,
+} from "@/components/parse-emoji";
+import CursorLoader from "@/components/cursor-loader";
 // import type { Cycle } from "@/interfaces/cycle.interface";
 
 const chartConfig = {
@@ -63,186 +69,6 @@ const chartConfig = {
   },
 };
 
-const assignees = [
-  {
-    name: "reyan",
-    avatar: "/placeholder.svg?height=24&width=24",
-    completed: 22,
-    total: 31,
-    icon: "🔒",
-  },
-  {
-    name: "adil",
-    avatar: "/placeholder.svg?height=24&width=24",
-    completed: 18,
-    total: 33,
-    icon: "☁️",
-  },
-  {
-    name: "ruhan",
-    avatar: "/placeholder.svg?height=24&width=24",
-    completed: 25,
-    total: 21,
-    icon: "⚡",
-  },
-  {
-    name: "abdurrehman",
-    avatar: "/placeholder.svg?height=24&width=24",
-    completed: 18,
-    total: 11,
-    icon: "✅",
-  },
-  {
-    name: "hamza",
-    avatar: "/placeholder.svg?height=24&width=24",
-    completed: 13,
-    total: 6,
-    icon: "🔧",
-  },
-  {
-    name: "abubakar",
-    avatar: "/placeholder.svg?height=24&width=24",
-    completed: 13,
-    total: 2,
-    icon: "🧩",
-  },
-  {
-    name: "musab",
-    avatar: "/placeholder.svg?height=24&width=24",
-    completed: 25,
-    total: 1,
-    icon: "🌊",
-  },
-  {
-    name: "abdul_rafay",
-    avatar: "/placeholder.svg?height=24&width=24",
-    completed: 16,
-    total: 8,
-    icon: "⚫",
-  },
-  {
-    name: "maria",
-    avatar: "/placeholder.svg?height=24&width=24",
-    completed: 25,
-    total: 2,
-    icon: "⚫",
-  },
-  {
-    name: "faisal",
-    avatar: "/placeholder.svg?height=24&width=24",
-    completed: 0,
-    total: 1,
-    icon: "⚫",
-  },
-];
-
-const labels = [
-  { name: "Bug", color: "bg-red-500", completed: 15, total: 23 },
-  { name: "Feature", color: "bg-purple-500", completed: 19, total: 21 },
-  { name: "Refactor", color: "bg-amber-600", completed: 25, total: 21 },
-  { name: "Design", color: "bg-orange-500", completed: 13, total: 12 },
-  { name: "Development", color: "bg-blue-500", completed: 21, total: 12 },
-  { name: "Mobile", color: "bg-sky-500", completed: 19, total: 8 },
-  { name: "Docs", color: "bg-gray-500", completed: 13, total: 6 },
-];
-
-const priorities = [
-  { name: "No priority", icon: "---", completed: 25, total: 15 },
-  { name: "Urgent", icon: "🔥", completed: 15, total: 28 },
-  { name: "High", icon: "📊", completed: 20, total: 53 },
-  { name: "Medium", icon: "📊", completed: 24, total: 39 },
-];
-const mockIssues: Issue[] = [
-  {
-    id: "ENG-55",
-    title: "change dashboard and integrate APIs",
-    status: "in-review",
-    priority: "high",
-    type: "bug",
-    project: "Enroute",
-    assignee: { name: "User", avatar: "/placeholder.svg?height=32&width=32" },
-    dueDate: "Jul 8",
-    labels: ["Bug", "Enroute"],
-  },
-  {
-    id: "ENG-100",
-    title: "build password input › Authentication Pages Front End",
-    status: "in-review",
-    priority: "medium",
-    type: "development",
-    project: "Myra Cloud",
-    assignee: { name: "User", avatar: "/placeholder.svg?height=32&width=32" },
-    dueDate: "Jul 22",
-    labels: ["Development", "Myra Cloud"],
-  },
-  {
-    id: "ENG-130",
-    title: "Dashboard UI update - Rafay's design changes Deployment",
-    status: "in-progress",
-    priority: "high",
-    type: "feature",
-    project: "Enroute",
-    assignee: { name: "User", avatar: "/placeholder.svg?height=32&width=32" },
-    dueDate: "Jul 16",
-    labels: ["DevOps", "Feature", "Enroute"],
-  },
-  {
-    id: "ENG-158",
-    title: "Authentication Pages Front End",
-    status: "in-progress",
-    priority: "medium",
-    type: "development",
-    project: "Myra Cloud",
-    assignee: { name: "User", avatar: "/placeholder.svg?height=32&width=32" },
-    dueDate: "Jul 20",
-    labels: ["Development", "Myra Cloud"],
-  },
-  {
-    id: "ENG-162",
-    title: "Keyboard Shortcuts Foundation",
-    status: "todo",
-    priority: "low",
-    type: "development",
-    project: "Myra Cloud",
-    assignee: { name: "User", avatar: "/placeholder.svg?height=32&width=32" },
-    dueDate: "Jul 20",
-    labels: ["Development", "Myra Cloud"],
-  },
-  {
-    id: "ENG-7",
-    title: "Demo site not working",
-    status: "done",
-    priority: "high",
-    type: "bug",
-    project: "Enroute",
-    assignee: { name: "User", avatar: "/placeholder.svg?height=32&width=32" },
-    dueDate: "Jul 7",
-    labels: ["Bug", "Enroute"],
-  },
-  {
-    id: "ENG-129",
-    title: "Login Page Design Deployment",
-    status: "done",
-    priority: "medium",
-    type: "feature",
-    project: "Enroute",
-    assignee: { name: "User", avatar: "/placeholder.svg?height=32&width=32" },
-    dueDate: "Jul 15",
-    labels: ["Feature", "Enroute", "Mid-July Sprint"],
-  },
-  {
-    id: "ENG-191",
-    title: "Bug fixes told by sir Ahmed",
-    status: "cancelled",
-    priority: "low",
-    type: "bug",
-    project: "Enroute",
-    assignee: { name: "User", avatar: "/placeholder.svg?height=32&width=32" },
-    dueDate: "Jul 22",
-    labels: ["Bug", "Enroute"],
-  },
-];
-
 export default function Issues() {
   const [view, setView] = useState(0);
   const [sidebarOpen, setSidebarOpen] = useState(true);
@@ -250,7 +76,7 @@ export default function Issues() {
   const [showNewIssueDialog, setShowNewIssueDialog] = useState(false);
   const [chartData, setChartData] = useState<iCycleListResponse>();
   const { currentWorkspace } = useUser();
-  // const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(false);
   const { cycleId: id } = useParams();
   const { "team-id": teamid } = useParams();
   // console.log("cycle id", id);
@@ -270,37 +96,38 @@ export default function Issues() {
   // console.log("ID IN CYCLE", Number(id));
   // console.log("TEAM ID IN CYCLE", Number(teamid));
 
-  // useEffect(() => {
-  //   const fetchCycleDetail = async () => {
-  //     setLoading(true);
-  //     try {
-  //       const res = await cycleDetailUri(
-  //         currentWorkspace?.slug ?? "",
-  //         Number(teamid),
-  //         Number(id),
-  //       );
-  //       dispatch(setCycleIssues(res.data));
-  //       console.log("cycle detail data", res.data);
+  useEffect(() => {
+    const fetchCycleDetail = async () => {
+      setLoading(true);
+      try {
+        //       const res = await cycleDetailUri(
+        //         currentWorkspace?.slug ?? "",
+        //         Number(teamid),
+        //         Number(id),
+        //       );
+        //       dispatch(setCycleIssues(res.data));
+        //       console.log("cycle detail data", res.data);
 
-  //       const res2 = await cycleChartUri(
-  //         currentWorkspace?.slug ?? "",
-  //         Number(teamid),
-  //         Number(id),
-  //       );
+        const res2 = await cycleChartUri(
+          currentWorkspace?.slug ?? "",
+          Number(teamid),
+          Number(id),
+        );
 
-  //       // console.log("CHART DATA", res2);
-  //       setChartData(res2.data);
-  //     } catch (e: any) {
-  //       console.log(e.message);
-  //     } finally {
-  //       setLoading(false);
-  //     }
-  //   };
+        console.log("CHART DATA", res2);
+        setChartData(res2.data);
+      } catch (e: any) {
+        console.log(e.message);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  //   fetchCycleDetail();
-  // }, [currentWorkspace?.slug, teamid, id, dispatch]);
+    fetchCycleDetail();
+  }, [currentWorkspace?.slug, teamid, id, dispatch]);
 
   // console.log(issueData, "CYCLE DETAIL");
+
   const groupedIssues: Record<string, iIssues[]> = Object.entries(
     issueData?.issues || {},
   ).reduce(
@@ -348,7 +175,7 @@ export default function Issues() {
               avatar: issue.assignee.avatar ?? undefined,
             }
           : null,
-        parent_issue: issue.parent_issue ?? null, 
+        parent_issue: issue.parent_issue ?? null,
       }));
       return acc;
     },
@@ -357,12 +184,8 @@ export default function Issues() {
 
   // console.log("setIssues called with:", groupedIssues);
 
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center h-full min-h-[300px]">
-        <div className="h-6 w-6 animate-spin rounded-full border-2 border-muted-foreground border-t-transparent" />
-      </div>
-    );
+  if (loading) {
+    return <CursorLoader />;
   }
 
   return (
@@ -565,7 +388,7 @@ export default function Issues() {
 
               {/* Analytics Tabs */}
               <div>
-                {/* <div className="flex border-b border-border">
+                <div className="flex border-b border-border">
                   {[
                     { id: "assignees", label: "Assignees", icon: Users },
                     { id: "labels", label: "Labels", icon: Tag },
@@ -585,15 +408,15 @@ export default function Issues() {
                       {tab.label}
                     </button>
                   ))}
-                </div> */}
+                </div>
 
                 {/* Assignees Tab */}
-                {/* {activeTab === "assignees" && (
+                {activeTab === "assignees" && (
                   <div className="mt-4 space-y-3">
-                    {assignees.map((assignee: any) => (
+                    {issueData?.assignees.map((assignee: any) => (
                       <div
                         key={assignee.name}
-                        className={`flex items-center justify-between p-2 rounded ${
+                        className={`flex items-center justify-between p-2 rounded font-semibold ${
                           assignee.highlighted ? "bg-muted" : ""
                         }`}
                       >
@@ -624,12 +447,12 @@ export default function Issues() {
                       </div>
                     ))}
                   </div>
-                )} */}
+                )}
 
                 {/* Labels Tab */}
-                {/* {activeTab === "labels" && (
+                {activeTab === "labels" && (
                   <div className="mt-4 space-y-3">
-                    {labels.map((label) => (
+                    {issueData?.label?.map((label) => (
                       <div
                         key={label.name}
                         className="flex items-center justify-between"
@@ -644,60 +467,67 @@ export default function Issues() {
                           <div className="w-16 h-1 bg-muted rounded-full overflow-hidden">
                             <div
                               className="h-full bg-blue-500 rounded-full"
-                              style={{
-                                width: `${
-                                  (label.completed / label.total) * 100
-                                }%`,
-                              }}
+                              style={
+                                {
+                                  // width: `${
+                                  //   (label.completed / label.total) * 100
+                                  // }%`,
+                                }
+                              }
                             />
                           </div>
-                          <span className="text-xs text-muted-foreground">
+                          {/* <span className="text-xs text-muted-foreground">
                             {label.completed}% of {label.total}
-                          </span>
+                          </span> */}
                         </div>
                       </div>
                     ))}
                   </div>
-                )} */}
+                )}
 
                 {/* Priority Tab */}
-                {/* {activeTab === "priority" && (
+                {activeTab === "priority" && (
                   <div className="mt-4 space-y-3">
-                    {priorities.map((priority) => (
+                    {issueData?.priorities.map((priority) => (
                       <div
                         key={priority.name}
                         className="flex items-center justify-between"
                       >
                         <div className="flex items-center gap-2">
-                          <span className="text-sm w-6 text-center">
-                            {priority.icon}
+                          <img
+                            src={priority.icon}
+                            className="text-sm h-4 w-4 text-center dark:filter dark:invert"
+                          ></img>
+                          <span className="font-semibold text-[13px]">
+                            {priority.name}
                           </span>
-                          <span className="text-sm">{priority.name}</span>
                         </div>
                         <div className="flex items-center gap-2">
                           <div className="w-16 h-1 bg-muted rounded-full overflow-hidden">
                             <div
                               className="h-full bg-blue-500 rounded-full"
-                              style={{
-                                width: `${
-                                  (priority.completed / priority.total) * 100
-                                }%`,
-                              }}
+                              style={
+                                {
+                                  // width: `${
+                                  //   // (priority.completed / priority.total) * 100
+                                  // }%`,
+                                }
+                              }
                             />
                           </div>
                           <span className="text-xs text-muted-foreground">
-                            {priority.completed}% of {priority.total}
+                            {/* {priority.completed}% of {priority.total} */}
                           </span>
                         </div>
                       </div>
                     ))}
                   </div>
-                )} */}
+                )}
 
                 {/* Projects Tab */}
-                {/* {activeTab === "projects" && (
+                {activeTab === "projects" && (
                   <div className="mt-4 space-y-3">
-                    {assignees.map((project: any) => (
+                    {issueData?.projects.map((project: any) => (
                       <div
                         key={project.name}
                         className={`flex items-center justify-between p-2 rounded ${
@@ -705,7 +535,27 @@ export default function Issues() {
                         }`}
                       >
                         <div className="flex items-center gap-2">
-                          <span className="text-sm">{project.icon}</span>
+                          {/* <span className="text-sm">{project.icon}</span> */}
+                          <IconPicker
+                            variant="inline"
+                            size={18}
+                            value={
+                              typeof project?.icon === "object"
+                                ? {
+                                    ...project.icon,
+                                    icon: parseEmojiFromUnicode(
+                                      project.icon.icon,
+                                    ), // ← Parse nested icon
+                                  }
+                                : project?.icon
+                                  ? {
+                                      icon: parseEmojiFromUnicode(project.icon),
+                                      color: "#000000",
+                                      type: detectIconType(project.icon),
+                                    }
+                                  : undefined
+                            }
+                          />
                           <span className="text-sm">{project.name}</span>
                         </div>
                         <div className="flex items-center gap-2">
@@ -731,7 +581,7 @@ export default function Issues() {
                       </div>
                     ))}
                   </div>
-                )} */}
+                )}
               </div>
             </div>
           </div>

@@ -281,7 +281,7 @@ export default function MilestoneSection({
           className={`flex items-center justify-between p-2 ${isAddingNew ? "border-b" : "border-b-0"}`}
         >
           <div className="flex items-center gap-2">
-            <span className="text-sm font-medium  text-white">
+            <span className="text-sm font-medium text-muted-foreground dark:text-white">
               {isAddingNew ? "Create Milestones" : "Milestones"}
             </span>
             {milestones.length > 0 && (

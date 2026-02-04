@@ -64,6 +64,10 @@ import { useUpdateSubIssueHook } from "@/hooks/use-update-subissue";
 import { CyclePicker } from "../cycles/components/cycle-picker";
 import { useGetCyclesHook } from "@/hooks/use-get-cycle";
 import type { iCycleListResponse } from "@/interfaces/cycle.interface";
+import {
+  detectIconType,
+  parseEmojiFromUnicode,
+} from "@/components/parse-emoji";
 import { Editor } from "@/components/blocks/editor-00/editor";
 
 interface ActivityItem {
@@ -75,13 +79,18 @@ interface ActivityItem {
   icon?: React.ReactNode;
 }
 
-export default function SubIssueDetailView() {
+interface SubIssueDetailViewProps {
+  subIssueId?: number;
+}
+
+export default function SubIssueDetailView({ subIssueId }: SubIssueDetailViewProps) {
   const issues = useSelector((state: any) => state.subIssues);
-  const { id } = useParams();
+  const { id: routeId } = useParams();
   const { currentWorkspace, currentUser } = useUser();
 
-  // console.log("IssueID", id);
-  // const [loading, setLoading] = useState(false);
+  // Use prop subIssueId if provided, otherwise use route param
+  const id = subIssueId ?? Number(routeId);
+
   const { data, isLoading: loading } = useGetSubIssuesDetailHook(Number(id));
   // const [data, setData] = useState<iIussesDetail | undefined>();
 
@@ -120,7 +129,9 @@ export default function SubIssueDetailView() {
   const commentfileInputRef = useRef<HTMLInputElement>(null);
   const [uploadingDocs, setUploadingDocs] = useState(false);
 
-  const [cycleState, setCycleUpdate] = useState<iCycleListResponse | null>(null);
+  const [cycleState, setCycleUpdate] = useState<iCycleListResponse | null>(
+    null,
+  );
 
   const deleteComment = useDeleteCommentHook();
 
@@ -696,7 +707,24 @@ export default function SubIssueDetailView() {
                       isActive ? "" : " text-muted-foreground "
                     }`}
                   >
-                    <IconPicker value={data?.team.icon} variant="inline" />
+                    <IconPicker
+                      variant="inline"
+                      size={20}
+                      value={
+                        typeof data?.team?.icon === "object"
+                          ? {
+                              ...data?.team?.icon,
+                              icon: parseEmojiFromUnicode(data?.team.icon.icon), // ← Parse nested icon
+                            }
+                          : data?.team?.icon
+                            ? {
+                                icon: parseEmojiFromUnicode(data?.team.icon),
+                                color: "#000000",
+                                type: detectIconType(data?.team.icon),
+                              }
+                            : undefined
+                      }
+                    />
                   </div>
                 )}
               </NavLink>
@@ -723,9 +751,26 @@ export default function SubIssueDetailView() {
 
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <div
-                className={`dark:hover:bg-muted p-1 rounded text-[14px] font-semibold`}
+                className={`dark:hover:bg-muted p-1 rounded text-[14px]  font-semibold`}
               >
-                <IconPicker variant="inline" value={data?.team.icon} />
+                <IconPicker
+                  variant="inline"
+                  size={20}
+                  value={
+                    typeof data?.team?.icon === "object"
+                      ? {
+                          ...data?.team?.icon,
+                          icon: parseEmojiFromUnicode(data?.team.icon.icon), // ← Parse nested icon
+                        }
+                      : data?.team?.icon
+                        ? {
+                            icon: parseEmojiFromUnicode(data?.team.icon),
+                            color: "#000000",
+                            type: detectIconType(data?.team.icon),
+                          }
+                        : undefined
+                  }
+                />
               </div>
               <span className="font-semibold dark:hover:text-white">
                 {data?.name}
@@ -1769,18 +1814,24 @@ export default function SubIssueDetailView() {
           </div>
 
           {/* Cycle */}
-          <div className="text-md dark:text-[#7e7f82] font-semibold">Cycle</div>
-          <div>
-            <CyclePicker
-              cycles={cycleData || []}
-              value={cycleState}
-              onChange={handleCycleUpdate}
-              buttnVarient="dark"
-              className="border-0"
-              // buttonVarient="dark"
-              // className="border-0"
-            />
-          </div>
+          {cycleData && cycleData.length > 0 && (
+            <div className="">
+              <div className="text-md dark:text-[#7e7f82] font-semibold pb-4">
+                Cycle
+              </div>
+              <div>
+                <CyclePicker
+                  cycles={cycleData || []}
+                  value={cycleState}
+                  onChange={handleCycleUpdate}
+                  buttnVarient="dark"
+                  className="border-0"
+                  // buttonVarient="dark"
+                  // className="border-0"
+                />
+              </div>
+            </div>
+          )}
 
           {/* Project */}
 
