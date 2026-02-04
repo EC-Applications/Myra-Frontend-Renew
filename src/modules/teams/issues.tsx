@@ -30,6 +30,7 @@ import {
   type DisplayState,
   type ViewType,
 } from "@/components/display-setting";
+import CursorLoader from "@/components/cursor-loader";
 
 export default function Issues() {
   const { currentWorkspace } = useUser();
@@ -223,12 +224,8 @@ export default function Issues() {
     return filtered;
   }, [finalIssues, activeFilters]);
 
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center h-full min-h-[300px]">
-        <div className="h-6 w-6 animate-spin rounded-full border-2 border-muted-foreground border-t-transparent" />
-      </div>
-    );
+  if(isLoading){
+    return <CursorLoader />;
   }
 
   return (

@@ -51,6 +51,7 @@ import {
   detectIconType,
   parseEmojiFromUnicode,
 } from "@/components/parse-emoji";
+import CursorLoader from "@/components/cursor-loader";
 // import type { Cycle } from "@/interfaces/cycle.interface";
 
 const chartConfig = {
@@ -183,12 +184,8 @@ export default function Issues() {
 
   // console.log("setIssues called with:", groupedIssues);
 
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center h-full min-h-[300px]">
-        <div className="h-6 w-6 animate-spin rounded-full border-2 border-muted-foreground border-t-transparent" />
-      </div>
-    );
+  if (loading) {
+    return <CursorLoader />;
   }
 
   return (
@@ -470,11 +467,13 @@ export default function Issues() {
                           <div className="w-16 h-1 bg-muted rounded-full overflow-hidden">
                             <div
                               className="h-full bg-blue-500 rounded-full"
-                              style={{
-                                // width: `${
-                                //   (label.completed / label.total) * 100
-                                // }%`,
-                              }}
+                              style={
+                                {
+                                  // width: `${
+                                  //   (label.completed / label.total) * 100
+                                  // }%`,
+                                }
+                              }
                             />
                           </div>
                           {/* <span className="text-xs text-muted-foreground">
@@ -499,7 +498,9 @@ export default function Issues() {
                             src={priority.icon}
                             className="text-sm h-4 w-4 text-center dark:filter dark:invert"
                           ></img>
-                          <span className="font-semibold text-[13px]">{priority.name}</span>
+                          <span className="font-semibold text-[13px]">
+                            {priority.name}
+                          </span>
                         </div>
                         <div className="flex items-center gap-2">
                           <div className="w-16 h-1 bg-muted rounded-full overflow-hidden">

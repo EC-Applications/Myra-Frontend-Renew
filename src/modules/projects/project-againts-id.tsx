@@ -38,6 +38,7 @@ import {
   type ProjectFilters,
 } from "@/components/filter-dropdown";
 import { useGetProjectIdHook } from "@/hooks/use-get-project-id";
+import CursorLoader from "@/components/cursor-loader";
 
 // const projects = [
 //     {
@@ -171,7 +172,7 @@ const ProjectAgainstTeamId = () => {
   // const [data, setData] = useState<iProject[]>([]);
   // console.log("extracted data", data);
 
-  const { data } = useGetProjectIdHook(
+  const { data, isLoading } = useGetProjectIdHook(
     Number(currentWorkspace?.id),
     Number(teamId),
   );
@@ -305,14 +306,9 @@ const ProjectAgainstTeamId = () => {
     });
   }, [data, activeFilters]);
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center h-full min-h-[300px]">
-        <div className="h-6 w-6 animate-spin rounded-full border-2 border-muted-foreground border-t-transparent" />
-      </div>
-    );
+  if (isLoading) {
+    return <CursorLoader />;
   }
-
   return (
     <>
       <div className="border rounded dark:border-zinc-800 min-h-screen dark:bg-[#17181b]">

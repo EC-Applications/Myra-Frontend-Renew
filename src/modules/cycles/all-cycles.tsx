@@ -42,6 +42,7 @@ import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router";
 import { toast } from "sonner";
 import { LinearStyleChart } from "./chart";
+import CursorLoader from "@/components/cursor-loader";
 
 const CyclesScreen = () => {
   const [data, setData] = useState<iCycleListResponse[]>();
@@ -49,7 +50,7 @@ const CyclesScreen = () => {
   const { "team-id": id } = useParams();
   const [editOpen, setEditOpen] = useState(false);
   const [selectedCycle, setSelectedCycle] = useState<iCycleListResponse | null>(
-    null
+    null,
   );
   const [dialogOpen, setDialogOpen] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -60,7 +61,7 @@ const CyclesScreen = () => {
       try {
         const res = await fetchCycleListUri(
           currentWorkspace?.slug ?? "",
-          Number(id)
+          Number(id),
         );
         setData(res.data);
         // console.log("All cycle", res.data);
@@ -83,11 +84,11 @@ const CyclesScreen = () => {
         currentWorkspace?.slug ?? "",
         Number(id),
         Number(cycleId),
-        body
+        body,
       );
       const res = await fetchCycleListUri(
         currentWorkspace?.slug ?? "",
-        Number(id)
+        Number(id),
       );
       setData(res.data);
 
@@ -107,7 +108,7 @@ const CyclesScreen = () => {
 
   const handleUpdate = async (
     formValues: typeof initialValues,
-    cycleId: number
+    cycleId: number,
   ) => {
     try {
       const body = {
@@ -119,14 +120,14 @@ const CyclesScreen = () => {
         currentWorkspace?.slug ?? "",
         Number(id),
         cycleId,
-        body
+        body,
       );
 
       fetchCycleListUri(currentWorkspace?.slug ?? "", Number(id)).then(
         (res) => {
           setData(res.data);
           // console.log("All cycle", res.data);
-        }
+        },
       );
       toast.success("Cycle updated successfully");
     } catch (e) {
@@ -135,11 +136,7 @@ const CyclesScreen = () => {
   };
 
   if (loading) {
-    return (
-      <div className="fixed inset-0 flex items-center justify-center bg-background/60 z-50">
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-muted border-t-primary" />
-      </div>
-    );
+    return <CursorLoader />;
   }
 
   // Sort cycles: Upcoming -> Current -> Completed
@@ -185,7 +182,7 @@ const CyclesScreen = () => {
                         {formatDateToMonthDay(cycle?.start_date.split(" ")[0])}
                         <div className="text-xs">
                           {formatDateToMonthDay(
-                            cycle?.start_date.split(" ")[1] || ""
+                            cycle?.start_date.split(" ")[1] || "",
                           )}
                         </div>
                       </div>
@@ -195,8 +192,8 @@ const CyclesScreen = () => {
                         cycle?.status == "current"
                           ? "border-blue-500 bg-blue-500"
                           : cycle?.status === "Completed"
-                          ? "border-gray-400 bg-gray-400"
-                          : "border-border bg-background"
+                            ? "border-gray-400 bg-gray-400"
+                            : "border-border bg-background"
                       }`}
                     />
                   </div>
@@ -206,11 +203,9 @@ const CyclesScreen = () => {
                     <div className="flex items-center gap-3">
                       {cycle?.status == "current" ? (
                         <Play className="h-5 w-5 " />
-                      ) : cycle?.status== "upcoming" ?
-                      (
-                         <ChevronUpIcon />
-                      ) :
-                      (
+                      ) : cycle?.status == "upcoming" ? (
+                        <ChevronUpIcon />
+                      ) : (
                         <CheckCircle />
                       )}
                       <Link to={"./" + cycle.id} className="font-medium">
