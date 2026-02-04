@@ -64,7 +64,7 @@ export interface iIssues {
   status: iIssueStatus | null;
   projects: any | null;
   milestones: iMilestone | null;
-  labels: iLabel;
+  labels: Label[];
   assignee: iMember | null;
   start_date?: string;
   type?: "issue" | "sub_issue";

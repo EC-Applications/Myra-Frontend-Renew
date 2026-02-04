@@ -17,7 +17,7 @@ export interface Label {
   description?: string;
 }
 
-type LabelPickerVariant = "default" | "card-row";
+type LabelPickerVariant = "default" | "card-row" | "card-row-rounded";
 
 interface ProjectFormLabelsProps {
   labels: Label[];
@@ -26,6 +26,8 @@ interface ProjectFormLabelsProps {
   className?: string;
   buttonVarient?: "light" | "dark";
   variant?: LabelPickerVariant;
+  compact?: boolean; // When true, shrinks to dots and expands on hover
+  compactThreshold?: number; // Character length threshold for auto-compact (default: 40)
 }
 
 export const ProjectFormLabels = ({
@@ -35,9 +37,15 @@ export const ProjectFormLabels = ({
   className,
   buttonVarient = "light",
   variant = "default",
+  compact = false,
+  compactThreshold,
 }: ProjectFormLabelsProps) => {
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
+  const [isHovered, setIsHovered] = useState(false);
+
+  // Determine if we should show compact mode
+  const shouldBeCompact = compact;
 
 // console.log("Labels", labels);
   const filteredLabels = labels.filter((label) =>
@@ -108,6 +116,107 @@ export const ProjectFormLabels = ({
     );
   };
 
+  // Card-row-rounded variant trigger (with compact/shrink support)
+  const renderCardRowRoundedTrigger = () => {
+    // No labels selected - show default "Labels" text
+    if (!value.length) {
+      return (
+        <button
+          onClick={(e) => e.stopPropagation()}
+          className={cn(
+            "flex items-center gap-1.5 h-[25px] px-2 rounded-full border text-sm font-semibold text-muted-foreground hover:text-white transition-colors dark:bg-transparent dark:border-zinc-700 dark:hover:bg-[#32333a]",
+            className
+          )}
+        >
+          <Tag className="h-3 w-3" />
+          <span className="text-[12px]">Labels</span>
+        </button>
+      );
+    }
+
+    const displayLabels = value.slice(0, 3);
+
+    // Compact mode - show only dots, expand on hover
+    if (shouldBeCompact) {
+      return (
+        <div
+          className="relative"
+          onMouseEnter={() => setIsHovered(true)}
+          onMouseLeave={() => setIsHovered(false)}
+          onClick={(e) => e.stopPropagation()}
+        >
+          {/* Compact view - just dots */}
+          <div
+            className={cn(
+              "flex items-center gap-0.5 transition-all duration-200 ease-in-out",
+              isHovered ? "opacity-0 w-0 overflow-hidden" : "opacity-100"
+            )}
+          >
+            {displayLabels.map((label) => (
+              <span
+                key={label.id}
+                className="h-2.5 w-2.5 rounded-full border border-zinc-700"
+                style={{ backgroundColor: label.color }}
+              />
+            ))}
+            {value.length > 3 && (
+              <span className="text-[10px] text-muted-foreground ml-0.5">
+                +{value.length - 3}
+              </span>
+            )}
+          </div>
+
+          {/* Expanded view on hover */}
+          <div
+            className={cn(
+              "absolute left-0 top-1/2 -translate-y-1/2 flex items-center gap-1 transition-all duration-200 ease-in-out z-10",
+              isHovered
+                ? "opacity-100 scale-100"
+                : "opacity-0 scale-95 pointer-events-none"
+            )}
+          >
+            {displayLabels.map((label) => (
+              <button
+                key={label.id}
+                className={cn(
+                  "flex items-center gap-1.5 h-[24px] px-2 rounded-full border text-[12px] font-semibold text-muted-foreground dark:hover:text-white transition-colors dark:bg-[#1c1d1f] dark:border-zinc-700 dark:hover:bg-[#32333a] whitespace-nowrap",
+                  className
+                )}
+              >
+                <span
+                  className="h-2.5 w-2.5 rounded-full flex-shrink-0"
+                  style={{ backgroundColor: label.color }}
+                />
+                <span className="text-[11px]">{label.name}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+      );
+    }
+
+    // Normal mode - show labels as separate rounded cards
+    return (
+      <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
+        {displayLabels.map((label) => (
+          <button
+            key={label.id}
+            className={cn(
+              "flex items-center gap-1.5 h-[24px] px-2 rounded-full border text-[12px] font-semibold text-muted-foreground dark:hover:text-white transition-colors dark:bg-transparent dark:border-zinc-700 dark:hover:bg-[#32333a]",
+              className
+            )}
+          >
+            <span
+              className="h-2.5 w-2.5 rounded-full"
+              style={{ backgroundColor: label.color }}
+            />
+            <span className="text-[11px]">{label.name}</span>
+          </button>
+        ))}
+      </div>
+    );
+  };
+
   // Default variant trigger
   const renderDefaultTrigger = () => (
     <Button
@@ -152,7 +261,11 @@ export const ProjectFormLabels = ({
   return (
     <DropdownMenu open={open} onOpenChange={setOpen}>
       <DropdownMenuTrigger asChild>
-        {variant === "card-row" ? renderCardRowTrigger() : renderDefaultTrigger()}
+        {variant === "card-row"
+          ? renderCardRowTrigger()
+          : variant === "card-row-rounded"
+            ? renderCardRowRoundedTrigger()
+            : renderDefaultTrigger()}
       </DropdownMenuTrigger>
 
       <DropdownMenuContent

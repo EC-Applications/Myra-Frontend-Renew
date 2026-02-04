@@ -19,20 +19,9 @@ import type { RootState } from "@/store/store";
 import { format } from "date-fns";
 import {
   BotMessageSquareIcon,
-  BrainCircuit,
-  CircuitBoard,
-  CircuitBoardIcon,
-  Delete,
-  FileIcon,
   Loader2,
-  LucideBrainCircuit,
-  LucideCircuitBoard,
   PaperclipIcon,
-  Sparkle,
-  Sparkles,
-  Trash2,
   Trash2Icon,
-  Workflow,
   X,
 } from "lucide-react";
 import { useEffect, useState } from "react";

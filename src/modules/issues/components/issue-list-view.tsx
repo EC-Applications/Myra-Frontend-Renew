@@ -59,6 +59,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { ProjectFormLabels } from "@/modules/projects/components/label-picker";
 
 const IssueListView: FC<{
   issuesData: Record<string, iIssues[]>;
@@ -503,64 +504,64 @@ const IssueListView: FC<{
                         return (
                           <div
                             key={issue.id}
-                            className="flex items-center gap-2 py-2 px-6  hover:bg-muted/50  last:border-b-0"
+                            className="flex items-center justify-between gap-3 py-2 px-6  hover:bg-muted/50  last:border-b-0"
                           >
-                            <PriorityPicker
-                              variant="icon-only"
-                              className="border-0"
-                              buttonVarient="dark"
-                              value={issue.priority_id ?? undefined}
-                              onChange={(newPriorityId) => {
-                                handlePriorityUpdate(
-                                  issue.id,
-                                  newPriorityId,
-                                  issue.team_id,
-                                  issue.type || "",
-                                  issue.issue_id,
-                                );
-                                // console.log(
-                                //   "Update priority:",
-                                //   issue.id,
-                                //   newPriorityId,
-                                // );
-                              }}
-                            />
-
-                            <IssuesStatusPicker
-                              variant="icon-only"
-                              statuses={statusList}
-                              value={
-                                statusList.find(
-                                  (s) => s.id === issue.status_id,
-                                ) ?? null
-                              }
-                              onChange={(newStatus) => {
-                                handleStatusUpdate(
-                                  issue.id,
-                                  newStatus,
-                                  issue.team_id,
-                                  issue.type || "",
-                                  issue.issue_id || 0,
-                                );
-                              }}
-                            />
-
-                            <Link
-                              to={`${issue.type === "issue" ? `/issues/${issue.id}` : `/issues/${issue.id}/sub-issue`}`}
-                              className="flex items-center gap-2 min-w-0 flex-1"
-                            >
-                              <Badge
-                                variant="noBorder"
-                                className="text-[13px] text-muted-foreground py-1.5"
-                              >
-                                {issue.key}
-                              </Badge>
-                              <span className="text-sm font-semibold truncate">
-                                {issue.name}
-                              </span>
-                            </Link>
-
                             <div className="flex items-center gap-2">
+                              <PriorityPicker
+                                variant="icon-only"
+                                className="border-0"
+                                buttonVarient="dark"
+                                value={issue.priority_id ?? undefined}
+                                onChange={(newPriorityId) => {
+                                  handlePriorityUpdate(
+                                    issue.id,
+                                    newPriorityId,
+                                    issue.team_id,
+                                    issue.type || "",
+                                    issue.issue_id,
+                                  );
+                                  // console.log(
+                                  //   "Update priority:",
+                                  //   issue.id,
+                                  //   newPriorityId,
+                                  // );
+                                }}
+                              />
+                              <IssuesStatusPicker
+                                variant="icon-only"
+                                statuses={statusList}
+                                value={
+                                  statusList.find(
+                                    (s) => s.id === issue.status_id,
+                                  ) ?? null
+                                }
+                                onChange={(newStatus) => {
+                                  handleStatusUpdate(
+                                    issue.id,
+                                    newStatus,
+                                    issue.team_id,
+                                    issue.type || "",
+                                    issue.issue_id || 0,
+                                  );
+                                }}
+                              />
+                              <Link
+                                to={`${issue.type === "issue" ? `/issues/${issue.id}` : `/issues/${issue.id}/sub-issue`}`}
+                                className="flex items-center gap-3 min-w-0 "
+                              >
+                                <Badge
+                                  variant="noBorder"
+                                  className="text-[15px] text-muted-foreground py-1.5"
+                                >
+                                  {issue.key}
+                                </Badge>
+                                <span className="text-sm font-semibold truncate">
+                                  {issue.name}
+                                </span>
+                              </Link>
+                            </div>
+
+                            <div className="flex items-center justify-end space-x-5">
                               {/* {(issue.labels as any)?.map(
                                 (label: any, idx: number) => (
                                   <Badge
@@ -581,6 +582,18 @@ const IssueListView: FC<{
                               {/* <Badge variant="outline" className="text-xs">
                                 {issue.projects}
                               </Badge> */}
+
+                              {/* {issue.labels && issue.labels.length > 0 && (
+                                <ProjectFormLabels
+                                  labels={issue.labels}
+                                  value={issue.labels || []}
+                                  onChange={(labels) =>
+                                    console.log("Labels changed", labels)
+                                  }
+                                  variant="card-row-rounded"
+                                  compact={issue.name.length > 40} 
+                                />
+                              )} */}
 
                               <ProjectDatePicker
                                 variant="inline"
@@ -631,40 +644,40 @@ const IssueListView: FC<{
                                   {issue.assignee?.name?.charAt(0) || "U"}
                                 </AvatarFallback>
                               </Avatar> */}
-                            </div>
-                            <DropdownMenu
-                              open={openDropdownId === issue.id}
-                              onOpenChange={(open) => {
-                                setOpenDropdownId(open ? issue.id : null);
-                              }}
-                            >
-                              <DropdownMenuTrigger asChild>
-                                <button className="p-1 rounded hover:bg-muted transition">
-                                  <MoreHorizontal className="w-4 h-4 text-muted-foreground" />
-                                </button>
-                              </DropdownMenuTrigger>
-
-                              <DropdownMenuContent
-                                align="end"
-                                className="dark:bg-[#1c1d1f]"
+                              <DropdownMenu
+                                open={openDropdownId === issue.id}
+                                onOpenChange={(open) => {
+                                  setOpenDropdownId(open ? issue.id : null);
+                                }}
                               >
-                                <DropdownMenuItem
-                                  className=" font-semibold"
-                                  onClick={() => {
-                                    setOpenDropdownId(null);
-                                    setIssueToDelete({
-                                      id: issue.id,
-                                      team_id: issue.team_id,
-                                      type: issue.type || "",
-                                      issue_id: issue.issue_id || 0,
-                                    });
-                                    setShowDeleteDialog(true);
-                                  }}
+                                <DropdownMenuTrigger asChild>
+                                  <button className="p-1 rounded hover:bg-muted transition">
+                                    <MoreHorizontal className="w-4 h-4 text-muted-foreground" />
+                                  </button>
+                                </DropdownMenuTrigger>
+
+                                <DropdownMenuContent
+                                  align="end"
+                                  className="dark:bg-[#1c1d1f]"
                                 >
-                                  Delete Issue
-                                </DropdownMenuItem>
-                              </DropdownMenuContent>
-                            </DropdownMenu>
+                                  <DropdownMenuItem
+                                    className=" font-semibold"
+                                    onClick={() => {
+                                      setOpenDropdownId(null);
+                                      setIssueToDelete({
+                                        id: issue.id,
+                                        team_id: issue.team_id,
+                                        type: issue.type || "",
+                                        issue_id: issue.issue_id || 0,
+                                      });
+                                      setShowDeleteDialog(true);
+                                    }}
+                                  >
+                                    Delete Issue
+                                  </DropdownMenuItem>
+                                </DropdownMenuContent>
+                              </DropdownMenu>
+                            </div>
                           </div>
                         );
                       })}
