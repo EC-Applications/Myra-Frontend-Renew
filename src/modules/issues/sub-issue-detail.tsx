@@ -68,6 +68,7 @@ import {
   detectIconType,
   parseEmojiFromUnicode,
 } from "@/components/parse-emoji";
+import { Editor } from "@/components/blocks/editor-00/editor";
 
 interface ActivityItem {
   id: string;
@@ -90,8 +91,7 @@ export default function SubIssueDetailView({ subIssueId }: SubIssueDetailViewPro
   // Use prop subIssueId if provided, otherwise use route param
   const id = subIssueId ?? Number(routeId);
 
-  const [loading, setLoading] = useState(false);
-  const { data } = useGetSubIssuesDetailHook(id);
+  const { data, isLoading: loading } = useGetSubIssuesDetailHook(Number(id));
   // const [data, setData] = useState<iIussesDetail | undefined>();
 
   // CYCLE DATA
@@ -690,6 +690,8 @@ export default function SubIssueDetailView({ subIssueId }: SubIssueDetailViewPro
     );
   }
 
+  if (!data) return <>Something went wrong!</>;
+
   return (
     <div className="flex h-[calc(100vh-1rem)] border dark:border-zinc-800 bg-background dark:bg-[#101012]">
       {/* Main Content */}
@@ -841,12 +843,16 @@ export default function SubIssueDetailView({ subIssueId }: SubIssueDetailViewPro
 
           {/* Description */}
           <div className="px-3">
-            <Textarea
+            <Editor
+              editorHtmlState={data?.description || description}
+              onHtmlChange={(e) => handleDescriptionChange(e)}
+            />
+            {/* <Textarea
               placeholder="Add description..."
               value={description}
               onChange={(e) => handleDescriptionChange(e.target.value)}
               className=" min-h-[100px]  resize-none border-0 shadow-none focus-visible:ring-0 dark:bg-transparent text-[25px] leading-7 placeholder:text-[18px] dark:placeholder:text-[#57595c]"
-            />
+            /> */}
             {documents.length > 0 ? (
               <div className="space-y-2">
                 {documents.map((doc) => {

@@ -3,9 +3,24 @@ import AddAccount from "@/modules/auth/add-account.component";
 import SignIn from "@/modules/auth/sign-in.component";
 import WorkspaceSetup from "@/modules/auth/workspace-setup.component";
 import { useAppSelector } from "@/store/hook";
-import { BrowserRouter, Navigate, Route, Routes } from "react-router";
+import {
+  BrowserRouter,
+  Navigate,
+  Route,
+  Routes,
+  useLocation,
+  useNavigate,
+  useSearchParams,
+} from "react-router";
 import PrivateRoutes from "./private-routes";
 import SocialLogin from "@/modules/auth/social-login";
+import { useEffect } from "react";
+
+const NavigateToSignin = () => {
+  const { pathname } = useLocation();
+  const redirectTo = encodeURIComponent(pathname);
+  return <Navigate to={`/sign-in?redirectTo=${redirectTo}`} replace={true} />;
+};
 
 const AppRoutes = () => {
   const { currentUser, currentWorkspace } = useAppSelector((x) => x.auth);
@@ -33,10 +48,7 @@ const AppRoutes = () => {
             <>
               <Route path="/sign-in" element={<SignIn />} />
               <Route path="/social-login" element={<SocialLogin />} />
-              <Route
-                path="*"
-                element={<Navigate to="/sign-in" replace={true} />}
-              />
+              <Route path="*" element={<NavigateToSignin />} />
             </>
           )}
         </Route>
