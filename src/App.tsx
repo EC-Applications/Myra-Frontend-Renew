@@ -4,18 +4,11 @@ import { toast, Toaster } from "sonner";
 import { getTeams } from "./services/team.service";
 import { useDispatch, useSelector } from "react-redux";
 import { setTeams } from "./store/slices/team.slice";
-import {
-  fetchProjectUri,
-  priorityFetchUri,
-  projectStatusCateogryUri,
-} from "./services/project.service";
+import { fetchProjectUri, priorityFetchUri, projectStatusCateogryUri } from "./services/project.service";
 import { setPriorityList } from "./store/slices/priority.slice";
 import type { IPriority, iProject } from "./interfaces/project.interface";
 import { projectCatetory } from "./store/slices/status.slice";
-import {
-  fetchissueStatusUri,
-  getLabelListUri,
-} from "./services/general.service";
+import { fetchissueStatusUri, getLabelListUri } from "./services/general.service";
 import { setLabel } from "./store/slices/label.slice";
 import { getMembers } from "./services/workspace.service";
 import { setWorkspaceMember } from "./store/slices/workspace.slice";
@@ -26,20 +19,20 @@ import { setProject } from "./store/slices/project.slice";
 import { getIssuesLabelListUri } from "./services/issues.service";
 import { setIssuesLabel } from "./store/slices/issues-label.slice";
 import { setIssuesSatus } from "./store/slices/issues-status.slice";
-import { userProfileUri } from "./services/auth.service";
-import { addAccount } from "./store/slices/auth.slice";
+
+
 
 function App() {
   const dispatch = useDispatch();
   const [loading, setLoading] = useState(false);
   const auth = store.getState().auth;
   const { currentWorkspace } = useUser();
-  const currentWorkspaceData = useSelector(
-    (state: any) => state.auth.currentWorkspace,
+  const currentWorkspaceData = useSelector( 
+    (state: any) => state.auth.currentWorkspace
   );
 
   const currentWorkspaceName = useSelector(
-    (state: any) => state.auth.currentWorkspaceName,
+    (state: any) => state.auth.currentWorkspaceName
   );
   // const auth = store.getState().auth;
   const token = auth.tokens[auth.currentUser];
@@ -48,9 +41,12 @@ function App() {
   // console.log("CURRENT WORKPSACE Id", currentWorkspace?.id)
   // console.log("CURRENT WORKPSACE Slug", currentWorkspace?.slug)
 
+
   useEffect(() => {
+    if (!token || !currentWorkspace) return;
+    // console.log("CURRENT slug",currentWorkspace!.slug)
+
     const fetchAllData = async () => {
-      if (!token || !currentWorkspace) return;
       setLoading(true);
 
       try {
@@ -64,7 +60,7 @@ function App() {
             dispatch(setProject(res.data));
           }),
 
-          getTeams(currentWorkspace?.slug, currentWorkspace.id).then((res) => {
+          getTeams( currentWorkspace?.slug, currentWorkspace.id).then((res) => {
             dispatch(setTeams(res.data));
           }),
 
@@ -86,7 +82,7 @@ function App() {
 
           fetchissueStatusUri().then((res) => {
             dispatch(setIssuesSatus(res.data));
-          }),
+          })
         ]);
       } catch (error: any) {
         console.error(error);
@@ -96,21 +92,10 @@ function App() {
       }
     };
 
-    const fetchProfile = async () => {
-      setLoading(true);
-      try {
-        const res = await userProfileUri();
-        dispatch(addAccount(res.data));
-        fetchAllData();
-      } catch {
-        toast.error("Something went wrong!", {
-          description: "Unable to fetch user profile!",
-        });
-        setLoading(false);
-      }
-    };
-    fetchProfile();
+    fetchAllData();
   }, [currentWorkspace]);
+
+
 
   if (loading) {
     return (
@@ -119,6 +104,7 @@ function App() {
       </div>
     );
   }
+
 
   return (
     <>
