@@ -39,6 +39,11 @@ const authSlice = createSlice({
       state.users[user.id] = action.payload.user;
       updateStorage(state);
     },
+    updateAccountUser: (state, action: PayloadAction<iLoginResponse>) => {
+      const user = action.payload.user;
+      state.users[user.id] = action.payload.user;
+      updateStorage(state);
+    },
     addWorkspace: (state, action: PayloadAction<iWorkspace>) => {
       state.currentWorkspace = action.payload.id;
       state.users[state.currentUser].owned_workspaces.push(action.payload);
@@ -106,6 +111,7 @@ const authSlice = createSlice({
 
 export const {
   addAccount,
+  updateAccountUser,
   addWorkspace,
   updateWorkspace,
   changeWorkspace,
