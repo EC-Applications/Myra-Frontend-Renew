@@ -46,6 +46,7 @@ const COLOR_OPTIONS = [
 
 export function Labels() {
   const dispatch = useDispatch();
+  const {currentWorkspace} = useUser();
   const response = useSelector((state: any) => state.label);
   const labels = Array.isArray(response) ? response : response?.labels || [];
   const workspace = useUser();
@@ -89,6 +90,7 @@ export function Labels() {
         name: newLabelName,
         description: newLabelDescription,
         color: selectedColorHex,
+        workspace_id: currentWorkspace?.id
       };
 
       const groupayload: iLabelPayLoad = {

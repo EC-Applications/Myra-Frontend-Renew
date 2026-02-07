@@ -24,7 +24,7 @@ import {
   Trash2Icon,
   X,
 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { toast } from "sonner";
 import { ProjectDatePicker } from "./date-picker";
@@ -134,11 +134,45 @@ export function NewProject({
   const [description, setDescription] = useState("");
   const [attachments, setAttachments] = useState<File[]>([]);
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
+  const [displayedSummary, setDisplayedSummary] = useState("");
+  const [isTyping, setIsTyping] = useState(false);
+  const summaryRef = useRef(shortSummary);
+  summaryRef.current = shortSummary;
+
+  // Start typing when AI generation begins
+  useEffect(() => {
+    if (isGeneratingAI) {
+      setDisplayedSummary("");
+      setIsTyping(true);
+    }
+  }, [isGeneratingAI]);
+
+  // Typewriter interval — runs while isTyping is true
+  useEffect(() => {
+    if (!isTyping) return;
+
+    const interval = setInterval(() => {
+      setDisplayedSummary((prev) => {
+        const target = summaryRef.current;
+        if (prev.length >= target.length && !isGeneratingAI) {
+          // Finished typing and generation is done — stop
+          setIsTyping(false);
+          return target;
+        }
+        if (prev.length >= target.length) return prev; // Wait for more text
+        return target.slice(0, prev.length + 1);
+      });
+    }, 20);
+
+    return () => clearInterval(interval);
+  }, [isTyping, isGeneratingAI]);
 
   const resetForm = () => {
     setProjectName("");
     setShortSummary("");
     setIsGeneratingAI(false);
+    setDisplayedSummary("");
+    setIsTyping(false);
     setMilestoneName("");
     setMilestoneDescription("");
     setDescription("");
@@ -305,16 +339,22 @@ export function NewProject({
               />
 
               <div className="relative">
-                {isGeneratingAI ? (
+                {isGeneratingAI || isTyping ? (
                   <div className="skeleton-container">
-                    <div className="flex items-start gap-1 mb-2">
-                     <span className="ai-star-cursor">✦</span>
-                    </div>
-
-                    <div className="skeleton-line" style={{ width: "100%" }} />
-                    <div className="skeleton-line" style={{ width: "88%" }} />
-                    {/* <div className="skeleton-line" style={{ width: "94%" }} />
-                    <div className="skeleton-line" style={{ width: "72%" }} /> */}
+                    {displayedSummary ? (
+                      <p className="text-base dark:text-white whitespace-pre-wrap leading-relaxed">
+                        {displayedSummary}
+                        <span className="ai-cursor" />
+                      </p>
+                    ) : (
+                      <>
+                        <div className="flex items-start gap-1 mb-2">
+                          <span className="ai-star-cursor">✦</span>
+                        </div>
+                        <div className="skeleton-line" style={{ width: "100%" }} />
+                        <div className="skeleton-line" style={{ width: "88%" }} />
+                      </>
+                    )}
                   </div>
                 ) : (
                   <Textarea

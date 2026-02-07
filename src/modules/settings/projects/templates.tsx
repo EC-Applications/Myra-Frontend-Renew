@@ -5,23 +5,16 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Plus, ExternalLink } from "lucide-react";
 import { Link } from "react-router";
-
-interface ProjectTemplate {
-  id: string;
-  name: string;
-  createdBy: string;
-  createdAt: string;
-}
+import { useUser } from "@/hooks/use-user";
+import { useGetProjectTemplateHook } from "@/hooks/use-get-project-template";
+import { IconPicker } from "@/modules/projects/components/icon-picker";
+import { detectIconType, parseEmojiFromUnicode } from "@/components/parse-emoji";
 
 export function Templates() {
-  const [templates] = useState<ProjectTemplate[]>([
-    {
-      id: "1",
-      name: "Test",
-      createdBy: "Tech Wolf",
-      createdAt: "33 minutes ago",
-    },
-  ]);
+  const { currentWorkspace } = useUser();
+  const { data: templates = [] } = useGetProjectTemplateHook(
+    Number(currentWorkspace?.id),
+  );
 
   return (
     <div className="w-full max-w-3xl mx-auto p-6 space-y-8">
@@ -31,9 +24,9 @@ export function Templates() {
           Project templates
         </h1>
         <p className="text-muted-foreground">
-          These templates are available when creating projects for any team in the
-          workspace. To create templates that only apply to specific teams, add
-          them as team templates.{" "}
+          These templates are available when creating projects for any team in
+          the workspace. To create templates that only apply to specific teams,
+          add them as team templates.{" "}
           <Button
             variant="link"
             className="p-0 h-auto text-muted-foreground hover:text-foreground"
@@ -69,13 +62,30 @@ export function Templates() {
                 key={template.id}
                 className="flex items-center space-x-3 px-4 py-3 hover:bg-muted/30"
               >
-                <div className="w-4 h-4 rounded-full border border-muted-foreground/50 bg-background" />
+                <IconPicker
+                  value={
+                    typeof template?.icon === "object"
+                      ? {
+                          ...template.icon,
+                          icon: parseEmojiFromUnicode(template.icon.icon),
+                        }
+                      : template?.icon
+                        ? {
+                            icon: parseEmojiFromUnicode(template.icon),
+                            color: "#000000",
+                            type: detectIconType(template.icon),
+                          }
+                        : undefined
+                  }
+                 
+                  variant="inline"
+                />
                 <div className="flex-1">
                   <div className="text-sm font-medium text-foreground">
-                    {template.name}
+                    {template.descriptive_name}
                   </div>
                   <div className="text-xs text-muted-foreground">
-                    Created by {template.createdBy} {template.createdAt}
+                    {template.name}
                   </div>
                 </div>
               </Link>
