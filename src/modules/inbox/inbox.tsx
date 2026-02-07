@@ -77,13 +77,14 @@ export const InboxLayout = () => {
         );
         if (commentItem) return commentItem;
       }
-    
+      // Otherwise find item without comment_id (e.g., assigned notification)
       return inboxData.find(
         (item) => item.notifiable.id === id && item.notifiable.type === type && !item.comment_id
       ) ?? inboxData.find(
         (item) => item.notifiable.id === id && item.notifiable.type === type
       ) ?? null;
     };
+    
 
     if (issueMatch) return findItem(Number(issueMatch[1]), "issue");
     if (subIssueMatch) return findItem(Number(subIssueMatch[1]), "subissue");
