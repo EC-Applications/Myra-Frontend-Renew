@@ -98,7 +98,7 @@ const InboxItem: FC<InboxItemProps> = ({
       className={cn(
         "flex gap-4 px-4 py-3  transition-colors cursor-pointer",
         isSelected
-          ? "dark:bg-[#292b30]  rounded m-2"
+          ? "dark:bg-[#292b30] bg-gray-300  rounded m-2"
           : "hover:bg-accent/30 text-foreground",
         !is_read && !isSelected && "bg-accent/10",
       )}
@@ -129,7 +129,7 @@ const InboxItem: FC<InboxItemProps> = ({
               <h3
                 className={cn(
                   "text-sm font-medium truncate",
-                  isSelected ? "text-white" : "text-foreground",
+                  isSelected ? "dark:text-white" : "text-foreground",
                 )}
               >
                 {notifiable.name}
@@ -140,7 +140,7 @@ const InboxItem: FC<InboxItemProps> = ({
             <p
               className={cn(
                 "text-xs truncate mt-1",
-                isSelected ? "text-white/80" : "text-muted-foreground",
+                isSelected ? "dark:text-white/80" : "text-muted-foreground",
               )}
             >
               {meta?.message ? meta.message : `${actionText} by ${actor}`}
@@ -162,7 +162,7 @@ const InboxItem: FC<InboxItemProps> = ({
             <span
               className={cn(
                 "text-xs whitespace-nowrap ",
-                isSelected ? "text-white/70" : "text-muted-foreground",
+                isSelected ? "dark:text-white/70" : "text-muted-foreground",
               )}
             >
               {timeAgo}

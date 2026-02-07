@@ -1,5 +1,4 @@
 import MasterLayout from "@/components/master-layout";
-import { Inbox } from "@/modules/inbox/inbox";
 import Members from "@/modules/members/members";
 import { useAppSelector } from "@/store/hook";
 import { lazy, Suspense, useEffect } from "react";
@@ -16,6 +15,7 @@ const TeamRoutes = lazy(() => import("./team-routes"));
 const IssueRoutes = lazy(() => import("./issue-routes"));
 const CustomerRoutes = lazy(() => import("./customer-routes"));
 const SettingRoutes = lazy(() => import("./setting"));
+const InboxRoutes = lazy(() => import("./inbox-routes"));
 
 const PrivateRoutes = () => {
   const [searchParams] = useSearchParams();
@@ -31,10 +31,10 @@ const PrivateRoutes = () => {
     <Routes>
       <Route element={<MasterLayout />}>
       <Route
-        path="/inbox"
+        path="/inbox/*"
         element={
           <Suspense>
-            <Inbox/>
+            <InboxRoutes />
           </Suspense>
         }
       />

@@ -40,7 +40,7 @@ import {
 import type React from "react";
 import { useEffect, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { NavLink, useNavigate, useParams } from "react-router";
+import { NavLink, useNavigate, useParams, useLocation } from "react-router";
 import { toast } from "sonner";
 import { ProjectDatePicker } from "../projects/components/date-picker";
 import {
@@ -85,6 +85,7 @@ import {
 } from "@/components/parse-emoji";
 import { Editor } from "@/components/blocks/editor-00/editor";
 import { sanitizeHtml } from "@/lib/helpers/sanitize-html";
+import CursorLoader from "@/components/cursor-loader";
 
 interface IssueDetailViewProps {
   issueId?: number;
@@ -94,10 +95,16 @@ export default function IssueDetailView({ issueId }: IssueDetailViewProps) {
   const queryClient = useQueryClient();
   const issues = useSelector((state: any) => state.issues);
   const { id: routeId } = useParams();
+  const location = useLocation();
   const currentUser = useUser();
 
   // Use prop issueId if provided, otherwise use route param
   const id = issueId ?? Number(routeId);
+
+  // Get highlighted comment ID from URL hash
+  const highlightedCommentId = location.hash.startsWith("#comment-")
+    ? Number(location.hash.replace("#comment-", ""))
+    : null;
 
   const { data, isLoading: loading } = useGetIssuesDetailHook(Number(id));
   // const {} = useGetSubIssuesHook(Number(id));
@@ -686,14 +693,10 @@ export default function IssueDetailView({ issueId }: IssueDetailViewProps) {
   };
 
   if (loading) {
-    return (
-      <div className="fixed inset-0 flex items-center justify-center bg-background/60 z-50">
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-muted border-t-primary" />
-      </div>
-    );
+    return <CursorLoader />;
   }
 
-  if (!data) return <>Something went wrong!</>
+  if (!data) return <>Something went wrong!</>;
 
   return (
     <div
@@ -721,7 +724,9 @@ dark:bg-[#101012]"
                         typeof data?.team?.icon === "object"
                           ? {
                               ...data?.team?.icon,
-                              icon: parseEmojiFromUnicode(data?.team?.icon?.icon ?? ''), // ← Parse nested icon
+                              icon: parseEmojiFromUnicode(
+                                data?.team?.icon?.icon ?? "",
+                              ), // ← Parse nested icon
                             }
                           : data?.team?.icon
                             ? {
@@ -1031,7 +1036,12 @@ dark:bg-[#101012]"
             {comments?.map((comment) => (
               <div
                 key={comment.id}
-                className="border rounded-lg dark:bg-[#17181b] border-zinc-800 pb-4"
+                id={`comment-${comment.id}`}
+                className={`border rounded-lg dark:bg-[#17181b] pb-4 transition-all duration-300 ${
+                  highlightedCommentId === comment.id
+                    ? "border-blue-500 ring-2 ring-blue-500/50"
+                    : "border-zinc-800"
+                }`}
               >
                 <div className="">
                   {/* Row: Avatar + Content + Actions */}
@@ -1743,7 +1753,9 @@ dark:bg-[#101012]"
       </div>
       {/* Properties Sidebar */}
       <div className="w-70 border-l border-border bg-muted/20 pl-6 py-2 border dark:border-zinc-800">
-        <h3 className="text-muted-foreground text-sm font-semibold mb-6">Properties</h3>
+        <h3 className="text-muted-foreground text-sm font-semibold mb-6">
+          Properties
+        </h3>
 
         <div className="space-y-6">
           {/* Status */}

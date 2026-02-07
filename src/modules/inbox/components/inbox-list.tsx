@@ -30,7 +30,7 @@ const InboxView: FC<InboxViewProps> = ({
         <div className="flex items-center gap-2">
           <h1 className="text-md font-semibold text-foreground">Inbox</h1>
           {unreadCount > 0 && (
-            <span className="px-2 py-1 text-white text-xs rounded-md font-medium">
+            <span className="px-2 py-1 dark:text-white text-xs rounded-md font-medium">
               {unreadCount}
             </span>
           )}

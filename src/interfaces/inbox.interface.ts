@@ -11,6 +11,7 @@ export interface iInboxResponse {
   due_status: string | null;
   notifiable: iNotifiable;
   type: string;
+  comment_id?: number;
   is_read: boolean;
   created_at: string | null;
 }
