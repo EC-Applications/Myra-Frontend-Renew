@@ -1,20 +1,52 @@
 "use client";
 
-import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Plus, ExternalLink } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Plus, ExternalLink, MoreHorizontal, Trash2 } from "lucide-react";
 import { Link } from "react-router";
 import { useUser } from "@/hooks/use-user";
 import { useGetProjectTemplateHook } from "@/hooks/use-get-project-template";
+import { useDeleteProjectTemplateHook } from "@/hooks/use-delete-project-template";
 import { IconPicker } from "@/modules/projects/components/icon-picker";
-import { detectIconType, parseEmojiFromUnicode } from "@/components/parse-emoji";
+import {
+  detectIconType,
+  parseEmojiFromUnicode,
+} from "@/components/parse-emoji";
+import { toast } from "sonner";
 
 export function Templates() {
   const { currentWorkspace } = useUser();
   const { data: templates = [] } = useGetProjectTemplateHook(
     Number(currentWorkspace?.id),
   );
+  const deleteTemplate = useDeleteProjectTemplateHook();
+
+  const handleDelete = (e: React.MouseEvent, templateId: number) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const loadingToast = toast.loading("Deleting template...");
+    deleteTemplate.mutate(
+      {
+        id: templateId,
+        workspace_id: Number(currentWorkspace?.id),
+      },
+      {
+        onSuccess: () => {
+          toast.success("Template deleted successfully");
+          toast.dismiss(loadingToast);
+        },
+        onError: () => {
+          toast.dismiss(loadingToast);
+        },
+      },
+    );
+  };
 
   return (
     <div className="w-full max-w-3xl mx-auto p-6 space-y-8">
@@ -77,7 +109,6 @@ export function Templates() {
                           }
                         : undefined
                   }
-                 
                   variant="inline"
                 />
                 <div className="flex-1">
@@ -87,6 +118,33 @@ export function Templates() {
                   <div className="text-xs text-muted-foreground">
                     {template.name}
                   </div>
+                </div>
+                <div
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                  }}
+                >
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-8 w-8 p-0 hover:bg-muted"
+                      >
+                        <MoreHorizontal className="h-4 w-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem
+                        className="text-destructive focus:text-destructive"
+                        onClick={(e) => handleDelete(e, template.id)}
+                      >
+                        <Trash2 className="mr-2 h-4 w-4" />
+                        Delete
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 </div>
               </Link>
             ))}

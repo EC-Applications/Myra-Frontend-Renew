@@ -17,6 +17,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useCreateProjectTemplateHook } from "@/hooks/use-create-project-template";
+import { useGetProjectTemplateDetailHook } from "@/hooks/use-get-project-template-detail";
+import { useUpdateProjectTemplateHook } from "@/hooks/use-update-project-template";
 import { useUser } from "@/hooks/use-user";
 import type { iProjectTemplatePayload } from "@/interfaces/project-template.interface";
 import type { iMember, iTeams } from "@/interfaces/teams.interface";
@@ -34,7 +36,7 @@ import type { RootState } from "@/store/store";
 import { format } from "date-fns";
 import { useFormik } from "formik";
 import { PaperclipIcon, Trash2Icon } from "lucide-react";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate, useParams } from "react-router";
 import { toast } from "sonner";
@@ -50,11 +52,13 @@ export function TemplateForm() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const params = useParams();
+  const isEditMode = !!params?.id && params?.id !== "new";
+  const templateId = isEditMode ? Number(params.id) : undefined;
+  const { data: templateDetail } = useGetProjectTemplateDetailHook(templateId);
   const { currentWorkspace } = useUser();
   const priorityData = useSelector((state: any) => state.priority);
   const teamsData = useSelector((state: any) => state.teams);
   const status = useSelector((state: any) => state.status);
-  const projects = useSelector((state: RootState) => state.project.projects);
 
   const workspaceMember = useSelector((state: any) => state.workspace);
   const members = Array.isArray(workspaceMember) ? workspaceMember : [];
@@ -66,12 +70,43 @@ export function TemplateForm() {
   const milestones = useSelector((state: any) => state.milestone);
 
   const createTemplate = useCreateProjectTemplateHook();
+  const updateTemplate = useUpdateProjectTemplateHook();
 
   // UI-only states (not form data)
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
 
-  const formik = useFormik({
-    initialValues: {
+  const initialValues = useMemo(() => {
+    if (isEditMode && templateDetail) {
+      return {
+        descriptive_name: templateDetail.descriptive_name ?? "",
+        name: templateDetail.name ?? "",
+        short_summary: templateDetail.short_summary ?? "",
+        description: templateDetail.description ?? "",
+        priority: templateDetail.priority_id ?? undefined,
+        status: templateDetail.status ?? statusList?.[0] ?? null,
+        start_date: templateDetail.start_date
+          ? new Date(templateDetail.start_date)
+          : null,
+        target_date: templateDetail.target_date
+          ? new Date(templateDetail.target_date)
+          : null,
+        labels: templateDetail.labels ?? [],
+        members: templateDetail.members ?? [],
+        lead: templateDetail.lead ?? undefined,
+        teams: templateDetail.teams ?? [],
+        icon:
+          templateDetail.icon && typeof templateDetail.icon === "object"
+            ? (templateDetail.icon as {
+                icon: string;
+                color: string;
+                type: "icon" | "emoji";
+                file?: File;
+              })
+            : undefined,
+        attachments: [] as File[],
+      };
+    }
+    return {
       descriptive_name: "",
       name: "",
       short_summary: "",
@@ -88,13 +123,16 @@ export function TemplateForm() {
         | { icon: string; color: string; type: "icon" | "emoji"; file?: File }
         | undefined,
       attachments: [] as File[],
-    },
+    };
+  }, [isEditMode, templateDetail, statusList]);
+
+  const formik = useFormik({
+    initialValues,
+    enableReinitialize: true,
     validationSchema: templateSchema,
     onSubmit: async (values) => {
       const loadingToast = toast.loading(
-        params?.id && params?.id !== "new"
-          ? "Saving template..."
-          : "Creating template...",
+        isEditMode ? "Saving template..." : "Creating template...",
       );
 
       try {
@@ -123,15 +161,25 @@ export function TemplateForm() {
           milestones,
         };
 
-        await createTemplate.mutateAsync({
-          body: payload,
-          iconFile: values.icon?.file,
-          documentFiles: values.attachments,
-          workspace_id: Number(currentWorkspace?.id),
-        });
+        if (isEditMode) {
+          await updateTemplate.mutateAsync({
+            id: templateId!,
+            body: payload,
+            iconFile: values.icon?.file,
+            documentFiles: values.attachments,
+            workspace_id: Number(currentWorkspace?.id),
+          });
+        } else {
+          await createTemplate.mutateAsync({
+            body: payload,
+            iconFile: values.icon?.file,
+            documentFiles: values.attachments,
+            workspace_id: Number(currentWorkspace?.id),
+          });
+        }
 
         toast.success(
-          params?.id && params?.id !== "new"
+          isEditMode
             ? "Template saved successfully"
             : "Template created successfully",
         );
@@ -141,7 +189,10 @@ export function TemplateForm() {
         navigate("../");
       } catch (error: any) {
         console.error("=== API ERROR ===", error);
-        toast.error(error?.message || "Failed to create template");
+        toast.error(
+          error?.message ||
+            `Failed to ${isEditMode ? "update" : "create"} template`,
+        );
       } finally {
         toast.dismiss(loadingToast);
       }
@@ -152,7 +203,7 @@ export function TemplateForm() {
     <div className="min-h-screen bg-background p-6">
       <div className="max-w-4xl mx-auto space-y-6">
         <h1 className="text-2xl font-semibold text-foreground">
-          {params?.id && params?.id !== "new" ? "Edit" : "New"} project template
+          {isEditMode ? "Edit" : "New"} project template
         </h1>
 
         <div className="">
@@ -430,10 +481,11 @@ export function TemplateForm() {
             Cancel
           </Button>
           <Button
+          variant="custom"
             onClick={() => formik.handleSubmit()}
-            disabled={createTemplate.isPending}
+            disabled={createTemplate.isPending || updateTemplate.isPending}
           >
-            {params?.id && params?.id !== "new" ? "Save" : "Create"}
+            {isEditMode ? "Save" : "Create"}
           </Button>
         </div>
       </div>

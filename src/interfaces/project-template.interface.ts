@@ -7,8 +7,8 @@ import type { Status } from "./cycle.interface";
 
 export interface iProjectTemplatePayload {
   workspace_id: number;
-  descriptive_name: string;
-  name: string;
+  descriptive_name?: string;
+  name?: string;
   icon?: {
     icon: string;
     color: string;
