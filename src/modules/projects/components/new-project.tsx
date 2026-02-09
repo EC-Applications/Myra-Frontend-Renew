@@ -40,6 +40,9 @@ import { setTeams } from "@/store/slices/team.slice";
 import * as yup from "yup";
 import { useCreateProjectHook } from "@/hooks/use-create-project";
 import { Editor } from "@/components/blocks/editor-00/editor";
+import { useGetProjectTemplateHook } from "@/hooks/use-get-project-template";
+import type { iProjectTemplateResoponse } from "@/interfaces/project-template.interface";
+import { ProjectTemplatePicker } from "@/components/project-template-picker";
 interface NewProjectModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -90,6 +93,12 @@ export function NewProject({
 
   const [selectedStatus, setSelectedStatus] = useState(statusList?.[0] ?? null);
 
+  const { data: projectTemplate } = useGetProjectTemplateHook(
+    Number(currentWorkspace?.id),
+  );
+
+  // console.log("PROJECT TEMPLATE", projectTemplate);
+
   // DEF status matching
   useEffect(() => {
     if (open && defStatus) {
@@ -136,6 +145,8 @@ export function NewProject({
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
   const [displayedSummary, setDisplayedSummary] = useState("");
   const [isTyping, setIsTyping] = useState(false);
+  const [selectedTemplate, setSelectedTemplate] =
+    useState<iProjectTemplateResoponse | null>(null);
   const summaryRef = useRef(shortSummary);
   summaryRef.current = shortSummary;
 
@@ -199,7 +210,66 @@ export function NewProject({
     setSelectedTeams([]);
     setStartDate(null);
     setShowDiscardDialog(false);
+    setSelectedTemplate(null);
     dispatch(clearMilestones());
+  };
+
+  const handleTemplateSelect = (template: iProjectTemplateResoponse | null) => {
+    setSelectedTemplate(template);
+    if (!template) return;
+
+    setProjectName(template.name ?? "");
+    setShortSummary(template.short_summary ?? "");
+    setDescription(template.description ?? "");
+
+    // Icon
+    if (template.icon && typeof template.icon === "object") {
+      setProjectIcon(
+        template.icon as {
+          icon: string;
+          color: string;
+          type: "icon" | "emoji";
+        },
+      );
+    }
+
+    // Priority
+    setPriority(template.priority_id ?? undefined);
+
+    // Status
+    if (template.status) {
+      setSelectedStatus(template.status);
+    }
+
+    // Dates
+    setStartDate(template.start_date ? new Date(template.start_date) : null);
+    setEndDate(template.target_date ? new Date(template.target_date) : null);
+
+    // Labels
+    setSelectedLabels(template.labels ?? []);
+
+    // Teams
+    setSelectedTeams(template.teams ?? []);
+
+    // Members - map from template format to iMember format
+    if (template.members && template.members.length > 0) {
+      const mappedMembers: iMember[] = template.members.map((m: any) => ({
+        id: m.users?.id ?? m.user_id ?? m.id,
+        name: m.users?.name ?? m.name ?? "",
+        email: m.users?.email ?? m.email ?? "",
+        avatar: m.users?.avatar ?? m.avatar,
+      }));
+      setSelectedMembers(mappedMembers);
+    } else {
+      setSelectedMembers([]);
+    }
+
+    // Lead
+    if (template.lead) {
+      setSelectedLead(template.lead);
+    } else {
+      setSelectedLead(undefined);
+    }
   };
 
   const handleGetAISuggestions = async () => {
@@ -312,6 +382,17 @@ export function NewProject({
             <DialogTitle className="text-md dark:text-white">
               New project
             </DialogTitle>
+
+            {projectTemplate && projectTemplate.length > 0 && (
+              <div className="flex items-center gap-2">
+                <span className="text-muted-foreground">›</span>
+                <ProjectTemplatePicker
+                  templates={projectTemplate ?? []}
+                  value={selectedTemplate}
+                  onChange={handleTemplateSelect}
+                />
+              </div>
+            )}
           </div>
           <Button
             variant="ghost"
@@ -351,8 +432,14 @@ export function NewProject({
                         <div className="flex items-start gap-1 mb-2">
                           <span className="ai-star-cursor">✦</span>
                         </div>
-                        <div className="skeleton-line" style={{ width: "100%" }} />
-                        <div className="skeleton-line" style={{ width: "88%" }} />
+                        <div
+                          className="skeleton-line"
+                          style={{ width: "100%" }}
+                        />
+                        <div
+                          className="skeleton-line"
+                          style={{ width: "88%" }}
+                        />
                       </>
                     )}
                   </div>
@@ -432,7 +519,6 @@ export function NewProject({
                 }}
               />
             </Label>
-
           </div>
 
           <hr className="dark:text-zinc-700" />

@@ -135,7 +135,7 @@ export const MemberPicker = ({
 
       <DropdownMenuContent
         align="start"
-        className="w-[280px] dark:bg-[#1c1d1f] p-0 dark:border-zinc-700"
+        className="min-w-[280px] dark:bg-[#1c1d1f] p-0 dark:border-zinc-700"
       >
         <div className="relative mb-1">
           <Input

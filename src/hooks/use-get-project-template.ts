@@ -8,5 +8,6 @@ export const useGetProjectTemplateHook = (workspace_id: number) => {
             const res = await projectTemplateListUri(workspace_id);
             return res.data;
         },
+        staleTime: 5 * 60 * 1000,
     })
 }

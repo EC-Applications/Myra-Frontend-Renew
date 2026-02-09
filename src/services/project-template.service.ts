@@ -72,10 +72,10 @@ export const createProjectTemplateUri = (
     });
   }
 
-  console.log("📋 FormData entries:");
-  for (const pair of formData.entries()) {
-    console.log(pair[0], pair[1]);
-  }
+  // console.log("📋 FormData entries:");
+  // for (const pair of formData.entries()) {
+    // console.log(pair[0], pair[1]);
+  // }
 
   return Axios.post("/api/projects/template/store", formData, {
     headers: {
@@ -163,10 +163,10 @@ export const updateProjectTemplateUri = async (
     });
   }
 
-  console.log("📋 FormData entries:");
-  for (const pair of formData.entries()) {
-    console.log(pair[0], pair[1]);
-  }
+  // console.log("📋 FormData entries:");
+  // for (const pair of formData.entries()) {
+  //   console.log(pair[0], pair[1]);
+  // }
 
   return Axios.post(`/api/projects/template/update/${id}`, formData, {
     headers: {
