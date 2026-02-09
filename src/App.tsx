@@ -51,6 +51,7 @@ function App() {
     // console.log("CURRENT slug",currentWorkspace!.slug)
 
     const fetchAllData = async () => {
+      // setLoading(true);
       setDataLoading(true);
 
       try {
@@ -100,7 +101,7 @@ function App() {
   }, [auth.currentWorkspace]);
 
   useEffect(() => {
-    console.log("hahahuhu hogai");
+    // console.log("hahahuhu hogai");
     const fetchProfile = async () => {
       setProfileLoading(true)
       try {
@@ -118,6 +119,8 @@ function App() {
   }, [auth.currentUser, dispatch]);
 
   const loading = dataLoading || profileLoading;
+
+
 
   if (loading) {
     return (

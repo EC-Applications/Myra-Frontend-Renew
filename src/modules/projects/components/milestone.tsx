@@ -52,7 +52,7 @@ export default function MilestoneSection({
   const dispatch = useDispatch();
   const { id } = useParams();
 
-  console.log("PROJECT ID", id);
+  // console.log("PROJECT ID", id);
 
   const reduxMilestones = useSelector((state: any) => state.milestone);
 

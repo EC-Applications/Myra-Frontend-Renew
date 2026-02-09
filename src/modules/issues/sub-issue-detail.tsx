@@ -32,7 +32,7 @@ import {
 import type React from "react";
 import { useEffect, useRef, useState } from "react";
 import { useSelector } from "react-redux";
-import { NavLink, useParams } from "react-router";
+import { NavLink, useParams, useLocation } from "react-router";
 import { toast } from "sonner";
 import { ProjectDatePicker } from "../projects/components/date-picker";
 import {
@@ -87,10 +87,16 @@ interface SubIssueDetailViewProps {
 export default function SubIssueDetailView({ subIssueId }: SubIssueDetailViewProps) {
   const issues = useSelector((state: any) => state.subIssues);
   const { id: routeId } = useParams();
+  const location = useLocation();
   const { currentWorkspace, currentUser } = useUser();
 
   // Use prop subIssueId if provided, otherwise use route param
   const id = subIssueId ?? Number(routeId);
+
+  // Get highlighted comment ID from URL hash
+  const highlightedCommentId = location.hash.startsWith("#comment-")
+    ? Number(location.hash.replace("#comment-", ""))
+    : null;
 
   const { data, isLoading: loading } = useGetSubIssuesDetailHook(Number(id));
   // const [data, setData] = useState<iIussesDetail | undefined>();
@@ -1065,7 +1071,12 @@ export default function SubIssueDetailView({ subIssueId }: SubIssueDetailViewPro
             {comments?.map((comment) => (
               <div
                 key={comment.id}
-                className="border rounded-lg dark:bg-[#17181b] border-zinc-800 pb-4"
+                id={`comment-${comment.id}`}
+                className={`border rounded-lg dark:bg-[#17181b] pb-4 transition-all duration-300 ${
+                  highlightedCommentId === comment.id
+                    ? "border-blue-500 ring-2 ring-blue-500/50"
+                    : "border-zinc-800"
+                }`}
               >
                 <div className="">
                   {/* Row: Avatar + Content + Actions */}
