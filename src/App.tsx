@@ -19,13 +19,17 @@ import { setProject } from "./store/slices/project.slice";
 import { getIssuesLabelListUri } from "./services/issues.service";
 import { setIssuesLabel } from "./store/slices/issues-label.slice";
 import { setIssuesSatus } from "./store/slices/issues-status.slice";
+import { useAppSelector } from "./store/hook";
+import { updateAccountUser } from "./store/slices/auth.slice";
+import { userProfileUri } from "./services/auth.service";
 
 
 
 function App() {
   const dispatch = useDispatch();
-  const [loading, setLoading] = useState(false);
-  const auth = store.getState().auth;
+  const [dataLoading, setDataLoading] = useState(false);
+  const [profileLoading, setProfileLoading] = useState(false);
+  const auth = useAppSelector((state) => state.auth);
   const { currentWorkspace } = useUser();
   const currentWorkspaceData = useSelector( 
     (state: any) => state.auth.currentWorkspace
@@ -47,7 +51,8 @@ function App() {
     // console.log("CURRENT slug",currentWorkspace!.slug)
 
     const fetchAllData = async () => {
-      setLoading(true);
+      // setLoading(true);
+      setDataLoading(true);
 
       try {
         await Promise.all([
@@ -88,12 +93,32 @@ function App() {
         console.error(error);
         toast.error(error?.message || "Something went wrong");
       } finally {
-        setLoading(false);
+        setDataLoading(false);
       }
     };
 
     fetchAllData();
-  }, [currentWorkspace]);
+  }, [auth.currentWorkspace]);
+
+  useEffect(() => {
+    // console.log("hahahuhu hogai");
+    const fetchProfile = async () => {
+      setProfileLoading(true)
+      try {
+        const res = await userProfileUri();
+        dispatch(updateAccountUser(res.data));
+        setProfileLoading(false);
+      } catch {
+        toast.error("Something went wrong!", {
+          description: "Unable to fetch profile.",
+        });
+        setProfileLoading(false);
+      }
+    };
+    fetchProfile();
+  }, [auth.currentUser, dispatch]);
+
+  const loading = dataLoading || profileLoading;
 
 
 
