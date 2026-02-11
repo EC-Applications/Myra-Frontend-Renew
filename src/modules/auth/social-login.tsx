@@ -11,35 +11,35 @@ const SocialLogin = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const [error, setError] = useState("");
-  const [platform, setPlatform] = useState<"web" | "mobile">("web");
+  // const [platform, setPlatform] = useState<"web" | "mobile">("web");
 
   useEffect(() => {
-    // Detect platform first
-    const detectPlatform = () => {
-      // Method 1: Check for platform parameter (most reliable)
-      const platformParam = searchParams.get("platform");
-      if (platformParam === "mobile") {
-        return "mobile";
-      }
+    // // Detect platform first
+    // const detectPlatform = () => {
+    //   // Method 1: Check for platform parameter (most reliable)
+    //   const platformParam = searchParams.get("platform");
+    //   if (platformParam === "mobile") {
+    //     return "mobile";
+    //   }
 
-      // Method 2: Check user agent for mobile
-      const userAgent =
-        navigator.userAgent || navigator.vendor || (window as any).opera;
-      const isMobileUA = /android|iphone|ipad|ipod|mobile/i.test(userAgent);
-      // Method 3: Check referrer (if coming from in-app browser)
-      const referrer = document.referrer;
-      const isFromApp =
-        referrer.includes("myraapp://") ||
-        searchParams.get("source") === "mobile_app";
+    //   // Method 2: Check user agent for mobile
+    //   const userAgent =
+    //     navigator.userAgent || navigator.vendor || (window as any).opera;
+    //   const isMobileUA = /android|iphone|ipad|ipod|mobile/i.test(userAgent);
+    //   // Method 3: Check referrer (if coming from in-app browser)
+    //   const referrer = document.referrer;
+    //   const isFromApp =
+    //     referrer.includes("myraapp://") ||
+    //     searchParams.get("source") === "mobile_app";
 
-      return isMobileUA || isFromApp ? "mobile" : "web";
-    };
+    //   return isMobileUA || isFromApp ? "mobile" : "web";
+    // };
 
-    const detectedPlatform = detectPlatform();
-    setPlatform(detectedPlatform);
+    // const detectedPlatform = detectPlatform();
+    // setPlatform(detectedPlatform);
 
     console.log("=== SOCIAL LOGIN BRIDGE ===");
-    console.log("Platform detected:", detectedPlatform);
+    // console.log("Platform detected:", detectedPlatform);
 
     const token = searchParams.get("token");
     console.log("Token received:", token ? "✅ Yes" : "❌ No");
@@ -47,53 +47,52 @@ const SocialLogin = () => {
     if (!token) {
       console.error("ERROR: No token in URL");
       setError("Authentication failed. No token received.");
-      // Redirect based on platform
       setTimeout(() => {
-        if (detectedPlatform === "mobile") {
-          // For mobile, redirect to app with error
-          window.location.href = `myraapp://callback?error=no_token`;
-        } else {
+        // if (detectedPlatform === "mobile") {
+        //   // For mobile, redirect to app with error
+        //   window.location.href = `myraapp://callback?error=no_token`;
+        // } else {
           navigate("/sign-in");
-        }
+        // }
       }, 3000);
 
       return;
     }
 
-    // Handle based on platform
-    if (detectedPlatform === "mobile") {
-      handleMobileLogin(token);
-    } else {
+    // // Handle based on platform
+    // if (detectedPlatform === "mobile") {
+    //   handleMobileLogin(token);
+    // } else {
       handleWebLogin(token);
-    }
+    // }
   }, [searchParams, navigate, dispatch]);
 
-  /**
-   * Handle Mobile (Flutter) Login
-   * Redirects to deep link immediately
-   */
-  const handleMobileLogin = (token: string) => {
-    try {
-      console.log("📱 Mobile platform - Redirecting to app");
-      // Create deep link with encoded token
-      const deepLink = `myraapp://callback?token=${encodeURIComponent(token)}`;
-      console.log("Deep link:", deepLink);
-      // Immediate redirect
-      window.location.href = deepLink;
+  // /**
+  //  * Handle Mobile (Flutter) Login
+  //  * Redirects to deep link immediately
+  //  */
+  // const handleMobileLogin = (token: string) => {
+  //   try {
+  //     console.log("📱 Mobile platform - Redirecting to app");
+  //     // Create deep link with encoded token
+  //     const deepLink = `myraapp://callback?token=${encodeURIComponent(token)}`;
+  //     console.log("Deep link:", deepLink);
+  //     // Immediate redirect
+  //     window.location.href = deepLink;
 
-      // Fallback message (if deep link fails to open)
-      setTimeout(() => {
-        setError("If the app doesn't open, please ensure it's installed.");
-      }, 2000);
-    } catch (err: any) {
-      console.error("Mobile redirect error:", err);
-      setError("Failed to redirect to app. Please try again.");
-      // Fallback: try to redirect to app with error
-      setTimeout(() => {
-        window.location.href = `myraapp://callback?error=redirect_failed`;
-      }, 3000);
-    }
-  };
+  //     // Fallback message (if deep link fails to open)
+  //     setTimeout(() => {
+  //       setError("If the app doesn't open, please ensure it's installed.");
+  //     }, 2000);
+  //   } catch (err: any) {
+  //     console.error("Mobile redirect error:", err);
+  //     setError("Failed to redirect to app. Please try again.");
+  //     // Fallback: try to redirect to app with error
+  //     setTimeout(() => {
+  //       window.location.href = `myraapp://callback?error=redirect_failed`;
+  //     }, 3000);
+  //   }
+  // };
 
   /**
    * Handle Web (React) Login
@@ -160,14 +159,10 @@ const SocialLogin = () => {
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
             </div>
             <h2 className="text-xl font-semibold">
-              {platform === "mobile"
-                ? "Redirecting to app..."
-                : "Authenticating..."}
+              Authenticating...
             </h2>
             <p className="text-muted-foreground">
-              {platform === "mobile"
-                ? "Opening the app, please wait..."
-                : "Please wait while we log you in"}
+              Please wait while we log you in
             </p>
           </>
         ) : (
@@ -178,9 +173,7 @@ const SocialLogin = () => {
             </h2>
             <p className="text-muted-foreground max-w-md">{error}</p>
             <p className="text-sm text-muted-foreground">
-              {platform === "mobile"
-                ? "Please try again from the app..."
-                : "Redirecting to login page..."}
+              Redirecting to login page...
             </p>
           </>
         )}

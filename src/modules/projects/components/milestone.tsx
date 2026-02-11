@@ -4,9 +4,14 @@ import { DatePicker } from "@/components/date-picker";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { useCreateProjectTemMilestoneHook } from "@/hooks/use-create-project-tem-milestone";
 import { useDeleteMilestone } from "@/hooks/use-delete-milestone";
+import { useDeleteProjectTempMilestoneHook } from "@/hooks/use-delete-project-temp-milestone";
+import { useGetProjectTempilestonesHook } from "@/hooks/use-get-project-temp-milestone";
 import { usePostMilestoneHook } from "@/hooks/use-post-milestone";
+import { useProjectTempMilestoneHook } from "@/hooks/use-update-project-temp-milestone";
 import { useUpdateMilestoneHook } from "@/hooks/use-update-milestone";
+import { useUser } from "@/hooks/use-user";
 import type { iProject } from "@/interfaces/project.interface";
 import {
   deleteMilestoneUri,
@@ -41,6 +46,7 @@ interface MilestoneSectionProps {
   initialMilestones?: any[];
   workspaceId?: number;
   mode?: "create" | "update";
+  source?: "project" | "template";
 }
 
 export default function MilestoneSection({
@@ -48,13 +54,22 @@ export default function MilestoneSection({
   initialMilestones = [],
   workspaceId,
   mode = "create",
+  source = "project",
 }: MilestoneSectionProps) {
   const dispatch = useDispatch();
   const { id } = useParams();
-
-  // console.log("PROJECT ID", id);
+  const { currentWorkspace } = useUser();
 
   const reduxMilestones = useSelector((state: any) => state.milestone);
+
+  // Template hooks
+  const isTemplate = source === "template";
+  const templateId = isTemplate ? Number(id) : 0;
+  const { data: templateMilestones, refetch: refetchTemplateMilestones } =
+    useGetProjectTempilestonesHook(templateId);
+  const createTemplateMilestone = useCreateProjectTemMilestoneHook();
+  const updateTemplateMilestone = useProjectTempMilestoneHook();
+  const deleteTemplateMilestone = useDeleteProjectTempMilestoneHook();
 
   const [isAddingNew, setIsAddingNew] = useState(false);
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
@@ -80,8 +95,17 @@ export default function MilestoneSection({
   const updateMilestone = useUpdateMilestoneHook();
 
   useEffect(() => {
-    if (mode === "update" && initialMilestones.length > 0) {
-      // API data ko format karo
+    if (isTemplate && mode === "update" && templateMilestones) {
+      // Template edit mode - fetch from React Query
+      const formatted = templateMilestones.map((m: any) => ({
+        id: m.id,
+        name: m.name,
+        description: m.description || "",
+        dueDate: m.target_date || undefined,
+      }));
+      setMilestones(formatted);
+    } else if (mode === "update" && initialMilestones.length > 0) {
+      // Project detail mode - API data ko format karo
       const formatted = initialMilestones.map((m) => ({
         id: m.id,
         name: m.name,
@@ -92,7 +116,7 @@ export default function MilestoneSection({
     } else if (mode === "create") {
       setMilestones(reduxMilestones || []);
     }
-  }, [mode, initialMilestones, reduxMilestones]);
+  }, [mode, initialMilestones, reduxMilestones, isTemplate, templateMilestones]);
 
   const handleAddMilestone = async () => {
     if (!milestoneName.trim()) {
@@ -107,7 +131,7 @@ export default function MilestoneSection({
     };
 
     if (mode === "create") {
-      // Create mode - Redux mein add karo
+      // Create mode - Redux mein add karo (both project & template)
       dispatch(addMilestone(newMilestone as any));
       setMilestoneName("");
       setMilestoneDescription("");
@@ -117,12 +141,7 @@ export default function MilestoneSection({
       return;
     }
 
-    // Update mode - API call
-    if (!project || !workspaceId) {
-      toast.error("Missing project information");
-      return;
-    }
-
+    // Update/detail mode - API call
     setSaving(true);
 
     // Optimistic update
@@ -130,35 +149,37 @@ export default function MilestoneSection({
     setMilestones(updatedMilestones);
 
     try {
-      postMilestone.mutate({
-        body: {
-          project_id: Number(id),
-          name: milestoneName,
-          description: milestoneDescription,
-          target_date: dueDate ? dueDate.toISOString().split("T")[0] : "",
-        },
-        projectId: Number(id),
-      });
-      // const payload = {
-      //   project_id: Number(id),
-      //   name: milestoneName,
-      //   description: milestoneDescription,
-      //   target_date: dueDate ? dueDate.toISOString().split("T")[0] : "",
-      // };
-
-      // await milesoneCreateUri(payload);
-      setMilestoneName("");
-      setMilestoneDescription("");
-      const res = await projectDetailFetchUri(Number(id));
-      console.log("AFTER CRETA MILESTONE", res.data);
-
-      setMilestones(res.data.milestones || []);
+      if (isTemplate) {
+        // Template milestone create via hook
+        await createTemplateMilestone.mutateAsync({
+          body: {
+            workspace_id: currentWorkspace?.id as number,
+            project_template_id: templateId,
+            name: milestoneName,
+            description: milestoneDescription,
+            target_date: dueDate ? dueDate.toISOString().split("T")[0] : "",
+          },
+        });
+        await refetchTemplateMilestones();
+      } else {
+        // Project milestone create via hook
+        postMilestone.mutate({
+          body: {
+            project_id: Number(id),
+            name: milestoneName,
+            description: milestoneDescription,
+            target_date: dueDate ? dueDate.toISOString().split("T")[0] : "",
+          },
+          projectId: Number(id),
+        });
+        const res = await projectDetailFetchUri(Number(id));
+        setMilestones(res.data.milestones || []);
+      }
 
       setMilestoneName("");
       setMilestoneDescription("");
       setDueDate(undefined);
       setIsAddingNew(false);
-      // toast.success("Milestone added");
     } catch (error: any) {
       // Revert on error
       setMilestones(milestones);
@@ -183,7 +204,7 @@ export default function MilestoneSection({
       return;
     }
 
-    if (!project || !workspaceId) {
+    if (!isTemplate && (!project || !workspaceId)) {
       toast.error("Missing project information");
       return;
     }
@@ -205,33 +226,41 @@ export default function MilestoneSection({
     setMilestones(updatedMilestones);
 
     try {
-      updateMilestone.mutate({
-        milestoneId: milestone?.id,
-        body: {
-          project_id: project.id,
-          name: editName,
-          description: editDescription || "",
-          target_date: editDueDate
-            ? editDueDate.toISOString().split("T")[0]
-            : "",
-        },
-        project_id: project.id,
-      });
+      if (isTemplate) {
+        await updateTemplateMilestone.mutateAsync({
+          project_template_id: milestone?.id as number,
+          body: {
+            workspace_id : Number(currentWorkspace?.id),
+            project_template_id: templateId,
+            name: editName,
+            description: editDescription || "",
+            target_date: editDueDate
+              ? editDueDate.toISOString().split("T")[0]
+              : "",
+          },
+        });
+        await refetchTemplateMilestones();
+      } else {
+        updateMilestone.mutate({
+          milestoneId: milestone?.id,
+          body: {
+            project_id: project!.id,
+            name: editName,
+            description: editDescription || "",
+            target_date: editDueDate
+              ? editDueDate.toISOString().split("T")[0]
+              : "",
+          },
+          project_id: project!.id,
+        });
+      }
       setEditingIndex(null);
-      // await mileStoneUpdateUri(milestone?.id, {
-      //   project_id: project.id,
-      //   name: editName,
-      //   description: editDescription || "",
-      //   target_date: editDueDate ? editDueDate.toISOString().split("T")[0] : "",
-      // });
-
-      // toast.success("Milestone updated");
     } catch (error) {
       // Revert
       setMilestones((prev) =>
         prev.map((m, idx) => (idx === editingIndex ? originalMilestone : m)),
       );
-      toast.error("Failed to update milestone");
+      
     } finally {
       setSaving(false);
     }
@@ -242,8 +271,6 @@ export default function MilestoneSection({
   };
   const handleRemove = async (index: number) => {
     const milestone = milestones[index];
-
-    console.log("Deleting milestone", milestone.id);
 
     if (mode === "create") {
       dispatch(removeMilestone(index));
@@ -259,12 +286,18 @@ export default function MilestoneSection({
     setMilestones((prev) => prev.filter((_, idx) => idx !== index));
 
     try {
-      deleteMilestone.mutate({
-        milestoneId: milestone.id,
-        project_id: Number(id),
-      });
-      // await deleteMilestoneUri(milestone.id);
-      // toast.success("Milestone removed");
+      if (isTemplate) {
+        await deleteTemplateMilestone.mutateAsync({
+          milestone_id: milestone.id,
+          project_template_id: templateId,
+        });
+        await refetchTemplateMilestones();
+      } else {
+        deleteMilestone.mutate({
+          milestoneId: milestone.id,
+          project_id: Number(id),
+        });
+      }
     } catch (error: any) {
       setMilestones(originalMilestones);
       toast.error(

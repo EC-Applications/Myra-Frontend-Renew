@@ -2,7 +2,11 @@ import type { Label } from "@/modules/projects/components/label-picker";
 import type { iLabel } from "./label.interface";
 import type { iMilestone } from "./milestone.interface";
 import type { iMember, iTeams } from "./teams.interface";
-import type { DocumentItem, IPriority, iProjectHealth } from "./project.interface";
+import type {
+  DocumentItem,
+  IPriority,
+  iProjectHealth,
+} from "./project.interface";
 import type { Status } from "./cycle.interface";
 
 export interface iProjectTemplatePayload {
@@ -62,4 +66,33 @@ export interface iProjectTemplateResoponse {
   documents: DocumentItem[];
   teams: iTeams[] | undefined;
   team_id: number[] | undefined;
+}
+
+// miletsonte
+export interface iProjectTemplateMilestonePayload {
+  workspace_id: number;
+  project_template_id: number;
+  name: string;
+  description?: string;
+  target_date?: string;
+}
+
+export interface iProjectTemplateMilestoneResponse {
+  workspace_id: number;
+  project_template_id: number;
+  name: string;
+  description: string;
+  target_date: string;
+  updated_at: string;
+  created_at: string;
+  id: number;
+}
+
+
+export interface ProjectTemplateMileStoneUpdatePayload {
+  workspace_id : number ;
+  project_template_id: number;
+  name?: string;
+  description: string;
+  target_date: string;
 }
