@@ -465,7 +465,11 @@ export function TemplateForm() {
 
               {/* Milestone Section */}
               <div className="mt-auto pt-4">
-                <MilestoneSection />
+                <MilestoneSection
+                  initialMilestones={templateDetail?.milestones}
+                  source="template"
+                  mode={isEditMode ? "update" : "create"}
+                />
               </div>
             </div>
           </CardContent>
@@ -481,7 +485,7 @@ export function TemplateForm() {
             Cancel
           </Button>
           <Button
-          variant="custom"
+            variant="custom"
             onClick={() => formik.handleSubmit()}
             disabled={createTemplate.isPending || updateTemplate.isPending}
           >

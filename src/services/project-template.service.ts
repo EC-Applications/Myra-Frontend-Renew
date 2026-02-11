@@ -1,6 +1,9 @@
 import type {
+  iProjectTemplateMilestonePayload,
+  iProjectTemplateMilestoneResponse,
   iProjectTemplatePayload,
   iProjectTemplateResoponse,
+  ProjectTemplateMileStoneUpdatePayload,
 } from "@/interfaces/project-template.interface";
 import { Axios } from "./axios.service";
 import type { iMilestone } from "@/interfaces/milestone.interface";
@@ -74,7 +77,7 @@ export const createProjectTemplateUri = (
 
   // console.log("📋 FormData entries:");
   // for (const pair of formData.entries()) {
-    // console.log(pair[0], pair[1]);
+  // console.log(pair[0], pair[1]);
   // }
 
   return Axios.post("/api/projects/template/store", formData, {
@@ -175,7 +178,46 @@ export const updateProjectTemplateUri = async (
   });
 };
 
-
 export const deleteProjectTemplateUri = async (id: number) => {
-  return Axios.delete(`/api/projects/template/delete/${id}`, {responseType:"json"})              
-}
+  return Axios.delete(`/api/projects/template/delete/${id}`, {
+    responseType: "json",
+  });
+};
+
+// create milestone
+export const createProjectTempateMilestoneUri = async (
+  body: iProjectTemplateMilestonePayload,
+) => {
+  return Axios.post(`/api/projects/template/milestone/store`, body, {
+    responseType: "json",
+  }).then((res) => res.data as iResponse<iProjectTemplateMilestoneResponse>);
+};
+
+// fetch milestone
+export const fetchProjectTempateMilestoneUri = async (
+  project_temp_id: number,
+) => {
+  return Axios.get(`/api/projects/template/milestone/list/${project_temp_id}`, {
+    responseType: "json",
+  }).then((res) => res.data as iResponse<iProjectTemplateMilestoneResponse[]>);
+};
+
+// update
+export const updateProjectTemplateMilestone = async (
+  project_template_id: number,
+  body: ProjectTemplateMileStoneUpdatePayload,
+) => {
+  return Axios.post(
+    `/api/projects/template/milestone/update/${project_template_id}`,
+    body,
+    { responseType: "json" },
+  ).then((res) => res.data as iResponse<iProjectTemplateMilestoneResponse>);
+};
+
+//  delete
+export const projectTemplateMilestoneDeleteUri = (milestoneId: number) => {
+  return Axios.delete(
+    `/api/projects/template/milestone/delete/${milestoneId}`,
+    { responseType: "json" },
+  );
+};
