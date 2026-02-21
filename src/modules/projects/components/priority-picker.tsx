@@ -109,9 +109,9 @@ export function PriorityPicker({
             // No selection placeholder
             <div className="flex items-center gap-1">
               <MoreHorizontal size={size} />
-              {/* {isPriorityShow == true ? (
+              {isPriorityShow == true ? (
                 <span className="text-[14px]">Priority</span>
-              ) : null} */}
+              ) : null}
             </div>
           )}
         </Button>

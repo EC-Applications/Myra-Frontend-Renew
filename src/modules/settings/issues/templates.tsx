@@ -122,8 +122,8 @@ export function Templates() {
           {/* Body */}
           <div className="flex relative px-5 py-1  ">
             {/* LEFT CARD */}
-            <Link to={'/new'}>
-              <div className="w-1/2 p-6 group transition-colors duration-200 hover:bg-[#efb515] rounded-bl-xl rounded-tl-xl dark:bg-[#27292f]">
+            <div className="w-1/2 p-6 group transition-colors duration-200 hover:bg-[#efb515] rounded-bl-xl rounded-tl-xl dark:bg-[#27292f]">
+              <Link to="./new">
                 <h3 className="text-white font-semibold text-[16px] mb-1">
                   Standard issue
                 </h3>
@@ -154,8 +154,8 @@ export function Templates() {
                     <MoreHorizontal />
                   </div>
                 </div>
-              </div>
-            </Link>
+              </Link>
+            </div>
 
             {/* Divider */}
             <div className="w-[1px] dark:bg-[#18181b] " />

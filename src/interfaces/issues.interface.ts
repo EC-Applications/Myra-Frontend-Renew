@@ -4,7 +4,7 @@ import type { iLabel } from "./label.interface";
 import type { iMilestone } from "./milestone.interface";
 import type { iMember } from "./teams.interface";
 
-// types/issue.interface.ts
+// types/issue.interface.tsgit
 export interface iIssuePayload {
   name: string;
   description?: string;
