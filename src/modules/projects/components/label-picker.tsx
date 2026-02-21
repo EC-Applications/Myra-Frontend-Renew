@@ -28,6 +28,8 @@ interface ProjectFormLabelsProps {
   variant?: LabelPickerVariant;
   compact?: boolean; // When true, shrinks to dots and expands on hover
   compactThreshold?: number; // Character length threshold for auto-compact (default: 40)
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }
 
 export const ProjectFormLabels = ({
@@ -39,15 +41,17 @@ export const ProjectFormLabels = ({
   variant = "default",
   compact = false,
   compactThreshold,
+  open: controlledOpen,
+  onOpenChange: controlledOnOpenChange,
 }: ProjectFormLabelsProps) => {
-  const [open, setOpen] = useState(false);
+  const [internalOpen, setInternalOpen] = useState(false);
+  const open = controlledOpen ?? internalOpen;
+  const setOpen = controlledOnOpenChange ?? setInternalOpen;
   const [search, setSearch] = useState("");
-  const [isHovered, setIsHovered] = useState(false);
-
   // Determine if we should show compact mode
   const shouldBeCompact = compact;
 
-// console.log("Labels", labels);
+  // console.log("Labels", labels);
   const filteredLabels = labels.filter((label) =>
     label.name.toLowerCase().includes(search.toLowerCase()),
   );
@@ -136,62 +140,43 @@ export const ProjectFormLabels = ({
 
     const displayLabels = value.slice(0, 3);
 
-    // Compact mode - show only dots, expand on hover
+    // Compact mode - show label badges inline
     if (shouldBeCompact) {
       return (
         <div
-          className="relative"
-          onMouseEnter={() => setIsHovered(true)}
-          onMouseLeave={() => setIsHovered(false)}
+          className="flex items-center -space-x-4"
           onClick={(e) => e.stopPropagation()}
         >
-          {/* Compact view - just dots */}
-          <div
-            className={cn(
-              "flex items-center gap-0.5 transition-all duration-200 ease-in-out",
-              isHovered ? "opacity-0 w-0 overflow-hidden" : "opacity-100"
-            )}
-          >
-            {displayLabels.map((label) => (
+          {displayLabels.map((label, index) => (
+            <span
+              key={label.id}
+              className={cn(
+                "relative z-10 flex items-center gap-1.5 h-[22px] max-w-[90px] px-2.5 rounded-full border text-[11px] font-medium text-muted-foreground dark:bg-[#1c1d1f] dark:border-zinc-700 whitespace-nowrap overflow-hidden",
+                className
+              )}
+              style={{
+                zIndex: index + 1,
+              }}
+            >
               <span
-                key={label.id}
-                className="h-2.5 w-2.5 rounded-full border border-zinc-700"
+                className="h-2.5 w-2.5 rounded-full flex-shrink-0"
                 style={{ backgroundColor: label.color }}
               />
-            ))}
-            {value.length > 3 && (
-              <span className="text-[10px] text-muted-foreground ml-0.5">
-                +{value.length - 3}
-              </span>
-            )}
-          </div>
 
-          {/* Expanded view on hover */}
-          <div
-            className={cn(
-              "absolute left-0 top-1/2 -translate-y-1/2 flex items-center gap-1 transition-all duration-200 ease-in-out z-10",
-              isHovered
-                ? "opacity-100 scale-100"
-                : "opacity-0 scale-95 pointer-events-none"
-            )}
-          >
-            {displayLabels.map((label) => (
-              <button
-                key={label.id}
-                className={cn(
-                  "flex items-center gap-1.5 h-[24px] px-2 rounded-full border text-[12px] font-semibold text-muted-foreground dark:hover:text-white transition-colors dark:bg-[#1c1d1f] dark:border-zinc-700 dark:hover:bg-[#32333a] whitespace-nowrap",
-                  className
-                )}
-              >
-                <span
-                  className="h-2.5 w-2.5 rounded-full flex-shrink-0"
-                  style={{ backgroundColor: label.color }}
-                />
-                <span className="text-[11px]">{label.name}</span>
-              </button>
-            ))}
-          </div>
+              {/* text truncation */}
+              <span className="overflow-hidden text-ellipsis whitespace-nowrap">
+                {label.name}
+              </span>
+            </span>
+          ))}
+
+          {value.length > 3 && (
+            <span className="text-[10px] text-muted-foreground ml-1 z-0">
+              +{value.length - 3}
+            </span>
+          )}
         </div>
+
       );
     }
 
@@ -271,7 +256,7 @@ export const ProjectFormLabels = ({
       <DropdownMenuContent
         align="start"
         className="w-[280px] dark:bg-[#1c1d1f] p-0 dark:border-zinc-700"
-         onClick={(e) => e.stopPropagation()}
+        onClick={(e) => e.stopPropagation()}
         onCloseAutoFocus={(e) => {
           e.preventDefault();
           setSearch("");
@@ -309,11 +294,10 @@ export const ProjectFormLabels = ({
                   <div
                     className={`h-4 w-4 rounded border flex items-center justify-center
           transition-colors
-          ${
-            isSelected
-              ? "bg-indigo-500 border-indigo-500 opacity-100"
-              : "bg-transparent border-zinc-700 opacity-0 group-hover:opacity-100"
-          }
+          ${isSelected
+                        ? "bg-indigo-500 border-indigo-500 opacity-100"
+                        : "bg-transparent border-zinc-700 opacity-0 group-hover:opacity-100"
+                      }
         `}
                   >
                     {isSelected && (

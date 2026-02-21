@@ -29,6 +29,7 @@ import {
   detectIconType,
   parseEmojiFromUnicode,
 } from "@/components/parse-emoji";
+import CursorLoader from "@/components/cursor-loader";
 
 interface projectDEtailProps {
   projectId?: number;
@@ -39,7 +40,7 @@ export default function Detail({ projectId }: projectDEtailProps) {
 
   const id = projectId ?? Number(routeId);
 
-  const { data: project } = useProjectDetail(Number(id));
+  const { data: project, isLoading } = useProjectDetail(Number(id));
   const workpsace = useUser();
   const priorityData = useSelector((state: any) => state.priority);
   const status = useSelector((state: any) => state.status);
@@ -500,12 +501,8 @@ export default function Detail({ projectId }: projectDEtailProps) {
   // console.log("First char:", backendIcon[0]); // "\"
   // console.log("Starts with \\u:", backendIcon.startsWith("\\u")); // true ya false?
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center h-full min-h-[300px]">
-        <div className="h-6 w-6 animate-spin rounded-full border-2 border-muted-foreground border-t-transparent" />
-      </div>
-    );
+  if (isLoading) {
+    return <CursorLoader />;
   }
 
   return (
@@ -553,15 +550,15 @@ export default function Detail({ projectId }: projectDEtailProps) {
               value={formik.values.short_summary}
               onChange={formik.handleChange}
               onBlur={handleUpdateSummary}
-              className="md:text-lg border-0 px-0 shadow-none focus-visible:ring-0 dark:bg-transparent resize-none"
+              className="md:text-md border-0 px-0 shadow-none focus-visible:ring-0 dark:bg-transparent resize-none"
             />
           </div>
         </div>
 
         {/* Properties */}
-        <div className="flex items-center  mb-6 flex-nowrap">
-          <h3 className="text-[15px] font-semibold text-muted-foreground whitespace-nowrap ">
-            Properties:
+        <div className="flex items-center mb-3 flex-nowrap">
+          <h3 className="text-[13px] font-semibold text-muted-foreground whitespace-nowrap ">
+            Properties
           </h3>
           <div className="flex items-center pl-1">
             <ProjectFormStatus
@@ -594,7 +591,7 @@ export default function Detail({ projectId }: projectDEtailProps) {
               className="border-0 "
               buttonVarient="dark"
             />
-            <ArrowRight />
+            <ArrowRight className="w-4 h-3" />
             <ProjectDatePicker
               label="End date"
               value={
@@ -608,8 +605,8 @@ export default function Detail({ projectId }: projectDEtailProps) {
         </div>
 
         {/* Labels */}
-        <div className="flex items-center gap-3 mb-6 flex-nowrap">
-          <h3 className="text-[15px] text-muted-foreground whitespace-nowrap font-semibold">
+        <div className="flex items-center gap-3 mb-3 flex-nowrap">
+          <h3 className="text-[13px] text-muted-foreground whitespace-nowrap font-semibold">
             Label
           </h3>
           <div className="flex items-center gap-2">
@@ -730,7 +727,7 @@ export default function Detail({ projectId }: projectDEtailProps) {
 
         {/* Description */}
         <div className="mb-6">
-          <h3 className="text-[15px] font-semibold  mb-3 text-muted-foreground">
+          <h3 className="text-[13px] font-semibold  mb-3 text-muted-foreground">
             Description
           </h3>
           <div className="relative">
@@ -738,7 +735,7 @@ export default function Detail({ projectId }: projectDEtailProps) {
               placeholder="Add a description..."
               value={formik.values.description}
               onChange={(e) => handleDescriptionChange(e.target.value)}
-              className="min-h-36 md:text-lg border-0 px-3 shadow-none focus-visible:ring-0 dark:bg-transparent resize-none dark:text-white dark:placeholder:text-[#626366]"
+              className="min-h-36 md:text-md border-0 pr-3 shadow-none focus-visible:ring-0 dark:bg-transparent resize-none dark:text-white dark:placeholder:text-[#626366]"
             />
             {/* {isSavingDescription && (
               <span className="absolute top-2 right-2 text-xs text-muted-foreground">
@@ -849,7 +846,7 @@ export default function Detail({ projectId }: projectDEtailProps) {
 
         {/* Milestones */}
         <div>
-          <h3 className="text-lg font-medium mb-4 text-muted-foreground">
+          <h3 className="text-md font-medium mb-4 text-muted-foreground">
             Milestones
           </h3>
           <div className="space-y-3">

@@ -133,6 +133,7 @@ export function NewProject({
   const [description, setDescription] = useState("");
   const [attachments, setAttachments] = useState<File[]>([]);
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
+  const [activePicker, setActivePicker] = useState<string | null>(null);
 
   const resetForm = () => {
     setProjectName("");
@@ -262,11 +263,11 @@ export function NewProject({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
-        className="md:max-w-5xl w-full h-[85vh] overflow-y-auto p-0 gap-0 dark:bg-[#1c1d1f] flex flex-col"
+        className="md:max-w-5xl w-full h-[85vh] overflow-hidden p-0 gap-0 dark:bg-[#1c1d1f] flex flex-col"
         showCloseButton={false}
       >
         {/* Header */}
-        <DialogHeader className="flex flex-row items-center justify-between px-6 h-14 space-y-0">
+        <DialogHeader className="flex flex-row items-center justify-between px-6 h-14 space-y-0 shrink-0">
           <div className="flex items-center gap-2">
             <TeamPicker
               teams={teamsData}
@@ -288,7 +289,7 @@ export function NewProject({
           </Button>
         </DialogHeader>
 
-        <div className="px-6 space-y-4 flex flex-1 flex-col">
+        <div className="px-6 space-y-4 flex flex-1 flex-col overflow-y-auto">
           {/* Project Icon and Name */}
           <div className="space-y-4">
             <div className="flex items-center gap-4">
@@ -333,12 +334,16 @@ export function NewProject({
               value={priority}
               onChange={setPriority}
               buttonVarient="light"
+              open={activePicker === "priority"}
+              onOpenChange={(o) => setActivePicker(o ? "priority" : null)}
             />
 
             <ProjectFormStatus
               statuses={statusList}
               value={selectedStatus}
               onChange={setSelectedStatus}
+              open={activePicker === "status"}
+              onOpenChange={(o) => setActivePicker(o ? "status" : null)}
             />
 
             <ProjectDatePicker
@@ -346,6 +351,8 @@ export function NewProject({
               value={startDate ? new Date(startDate) : undefined}
               onChange={setStartDate}
               buttonVarient="light"
+              open={activePicker === "startDate"}
+              onOpenChange={(o) => setActivePicker(o ? "startDate" : null)}
             />
 
             <ProjectDatePicker
@@ -353,19 +360,24 @@ export function NewProject({
               value={endDate ? new Date(endDate) : undefined}
               onChange={setEndDate}
               buttonVarient="light"
+              open={activePicker === "targetDate"}
+              onOpenChange={(o) => setActivePicker(o ? "targetDate" : null)}
             />
             <ProjectFormLabels
               labels={labels}
               value={selectedLabels}
               onChange={setSelectedLabels}
               buttonVarient="light"
+              open={activePicker === "labels"}
+              onOpenChange={(o) => setActivePicker(o ? "labels" : null)}
             />
 
             <MemberPicker
               members={members}
               value={selectedMembers}
               onChange={setSelectedMembers}
-              // className="w-full"
+              open={activePicker === "members"}
+              onOpenChange={(o) => setActivePicker(o ? "members" : null)}
             />
 
             {/* Lead Picker */}
@@ -373,7 +385,8 @@ export function NewProject({
               members={members}
               value={selectedLead}
               onChange={setSelectedLead}
-              // className="w-full"
+              open={activePicker === "lead"}
+              onOpenChange={(o) => setActivePicker(o ? "lead" : null)}
             />
 
             <Label className="h-7.5 w-auto rounded-md justify-start align-center gap-2 px-2 text-sm   text-muted-foreground dark:text-muted-foreground hover:font-semibold font-semibold hover:text-black dark:hover:text-white border dark:bg-[#2a2c33] dark:hover:bg-[#32333a]">
@@ -506,7 +519,7 @@ export function NewProject({
         </div>
 
         {/* Footer */}
-        <div className="flex items-center justify-between  py-2 px-4  border-t dark:border-zinc-700 mt-auto sticky bottom-0 dark:bg-[#1c1d1f] cursor-pointer">
+        <div className="flex items-center justify-between py-2 px-4 border-t dark:border-zinc-700 shrink-0 dark:bg-[#1c1d1f] cursor-pointer">
           <div className="flex items-center gap-2">
             <Button
               variant="ghost"

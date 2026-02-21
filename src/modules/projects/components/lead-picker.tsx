@@ -18,6 +18,8 @@ interface LeadProps {
   onChange: (member: iMember | undefined) => void;
   className?: string;
   buttonVarient?: "light" | "dark";
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }
 
 export const LeadPicker = ({
@@ -26,8 +28,12 @@ export const LeadPicker = ({
   onChange,
   className,
   buttonVarient = "light",
+  open: controlledOpen,
+  onOpenChange: controlledOnOpenChange,
 }: LeadProps) => {
-  const [open, setOpen] = useState(false);
+  const [internalOpen, setInternalOpen] = useState(false);
+  const open = controlledOpen ?? internalOpen;
+  const setOpen = controlledOnOpenChange ?? setInternalOpen;
   const [search, setSearch] = useState("");
 
   const filteredMembers = members.filter((member) => {

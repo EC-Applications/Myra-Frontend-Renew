@@ -159,7 +159,7 @@ const Projects = () => {
       <div className="border rounded dark:border-zinc-800 min-h-screen dark:bg-[#17181b]">
         <div className="space-y-4 ">
           {/* Header */}
-          <header className="flex justify-between h-12 shrink-0 border-b px-4 items-center gap-2 transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12">
+          <header className="flex justify-between mb-2 h-12 shrink-0 border-b px-4 items-center gap-2 transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12">
             <div className="flex items-center gap-2">
               <SidebarTrigger className="-ml-1" />
               <Separator
@@ -195,12 +195,12 @@ const Projects = () => {
           </header>
 
           {/* Controls */}
-          <div className="flex items-center justify-between px-4">
+          <div className="flex items-center justify-between px-4 mb-2">
             <FilterDropdown onFilterChange={handleFilterChange} />
 
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="noBorder" size="sm">
+                <Button variant="secondary" size="sm">
                   <LayoutGrid className="w-4 h-4 mr-2" />
                   Display
                 </Button>

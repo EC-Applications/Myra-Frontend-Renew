@@ -23,7 +23,9 @@ interface ProjectStatusProps {
   value: Status | undefined;
   onChange: (status: Status) => void;
   className?: string;
-  buttonVarient?: "light" | "dark"  ;
+  buttonVarient?: "light" | "dark";
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }
 
 export const ProjectFormStatus = ({
@@ -31,9 +33,13 @@ export const ProjectFormStatus = ({
   value,
   onChange,
   className,
-  buttonVarient= "light" 
+  buttonVarient= "light",
+  open: controlledOpen,
+  onOpenChange: controlledOnOpenChange,
 }: ProjectStatusProps) => {
-  const [open, setOpen] = useState(false);
+  const [internalOpen, setInternalOpen] = useState(false);
+  const open = controlledOpen ?? internalOpen;
+  const setOpen = controlledOnOpenChange ?? setInternalOpen;
   const [search, setSearch] = useState("");
 
   const filteredOptions = statuses.filter((status) =>

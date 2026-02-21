@@ -113,12 +113,12 @@ const ProjectList: FC<props> = ({ projects }) => {
     <>
       {/* Table */}
       <div className="border-t">
-        <div className="grid grid-cols-12 gap-4 px-4 py-2 border-b text-sm font-medium text-muted-foreground">
-          <div className="col-span-4">Name</div>
+        <div className="grid grid-cols-12 gap-4 px-4 py-2 mb-1 border-b text-sm font-medium text-muted-foreground">
+          <div className="col-span-8 md:pl-5">Name</div>
           {/* <div className="col-span-2">Health</div> */}
-          <div className="col-span-2">Priority</div>
-          <div className="col-span-2  ">Lead</div>
-          <div className="col-span-2">Target date</div>
+          <div className="col-span-1">Priority</div>
+          <div className="col-span-1">Lead</div>
+          <div className="col-span-1">Target date</div>
           {/* <div className="col-span-2">Status</div> */}
           <div className="col-span-1"></div>
         </div>
@@ -128,17 +128,17 @@ const ProjectList: FC<props> = ({ projects }) => {
           return (
             <div
               key={project.id}
-              className="grid grid-cols-12 gap-4 p-4  last:border-b-0 hover:bg-muted/50 transition-colors"
+              className="grid grid-cols-12 gap-4 px-4 py-2 last:border-b-0 hover:bg-muted/50 transition-colors"
             >
               {/* Name */}
-              <div className="col-span-4 flex items-center space-x-3">
+              <div className="col-span-8 flex items-center space-x-3">
                 <div className={`p-1 ${project.icon}`}>
                   {/* <IconComponent className="w-4 h-4" /> */}
                 </div>
                 <div>
                   <Link
                     to={"/projects/detail/" + project.id}
-                    className="font-medium"
+                    className="font-medium text-sm"
                   >
                     <div>{project.name || "daw"}</div>
                   </Link>
@@ -164,7 +164,7 @@ const ProjectList: FC<props> = ({ projects }) => {
               </div> */}
 
               {/* Priority */}
-              <div className="col-span-2 flex items-center ">
+              <div className="col-span-1 flex items-center ">
                 {project.priority ? (
                   <>
                     {project.priority.icon && (
@@ -184,7 +184,7 @@ const ProjectList: FC<props> = ({ projects }) => {
               </div>
 
               {/* Lead */}
-              <div className="col-span-2 flex items-center">
+              <div className="col-span-1 flex items-center">
                 <Avatar className="w-6 h-6">
                   <AvatarImage
                     src={project.lead?.avatar || "/placeholder.svg"}
@@ -197,7 +197,7 @@ const ProjectList: FC<props> = ({ projects }) => {
               </div>
 
               {/* Target date */}
-              <div className="col-span-2 flex items-center text-sm">
+              <div className="col-span-1 flex items-center text-sm">
                 {/* <ProjectDatePicker
                   label="Start date"
                   value={startDate}
@@ -216,7 +216,7 @@ const ProjectList: FC<props> = ({ projects }) => {
                 </span>
               </div> */}
 
-              <div className="col-span-2 flex items-center justify-end">
+              <div className="col-span-1 flex items-center justify-end">
                 <DropdownMenu
                   open={openDropdownId === project.id}
                   onOpenChange={(open) => {

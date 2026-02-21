@@ -18,6 +18,8 @@ interface MemberProps {
   onChange: (members: iMember[]) => void;
   className?: string;
   buttunVarient?: "light" | "dark";
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }
 
 export const MemberPicker = ({
@@ -26,8 +28,12 @@ export const MemberPicker = ({
   onChange,
   className,
   buttunVarient = "light",
+  open: controlledOpen,
+  onOpenChange: controlledOnOpenChange,
 }: MemberProps) => {
-  const [open, setOpen] = useState(false);
+  const [internalOpen, setInternalOpen] = useState(false);
+  const open = controlledOpen ?? internalOpen;
+  const setOpen = controlledOnOpenChange ?? setInternalOpen;
   const [search, setSearch] = useState("");
 
   const term = search?.toLowerCase() ?? "";

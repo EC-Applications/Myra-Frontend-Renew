@@ -419,7 +419,7 @@ export function IconPicker({
       );
     }
     // console.log("Rendering icon - Type:", value.type, "Icon:", value.icon);
-    
+
     if (value.type === "emoji") {
       return (
         <span
@@ -437,7 +437,7 @@ export function IconPicker({
         style={
           iconSize
             ? { width: iconSize, height: iconSize }
-            : { width: 20, height: 20 }
+            : { width: 16, height: 16 }
         }
       />
     );
@@ -465,7 +465,7 @@ export function IconPicker({
           <Button
             variant={variant === "compact" ? "ghost" : "outline"}
             className={cn(
-              "h-10 w-10 p-0 rounded-md cursor-pointer",
+              "h-8 w-8 p-0 rounded-md cursor-pointer",
               variant === "full" && "shadow-sm",
               variant === "compact" && "border-0 shadow-none",
               className,
@@ -526,7 +526,7 @@ export function IconPicker({
                         ? color.value
                         : `bg-current ${color.value}`,
                       selectedColor === color.value &&
-                        "ring-2 ring-primary ring-offset-2",
+                      "ring-2 ring-primary ring-offset-2",
                     )}
                     title={color.name}
                   />

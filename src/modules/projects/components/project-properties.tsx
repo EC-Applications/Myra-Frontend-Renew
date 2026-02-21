@@ -59,7 +59,7 @@ const ProjectProperties = () => {
   const [priority, setPriority] = useState<number | undefined>();
   const [selectedStatus, setSelectedStatus] = useState(statusList?.[0] ?? null);
   const [selectedLead, setSelectedLead] = useState<iMember | undefined>();
-  const [showActivity, setShowActivity] = useState(false);
+  const [showActivity, setShowActivity] = useState(true);
   const [startDate, setStartDate] = useState<Date | null>(null);
   const [endDate, setEndDate] = useState<Date | null>(null);
   const [selectedLabels, setSelectedLabels] = useState<any[]>([]);
@@ -370,7 +370,7 @@ const ProjectProperties = () => {
 
           <div className="space-y-4">
             <div className="flex items-center justify-between">
-              <span className="text-[15px] font-semibold text-muted-foreground ">
+              <span className="text-[14px] font-semibold text-muted-foreground ">
                 Status
               </span>
               <ProjectFormStatus
@@ -383,7 +383,7 @@ const ProjectProperties = () => {
             </div>
 
             <div className="flex items-center justify-between">
-              <span className="text-[15px] font-semibold text-muted-foreground">
+              <span className="text-[14px] font-semibold text-muted-foreground">
                 Priority
               </span>
               <PriorityPicker
@@ -395,7 +395,7 @@ const ProjectProperties = () => {
             </div>
 
             <div className="flex items-center justify-between">
-              <span className="text-[15px] font-semibold text-muted-foreground">
+              <span className="text-[14px] font-semibold text-muted-foreground">
                 Lead
               </span>
               <div className="flex items-center gap-2">
@@ -410,7 +410,7 @@ const ProjectProperties = () => {
             </div>
 
             <div className="flex items-center justify-between">
-              <span className="text-[15px] font-semibold text-muted-foreground">
+              <span className="text-[14px] font-semibold text-muted-foreground">
                 Members
               </span>
               <div className="flex items-center gap-2">
@@ -449,7 +449,7 @@ const ProjectProperties = () => {
             </div> */}
 
             <div className="flex items-center justify-between">
-              <span className="text-[15px] font-semibold text-muted-foreground">
+              <span className="text-[14px] font-semibold text-muted-foreground">
                 Start date
               </span>
               <ProjectDatePicker
@@ -464,7 +464,7 @@ const ProjectProperties = () => {
             </div>
 
             <div className="flex items-center justify-between">
-              <span className="text-[15px] font-semibold text-muted-foreground">
+              <span className="text-[14px] font-semibold text-muted-foreground">
                 Target date
               </span>
               <ProjectDatePicker
@@ -493,7 +493,7 @@ const ProjectProperties = () => {
             </div> */}
 
             <div className="flex items-center justify-between">
-              <span className="text-[15px] font-semibold text-muted-foreground">
+              <span className="text-[14px] font-semibold text-muted-foreground">
                 Labels
               </span>
               <ProjectFormLabels
@@ -510,7 +510,7 @@ const ProjectProperties = () => {
         {/* Milestones */}
         <div className="mb-6">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-[15px] font-semibold text-muted-foreground">Milestones</h3>
+            <h3 className="text-[14px] font-semibold text-muted-foreground">Milestones</h3>
             {/* <Plus className="w-4 h-4" /> */}
           </div>
 

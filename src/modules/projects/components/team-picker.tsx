@@ -127,33 +127,42 @@ export const TeamPicker = ({
         </Button>
       </DropdownMenuTrigger>
 
-      <DropdownMenuContent align="start" className="w-[280px] p-1.5">
+      <DropdownMenuContent align="start" className="w-[280px] dark:bg-[#1c1d1f] p-0 dark:border-zinc-700">
         {/* Search */}
         <div className="relative mb-1">
           <Input
             placeholder="Search teams..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="h-8 text-[13px] placeholder:text-muted-foreground/60"
+            className="h-8 text-[15px] dark:placeholder:text-[#7e7f82] placeholder:font-semibold placeholder:text-muted-foreground/60 border-0 dark:bg-[#1c1d1f] focus-visible:ring-0 focus-visible:ring-offset-0 dark:caret-[#5e6ad2]"
             autoFocus
           />
         </div>
+        <hr className="dark:border-zinc-700" />
 
-        <div className="py-0.5 max-h-[300px] overflow-y-auto">
+        <div className="p-1 max-h-[300px] overflow-y-auto">
           {/* Current/Active Team */}
           {currentTeam && (
             <>
               <DropdownMenuItem
-                className="flex items-center justify-between rounded-sm px-2 py-1.5 text-[13px] cursor-pointer"
-                onSelect={() => handleToggleTeam(currentTeam)}
+                className="group flex h-8 items-center gap-2 rounded-sm px-2 text-[14px] font-semibold dark:hover:bg-[#292b30] cursor-pointer"
+                onSelect={(e) => e.preventDefault()}
+                onClick={() => handleToggleTeam(currentTeam)}
               >
                 <div className="flex items-center gap-2">
-                  <input
-                    type="checkbox"
-                    checked={value.some((t) => t.id === currentTeam.id)}
-                    readOnly
-                    className="h-4 w-4"
-                  />
+                  <div
+                    className={`h-4 w-4 rounded border flex items-center justify-center transition-colors ${
+                      value.some((t) => t.id === currentTeam.id)
+                        ? "bg-[#5e6ad2] border-[#5e6ad2] opacity-100"
+                        : "bg-transparent border-zinc-700 opacity-0 group-hover:opacity-100"
+                    }`}
+                  >
+                    {value.some((t) => t.id === currentTeam.id) && (
+                      <svg className="h-3 w-3 text-white" fill="none" stroke="currentColor" strokeWidth="3" viewBox="0 0 24 24">
+                        <path d="M5 13l4 4L19 7" />
+                      </svg>
+                    )}
+                  </div>
                   <IconPicker
                     variant="inline"
                     size={15}
@@ -200,16 +209,24 @@ export const TeamPicker = ({
                 return (
                   <DropdownMenuItem
                     key={team.id}
-                    className="flex items-center justify-between rounded-sm px-2 py-1.5 text-[13px] cursor-pointer"
-                    onSelect={() => handleToggleTeam(team)}
+                    className="group flex h-8 items-center gap-2 rounded-sm px-2 text-[14px] font-semibold dark:hover:bg-[#292b30] cursor-pointer"
+                    onSelect={(e) => e.preventDefault()}
+                    onClick={() => handleToggleTeam(team)}
                   >
                     <div className="flex items-center gap-2">
-                      <input
-                        type="checkbox"
-                        checked={isSelected}
-                        readOnly
-                        className="h-4 w-4"
-                      />
+                      <div
+                        className={`h-4 w-4 rounded border flex items-center justify-center transition-colors ${
+                          isSelected
+                            ? "bg-[#5e6ad2] border-[#5e6ad2] opacity-100"
+                            : "bg-transparent border-zinc-700 opacity-0 group-hover:opacity-100"
+                        }`}
+                      >
+                        {isSelected && (
+                          <svg className="h-3 w-3 text-white" fill="none" stroke="currentColor" strokeWidth="3" viewBox="0 0 24 24">
+                            <path d="M5 13l4 4L19 7" />
+                          </svg>
+                        )}
+                      </div>
                       <IconPicker
                         variant="inline"
                         size={15}

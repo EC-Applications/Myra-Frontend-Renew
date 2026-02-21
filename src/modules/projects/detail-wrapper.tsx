@@ -6,7 +6,7 @@ import { SidebarTrigger } from "@/components/ui/sidebar";
 // import { useProjectDetail } from "@/hooks/use-project-detail";
 import { Copy, FileText, PanelRightIcon } from "lucide-react";
 import { useState } from "react";
-import { NavLink, Outlet, useParams } from "react-router";
+import { Link, NavLink, Outlet, useParams } from "react-router";
 import ProjectProperties from "./components/project-properties";
 import { useProjectDetail } from "@/hooks/use-project-detail";
 
@@ -27,9 +27,9 @@ export default function DetailWrapper() {
             orientation="vertical"
             className="mr-2 data-[orientation=vertical]:h-4"
           />
-          <h1 className="text-foreground text-[14px] font-semibold">
+          <Link to={'/projects'} className="text-foreground text-[14px] font-semibold">
             Projects ›
-          </h1>
+          </Link>
           <div className="flex items-center space-x-1 ">
             <NavLink to={`/projects/detail/${id}`}>
               {({ isActive }) => (

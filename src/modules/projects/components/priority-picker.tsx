@@ -23,6 +23,8 @@ interface PriorityPickerProps {
   disabled?: boolean;
   buttonVarient?: "light" | "dark";
   isPriorityShow?: boolean;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }
 
 export function PriorityPicker({
@@ -35,8 +37,12 @@ export function PriorityPicker({
   buttonVarient = "light",
   isPriorityShow = false,
   size,
+  open: controlledOpen,
+  onOpenChange: controlledOnOpenChange,
 }: PriorityPickerProps) {
-  const [open, setOpen] = useState(false);
+  const [internalOpen, setInternalOpen] = useState(false);
+  const open = controlledOpen ?? internalOpen;
+  const setOpen = controlledOnOpenChange ?? setInternalOpen;
   const [search, setSearch] = useState("");
   const priorityData = useSelector((state: any) => state.priority);
 

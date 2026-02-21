@@ -29,7 +29,7 @@ import {
 } from "@/components/ui/popover";
 
 type SelectionMode = "Day" | "Month" | "Quarter" | "Half-year" | "Year";
-type DatePickerVariant = "full" | "compact" | "inline";
+type DatePickerVariant = "full" | "compact" | "inline" | "badge";
 
 interface ProjectDatePickerProps {
   label?: string;
@@ -39,6 +39,9 @@ interface ProjectDatePickerProps {
   variant?: DatePickerVariant;
   disabled?: boolean;
   buttonVarient?: "light" | "dark";
+  compact?: boolean;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }
 
 export const ProjectDatePicker = ({
@@ -49,13 +52,18 @@ export const ProjectDatePicker = ({
   variant = "full",
   disabled = false,
   buttonVarient = "light",
+  compact = false,
+  open: controlledOpen,
+  onOpenChange: controlledOnOpenChange,
 }: ProjectDatePickerProps) => {
   const [currentMonth, setCurrentMonth] = useState<Date>(value ?? new Date());
   const [selectionMode, setSelectionMode] = useState<SelectionMode>("Day");
   const [inputValue, setInputValue] = useState(
     value ? format(value, "MM/dd/yyyy") : "",
   );
-  const [open, setOpen] = useState(false);
+  const [internalOpen, setInternalOpen] = useState(false);
+  const open = controlledOpen ?? internalOpen;
+  const setOpen = controlledOnOpenChange ?? setInternalOpen;
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setInputValue(e.target.value);
@@ -376,6 +384,23 @@ export const ProjectDatePicker = ({
 
   // Render different UI based on variant
   const renderTrigger = () => {
+    if (variant === "badge") {
+      // Badge variant - rounded pill style for list rows
+      return (
+        <button
+          disabled={disabled}
+          className={cn(
+            "flex items-center gap-1.5 h-[22px] px-2.5 rounded-full border text-[11px] font-medium text-muted-foreground dark:bg-[#1c1d1f] dark:border-zinc-700 whitespace-nowrap transition-colors hover:text-foreground",
+            disabled && "opacity-50 cursor-not-allowed",
+            className,
+          )}
+        >
+          <CalendarIcon className="w-3 h-3 flex-shrink-0" />
+          {value ? format(value, "MMM d") : "No date"}
+        </button>
+      );
+    }
+
     if (variant === "inline") {
       // Inline variant (just date text + icon, no button border)
       return (

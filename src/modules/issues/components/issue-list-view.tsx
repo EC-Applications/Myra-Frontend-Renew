@@ -60,6 +60,8 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { ProjectFormLabels } from "@/modules/projects/components/label-picker";
+import { useMediaQuery } from "@/hooks/use-media-query";
+import { compact } from "lodash";
 
 const IssueListView: FC<{
   issuesData: Record<string, iIssues[]>;
@@ -67,6 +69,7 @@ const IssueListView: FC<{
   setShowNewIssueDialog: Dispatch<SetStateAction<boolean>>;
 }> = ({ issuesData, setShowNewIssueDialog, showNewIssueDialog }) => {
   const { "team-id": teamId, id: projectId } = useParams();
+  const isCompactLabels = useMediaQuery("(max-width: 1280px)");
   const teamset = useSelector((state: RootState) => state.useTeamId);
 
   // console.log("TEAM ID", teamId);
@@ -156,18 +159,18 @@ const IssueListView: FC<{
       const mutate =
         type === "issue"
           ? deleteIssue.mutate({
-              issueId: Number(issueId),
-              teamId: teamid,
-              workspaceId: Number(currentWorkspace?.id),
-            })
+            issueId: Number(issueId),
+            teamId: teamid,
+            workspaceId: Number(currentWorkspace?.id),
+          })
           : deleteSubIssue.mutate({
-              body: {
-                issue_id: Number(parent_issue_id),
-                sub_issue_ids: [Number(issueId)], // Must be array
-              },
-              teamId: Number(teamid),
-              workspaceId: Number(currentWorkspace?.id),
-            });
+            body: {
+              issue_id: Number(parent_issue_id),
+              sub_issue_ids: [Number(issueId)], // Must be array
+            },
+            teamId: Number(teamid),
+            workspaceId: Number(currentWorkspace?.id),
+          });
 
       // const res = await deleteIssueUri(issueId);
       // toast.success(res.data.message);
@@ -195,26 +198,26 @@ const IssueListView: FC<{
       const mutate =
         type === "issue"
           ? updateIssueStatus.mutate({
-              issueId: Number(issuid),
-              body: {
-                priority_id: priorityId,
-                workspace_id: currentWorkspace?.id,
-                team_id: Number(tId),
-              },
-              teamId: Number(tId),
-              workspaceId: Number(currentWorkspace?.id),
-            })
+            issueId: Number(issuid),
+            body: {
+              priority_id: priorityId,
+              workspace_id: currentWorkspace?.id,
+              team_id: Number(tId),
+            },
+            teamId: Number(tId),
+            workspaceId: Number(currentWorkspace?.id),
+          })
           : updateSubIssue.mutate({
-              issueId: Number(issuid),
-              body: {
-                issue_id: parent_issue_id,
-                priority_id: priorityId,
-                workspace_id: currentWorkspace?.id,
-                team_id: Number(tId),
-              },
-              teamId: Number(tId),
-              workspaceId: Number(currentWorkspace?.id),
-            });
+            issueId: Number(issuid),
+            body: {
+              issue_id: parent_issue_id,
+              priority_id: priorityId,
+              workspace_id: currentWorkspace?.id,
+              team_id: Number(tId),
+            },
+            teamId: Number(tId),
+            workspaceId: Number(currentWorkspace?.id),
+          });
       // const payload = {
       //   priority_id: priorityId,
       //   workspace_id: currentWorkspace?.id,
@@ -247,26 +250,26 @@ const IssueListView: FC<{
       const mutate =
         type === "issue"
           ? updateIssueStatus.mutate({
-              issueId: Number(issueId),
-              body: {
-                due_date: date ? format(date, "yyyy-MM-dd") : undefined,
-                workspace_id: currentWorkspace?.id,
-                team_id: Number(tId),
-              },
-              teamId: Number(tId),
-              workspaceId: Number(currentWorkspace?.id),
-            })
+            issueId: Number(issueId),
+            body: {
+              due_date: date ? format(date, "yyyy-MM-dd") : undefined,
+              workspace_id: currentWorkspace?.id,
+              team_id: Number(tId),
+            },
+            teamId: Number(tId),
+            workspaceId: Number(currentWorkspace?.id),
+          })
           : updateSubIssue.mutate({
-              issueId: Number(issueId),
-              body: {
-                issue_id: parent_issue_id,
-                due_date: date ? format(date, "yyyy-MM-dd") : undefined,
-                workspace_id: currentWorkspace?.id,
-                team_id: Number(tId),
-              },
-              teamId: Number(tId),
-              workspaceId: Number(currentWorkspace?.id),
-            });
+            issueId: Number(issueId),
+            body: {
+              issue_id: parent_issue_id,
+              due_date: date ? format(date, "yyyy-MM-dd") : undefined,
+              workspace_id: currentWorkspace?.id,
+              team_id: Number(tId),
+            },
+            teamId: Number(tId),
+            workspaceId: Number(currentWorkspace?.id),
+          });
       // const payload = {
       //   due_date: date ? format(date, "yyyy-MM-dd") : undefined,
       //   workspace_id: currentWorkspace?.id,
@@ -297,26 +300,26 @@ const IssueListView: FC<{
       const mutate =
         type === "issue"
           ? updateIssueStatus.mutate({
-              issueId: Number(issueId),
-              body: {
-                assignee_id: member?.id,
-                workspace_id: currentWorkspace?.id,
-                team_id: Number(tId),
-              },
-              teamId: Number(tId),
-              workspaceId: Number(currentWorkspace?.id),
-            })
+            issueId: Number(issueId),
+            body: {
+              assignee_id: member?.id,
+              workspace_id: currentWorkspace?.id,
+              team_id: Number(tId),
+            },
+            teamId: Number(tId),
+            workspaceId: Number(currentWorkspace?.id),
+          })
           : updateSubIssue.mutate({
-              issueId: Number(issueId),
-              body: {
-                issue_id: Number(parent_issue_id),
-                assignee_id: member?.id,
-                workspace_id: currentWorkspace?.id,
-                team_id: Number(tId),
-              },
-              teamId: Number(tId),
-              workspaceId: Number(currentWorkspace?.id),
-            });
+            issueId: Number(issueId),
+            body: {
+              issue_id: Number(parent_issue_id),
+              assignee_id: member?.id,
+              workspace_id: currentWorkspace?.id,
+              team_id: Number(tId),
+            },
+            teamId: Number(tId),
+            workspaceId: Number(currentWorkspace?.id),
+          });
       // const payload = {
       //   assignee_id: member?.id,
       //   workspace_id: currentWorkspace?.id,
@@ -347,26 +350,26 @@ const IssueListView: FC<{
       const mutate =
         type === "issue"
           ? updateIssueStatus.mutate({
-              issueId: Number(issueId),
-              body: {
-                status_id: status.id,
-                workspace_id: currentWorkspace?.id,
-                team_id: Number(tId),
-              },
-              teamId: Number(tId),
-              workspaceId: Number(currentWorkspace?.id),
-            })
+            issueId: Number(issueId),
+            body: {
+              status_id: status.id,
+              workspace_id: currentWorkspace?.id,
+              team_id: Number(tId),
+            },
+            teamId: Number(tId),
+            workspaceId: Number(currentWorkspace?.id),
+          })
           : updateSubIssue.mutate({
-              issueId: Number(issueId),
-              body: {
-                issue_id: parent_issue_id,
-                status_id: status.id,
-                workspace_id: currentWorkspace?.id,
-                team_id: Number(tId),
-              },
-              teamId: Number(tId),
-              workspaceId: Number(currentWorkspace?.id),
-            });
+            issueId: Number(issueId),
+            body: {
+              issue_id: parent_issue_id,
+              status_id: status.id,
+              workspace_id: currentWorkspace?.id,
+              team_id: Number(tId),
+            },
+            teamId: Number(tId),
+            workspaceId: Number(currentWorkspace?.id),
+          });
       // const payload = {
       //   status_id: status.id,
       //   workspace_id: currentWorkspace?.id,
@@ -395,30 +398,30 @@ const IssueListView: FC<{
   // Status colors mapping (left to right gradient)
   const statusColors: Record<string, { from: string; to: string }> = isDark
     ? {
-        "In Review": { from: "#171d1c", to: "#17181a" },
-        Todo: { from: "#1a1b1d", to: "#18191b" },
-        "In Progress": { from: "#1c1b1b", to: "#18181b" },
-        Done: { from: "#1a1b24", to: "#18191c" },
-        Backlog: { from: "#1b1c1e", to: "#17181a" },
-        Canceled: { from: "#1b1c1e", to: "#17181a" },
-        Duplicate: { from: "#1b1c1e", to: "#17181a" },
-      }
+      "In Review": { from: "#171d1c", to: "#17181a" },
+      Todo: { from: "#1a1b1d", to: "#18191b" },
+      "In Progress": { from: "#1c1b1b", to: "#18181b" },
+      Done: { from: "#1a1b24", to: "#18191c" },
+      Backlog: { from: "#1b1c1e", to: "#17181a" },
+      Canceled: { from: "#1b1c1e", to: "#17181a" },
+      Duplicate: { from: "#1b1c1e", to: "#17181a" },
+    }
     : {
-        "In Review": { from: "#f3f6f4", to: "#f5f6f5" },
-        Todo: { from: "#f6f6f6", to: "#f5f6f5" },
-        "In Progress": { from: "#f7f5f3", to: "#f5f6f5" },
-        Done: { from: "#f5f5fc", to: "#f5f6f5" },
-        Backlog: { from: "#f5f5f5", to: "#f5f6f5" },
-        Canceled: { from: "#f5f5f6", to: "#f5f6f5" },
-        Duplicate: { from: "#f5f5f6", to: "#f5f6f5" },
-      };
+      "In Review": { from: "#f3f6f4", to: "#f5f6f5" },
+      Todo: { from: "#f6f6f6", to: "#f5f6f5" },
+      "In Progress": { from: "#f7f5f3", to: "#f5f6f5" },
+      Done: { from: "#f5f5fc", to: "#f5f6f5" },
+      Backlog: { from: "#f5f5f5", to: "#f5f6f5" },
+      Canceled: { from: "#f5f5f6", to: "#f5f6f5" },
+      Duplicate: { from: "#f5f5f6", to: "#f5f6f5" },
+    };
 
   // console.log("def status", defStatus);
   return (
     <>
       <div className="flex-1  overflow-auto dark:bg-[#17181b]">
         {Object.keys(issuesData).length === 0 ||
-        Object.values(issuesData).every((issues) => issues.length === 0) ? (
+          Object.values(issuesData).every((issues) => issues.length === 0) ? (
           <div className="flex flex-col items-center justify-center h-full min-h-[400px] space-y-4">
             <div className="text-center space-y-2">
               <h3 className="text-lg font-semibold text-foreground">
@@ -475,7 +478,7 @@ const IssueListView: FC<{
                         <ChevronRight className="w-4 h-4" />
                       )}
                       <img className="h-4 w-4" src={config.icon} alt="" />
-                      <span className="font-medium text-[#565758] dark:text-white">
+                      <span className="font-medium text-sm text-[#565758] dark:text-white">
                         {config.name}
                       </span>
                       <Badge variant="noBorder" className="text-xs">
@@ -504,7 +507,7 @@ const IssueListView: FC<{
                         return (
                           <div
                             key={issue.id}
-                            className="flex items-center justify-between gap-3 py-2 px-6  hover:bg-muted/50  last:border-b-0"
+                            className="flex items-center justify-between gap-3 py-1 px-6  hover:bg-muted/50  last:border-b-0"
                           >
                             <div className="flex items-center gap-2">
                               <PriorityPicker
@@ -551,7 +554,7 @@ const IssueListView: FC<{
                               >
                                 <Badge
                                   variant="noBorder"
-                                  className="text-[15px] text-muted-foreground py-1.5"
+                                  className="text-[15px] text-sm text-muted-foreground py-1.5"
                                 >
                                   {issue.key}
                                 </Badge>
@@ -578,46 +581,45 @@ const IssueListView: FC<{
                                     {label}
                                   </Badge>
                                 ),
-                              )} */}
-                              {/* <Badge variant="outline" className="text-xs">
+                              )}
+                              <Badge variant="outline" className="text-xs">
                                 {issue.projects}
                               </Badge> */}
 
-                              {/* {issue.labels && issue.labels.length > 0 && (
-                                <ProjectFormLabels
-                                  labels={issue.labels}
-                                  value={issue.labels || []}
-                                  onChange={(labels) =>
-                                    console.log("Labels changed", labels)
-                                  }
-                                  variant="card-row-rounded"
-                                  compact={issue.name.length > 40} 
-                                />
-                              )} */}
+                              <div className={`flex items-center ${isCompactLabels || issue.name.length > 40 ? "-space-x-4" : "space-x-2"}`}>
+                                {issue.labels && issue.labels.length > 0 && (
+                                  <ProjectFormLabels
+                                    labels={issue.labels}
+                                    value={issue.labels || []}
+                                    onChange={(labels) =>
+                                      console.log("Labels changed", labels)
+                                    }
+                                    variant="card-row-rounded"
+                                    compact={isCompactLabels || issue.name.length > 40}
+                                  />
+                                )}
 
-                              <ProjectDatePicker
-                                variant="inline"
-                                value={
-                                  issue.due_date &&
-                                  !isNaN(new Date(issue.due_date).getTime())
-                                    ? new Date(issue.due_date)
-                                    : undefined
-                                }
-                                onChange={(newDate) => {
-                                  handleTargetDate(
-                                    issue.id,
-                                    newDate,
-                                    issue.team_id,
-                                    issue.type || "",
-                                    issue.issue_id,
-                                  );
-                                  // console.log(
-                                  //   "Update due date:",
-                                  //   issue.id,
-                                  //   newDate,
-                                  // );
-                                }}
-                              />
+                                <div className="relative z-20">
+                                  <ProjectDatePicker
+                                    variant="badge"
+                                    value={
+                                      issue.due_date &&
+                                        !isNaN(new Date(issue.due_date).getTime())
+                                        ? new Date(issue.due_date)
+                                        : undefined
+                                    }
+                                    onChange={(newDate) => {
+                                      handleTargetDate(
+                                        issue.id,
+                                        newDate,
+                                        issue.team_id,
+                                        issue.type || "",
+                                        issue.issue_id,
+                                      );
+                                    }}
+                                  />
+                                </div>
+                              </div>
 
                               <SingleMemberPicker
                                 variant="avatar-only"
